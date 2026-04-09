@@ -1,10 +1,9 @@
 'use client';
 
-import { dummyCharacters } from '@/lib/dummy-data';
 import { Button } from '@/components/ui/Button';
-import { Textarea, Input, FieldLabel } from '@/components/ui/Input';
+import { VoiceTextarea, VoiceInput, FieldLabel } from '@/components/ui/Input';
 import { Sparkles, RefreshCw } from 'lucide-react';
-import type { AiProvider, GenerateInput } from '@/lib/types';
+import type { AiProvider, GenerateInput, PostPersona } from '@/lib/types';
 
 const PROVIDER_OPTIONS: { value: AiProvider; label: string; badge: string; badgeColor: string }[] = [
   {
@@ -49,12 +48,14 @@ const LENGTH_OPTIONS = [
 
 interface Props {
   input: GenerateInput;
+  personas: PostPersona[];
   isGenerating: boolean;
   onChange: (partial: Partial<GenerateInput>) => void;
   onGenerate: () => void;
+  onActivatePersona: (id: string) => void;
 }
 
-export function GenerateSettings({ input, isGenerating, onChange, onGenerate }: Props) {
+export function GenerateSettings({ input, personas, isGenerating, onChange, onGenerate, onActivatePersona }: Props) {
   const canGenerate = (input.theme.trim() || input.selectedTopic) && !isGenerating;
 
   return (
@@ -107,30 +108,40 @@ export function GenerateSettings({ input, isGenerating, onChange, onGenerate }: 
         </div>
       </div>
 
-      {/* ── ペルソナ ── */}
+      {/* ── ペルソナ（横スクロール・クリック切り替え）── */}
       <div>
         <FieldLabel>ペルソナ</FieldLabel>
-        <div className="space-y-2">
-          {dummyCharacters.map((char) => (
-            <div
+        {/* 横スクロールコンテナ：高さ固定でレイアウトを圧迫しない */}
+        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+          {personas.map((char) => (
+            <button
               key={char.id}
-              className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all"
+              onClick={() => !char.is_active && onActivatePersona(char.id)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all shrink-0"
               style={{
-                background: char.is_active ? 'rgba(167,139,250,0.1)' : 'rgba(255,255,255,0.025)',
+                background: char.is_active ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.03)',
                 border: char.is_active
-                  ? '1px solid rgba(167,139,250,0.25)'
-                  : '1px solid rgba(255,255,255,0.06)',
+                  ? '1px solid rgba(167,139,250,0.35)'
+                  : '1px solid rgba(255,255,255,0.07)',
+                cursor: char.is_active ? 'default' : 'pointer',
+                boxShadow: char.is_active ? '0 0 12px rgba(167,139,250,0.15)' : 'none',
               }}
             >
-              <span className="text-lg">{char.avatar}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-slate-200 leading-none">{char.name}</p>
-                <p className="text-[11px] text-slate-600 mt-1">{char.tone}</p>
+              <span className="text-base leading-none">{char.avatar}</span>
+              <div className="text-left min-w-0">
+                <p
+                  className="text-[12px] font-medium leading-none truncate max-w-[100px]"
+                  style={{ color: char.is_active ? '#c4b5fd' : '#94a3b8' }}
+                >
+                  {char.name}
+                </p>
+                {char.is_active && (
+                  <p className="text-[10px] mt-0.5 leading-none" style={{ color: '#a78bfa' }}>
+                    使用中
+                  </p>
+                )}
               </div>
-              {char.is_active && (
-                <span className="text-[11px] text-neon-purple font-medium">使用中</span>
-              )}
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -138,11 +149,12 @@ export function GenerateSettings({ input, isGenerating, onChange, onGenerate }: 
       {/* ── テーマ ── */}
       <div>
         <FieldLabel>テーマ <span className="text-red-400">*</span></FieldLabel>
-        <Textarea
+        <VoiceTextarea
           rows={2}
           value={input.theme}
-          onChange={(e) => onChange({ theme: e.target.value })}
+          onValueChange={(v) => onChange({ theme: v })}
           placeholder="例：AIを使った副業で月5万円稼ぐ方法…"
+          appendMode
         />
       </div>
 
@@ -173,9 +185,9 @@ export function GenerateSettings({ input, isGenerating, onChange, onGenerate }: 
       {/* ── ターゲット ── */}
       <div>
         <FieldLabel>ターゲット読者</FieldLabel>
-        <Input
+        <VoiceInput
           value={input.target}
-          onChange={(e) => onChange({ target: e.target.value })}
+          onValueChange={(v) => onChange({ target: v })}
           placeholder="例：副業を始めたい20〜30代の会社員"
         />
       </div>

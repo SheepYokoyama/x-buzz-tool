@@ -2,15 +2,18 @@
 
 import { Button } from '@/components/ui/Button';
 import { PersonaKeywords } from './PersonaKeywords';
-import { Check, Edit2 } from 'lucide-react';
+import { Check, Edit2, Trash2 } from 'lucide-react';
 import type { Character } from '@/lib/types';
 
 interface Props {
   persona: Character;
+  isActivating?: boolean;
   onActivate: (id: string) => void;
+  onEdit: (persona: Character) => void;
+  onDelete: (id: string) => void;
 }
 
-export function PersonaCard({ persona, onActivate }: Props) {
+export function PersonaCard({ persona, isActivating = false, onActivate, onEdit, onDelete }: Props) {
   return (
     <div
       className="neon-card p-6 flex flex-col gap-4 transition-all duration-300"
@@ -46,12 +49,26 @@ export function PersonaCard({ persona, onActivate }: Props) {
               使用中
             </span>
           )}
+          {/* 編集ボタン */}
           <button
+            onClick={() => onEdit(persona)}
             className="w-7 h-7 rounded-lg flex items-center justify-center transition-all text-slate-600 hover:text-neon-blue"
             style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+            title="編集"
           >
             <Edit2 size={12} />
           </button>
+          {/* 削除ボタン（使用中は無効） */}
+          {!persona.is_active && (
+            <button
+              onClick={() => onDelete(persona.id)}
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all text-slate-600 hover:text-red-400"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+              title="削除"
+            >
+              <Trash2 size={12} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -81,10 +98,11 @@ export function PersonaCard({ persona, onActivate }: Props) {
           variant="secondary"
           size="sm"
           className="w-full justify-center mt-auto"
+          disabled={isActivating}
           onClick={() => onActivate(persona.id)}
         >
           <Check size={13} />
-          このペルソナを使用
+          {isActivating ? '切り替え中…' : 'このペルソナを使用'}
         </Button>
       )}
     </div>

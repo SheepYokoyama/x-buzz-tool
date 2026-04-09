@@ -27,9 +27,13 @@ export async function POST(req: Request) {
     if (err instanceof Anthropic.RateLimitError) {
       return NextResponse.json({ error: 'レート制限に達しました。しばらく待ってから再試行してください' }, { status: 429 });
     }
-    const message = err instanceof Error ? err.message : '生成中にエラーが発生しました';
+    // Gemini 503 / 一時的な高負荷
+    const errMsg = err instanceof Error ? err.message : '';
+    if (errMsg.includes('503') || errMsg.toLowerCase().includes('service unavailable') || errMsg.toLowerCase().includes('high demand')) {
+      return NextResponse.json({ error: 'サーバーが一時的に混雑しています。しばらく待ってから再試行してください。' }, { status: 503 });
+    }
     console.error('Generate error:', err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: errMsg || '生成中にエラーが発生しました' }, { status: 500 });
   }
 }
 
@@ -63,7 +67,7 @@ async function generateWithGemini(input: GenerateInput, theme: string): Promise<
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     systemInstruction: buildSystem(input),
   });
 
