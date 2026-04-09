@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(ls /c/Claude/x-buzz-tool/.env*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(supabase --version)",
+      "Bash(npx supabase:*)",
+      "Bash(ls C:/Claude/x-buzz-tool/.env*)",
+      "Bash(taskkill /PID 31988 /F)",
+      "Bash(cmd.exe /c \"taskkill /PID 31988 /F\")",
+      "Bash(cmd.exe /c \"taskkill /F /IM node.exe\")",
+      "Bash(powershell -Command \"Stop-Process -Id 31988 -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(cmd.exe /c \"type C:\\\\Claude\\\\x-buzz-tool\\\\.env.local\")",
+      "Bash(cmd.exe /c \"taskkill /F /IM node.exe 2>nul & exit 0\")",
+      "Bash(cmd.exe /c \"taskkill /PID 35380 /F\")",
+      "Bash(cmd.exe /c \"wmic process where processid=35380 delete 2>nul & wmic process where \"\"name=''node.exe''\"\" delete 2>nul & exit 0\")",
+      "Bash(cmd.exe /c \"del /F /Q C:\\\\Claude\\\\x-buzz-tool\\\\.next\\\\dev\\\\logs\\\\next-development.log 2>nul & exit 0\")",
+      "Bash(powershell.exe -Command \"Stop-Process -Id 35380 -Force; Write-Host ''Done''\")",
+      "Bash(powershell.exe -Command \"Get-Content ''C:\\\\Claude\\\\x-buzz-tool\\\\.env.local''\")",
+      "Bash(powershell.exe -Command \"Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host ''Done''\")",
+      "Bash(powershell.exe -Command \"\\(Get-Content ''C:\\\\Claude\\\\x-buzz-tool\\\\.env.local'' | Select-String ''ANTHROPIC''\\).Line\")",
+      "Bash(powershell.exe -Command \"[System.IO.File]::ReadAllBytes\\(''C:\\\\Claude\\\\x-buzz-tool\\\\.env.local''\\) | Select-Object -First 6 | ForEach-Object { ''{0:X2}'' -f $_}\")",
+      "Bash(node -e \":*)",
+      "Bash(xargs grep:*)",
+      "Bash(node -e \"console.log\\(''ANTHROPIC_API_KEY in system env:'', JSON.stringify\\(process.env.ANTHROPIC_API_KEY\\)\\)\")",
+      "Bash(git -C \"C:/Claude/x-buzz-tool\" log --oneline --since=\"2026-04-06\")"
+    ]
+  }
+}

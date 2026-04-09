@@ -1,0 +1,239 @@
+## ローカルテスト手順
+
+### 1. 環境変数を設定
+
+`.env.local.example` をコピーして `.env.local` を作成し、実際の値を入力：
+
+```bash
+cp .env.local.example .env.local
+```
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+ANTHROPIC_API_KEY=sk-ant-...
+CRON_SECRET=test-secret-123   # 任意の文字列でOK
+```
+
+---
+
+### 2. 開発サーバー起動
+
+```bash
+npm run dev
+```
+
+`http://localhost:3000` を開く。
+
+---
+
+### 3. Supabase テーブル確認
+
+Supabaseダッシュボードの **Table Editor** で `scheduled_posts` テーブルが存在するか確認。なければ以下のSQLをSupabase **SQL Editor** で実行：
+
+```sql
+create type scheduled_post_status as enum ('scheduled', 'published', 'failed', 'cancelled');
+
+create table scheduled_posts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  generated_post_id uuid,
+  persona_id uuid,
+  content text not null,
+  tags text[] not null default '{}',
+  scheduled_at timestamptz not null,
+  published_at timestamptz,
+  status scheduled_post_status not null default 'scheduled',
+  x_post_id text,
+  x_post_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+```
+
+---
+
+### 4. 予約投稿機能の動作確認
+
+**http://localhost:3000/schedule** を開いて：
+
+1. 「新しい予約投稿を追加」→ 内容・日時・タグを入力して「予約する」
+2. 一覧に追加されたカードを確認
+3. **編集**: 鉛筆アイコン → 本文や日時を変えて「保存」
+4. **テスト公開**: 「テスト公開」ボタン → ステータスが「公開済み」に変わりカードが更新される
+5. **タブ切り替え**: 「公開済み」タブに移動して、公開した投稿が表示されているか確認
+6. **キャンセル**: `×` ボタン → 「キャンセル」タブに移動して確認
+7. **削除**: ゴミ箱アイコン → 確認ダイアログ → 「削除」
+
+---
+
+### 5. Cron API を curl でテスト
+
+別ターミナルから：
+
+```bash
+# 期限到来済みの投稿を取得（localhost は認証スキップ）
+curl http://localhost:3000/api/cron
+
+# 特定の投稿を published に変更
+curl -X PATCH http://localhost:3000/api/cron/<投稿のUUID> \
+  -H "Content-Type: application/json" \
+  -d '{"status": "published"}'
+
+# failed に変更
+curl -X PATCH http://localhost:3000/api/cron/<投稿のUUID> \
+  -H "Content-Type: application/json" \
+  -d '{"status": "failed"}'
+```
+
+**本番環境からのcronジョブを模擬する場合**（localhostバイパスなし）：
+
+```bash
+curl http://localhost:3000/api/cron \
+  -H "Authorization: Bearer test-secret-123"
+```
+
+---
+
+### よくあるエラーと対処
+
+| エラー | 原因 | 対処 |
+|---|---|---|
+| `supabaseUrl is required` | `.env.local` が未作成 | ファイルを作成してサーバー再起動 |
+| `insert` で `never` 型エラー | TypeScriptのビルドエラー | `npm run build` でエラー内容を確認 |
+| 保存ボタン押しても何も起きない | Supabaseのテーブルが存在しない | SQL Editorでテーブル作成 |
+| `401 Unauthorized` | cronのAuthヘッダーが間違っている | `.env.local` の `CRON_SECRET` と一致させる |
+
+
+
+では手順を案内します。
+
+### 1. プロジェクト作成
+
+1. [supabase.com](https://supabase.com) にアクセスしてサインイン（GitHubアカウントで可）
+2. 「New project」をクリック
+3. 以下を入力して「Create new project」：
+   - **Name**: `x-buzz-tool`（任意）
+   - **Database Password**: 任意のパスワード（メモしておく）
+   - **Region**: `Northeast Asia (Tokyo)` を推奨
+
+作成完了まで約1～2分かかります。
+
+---
+
+### 2. URL と API Key を取得
+
+プロジェクト作成後：
+
+**Project Settings** → **API** を開く
+
+- **Project URL** → `NEXT_PUBLIC_SUPABASE_URL` に貼る
+- **Project API keys** の `anon` `public` → `NEXT_PUBLIC_SUPABASE_ANON_KEY` に貼る
+
+---
+
+### 3. テーブルを作成
+
+**SQL Editor** を開いて以下を実行：
+
+```sql
+-- Enum types
+create type generated_post_status as enum ('draft', 'approved', 'rejected', 'published');
+create type scheduled_post_status as enum ('scheduled', 'published', 'failed', 'cancelled');
+
+-- post_personas
+create table post_personas (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  name text not null,
+  avatar text not null default '🤖',
+  tone text not null default '',
+  style text not null default '',
+  keywords text[] not null default '{}',
+  description text not null default '',
+  is_active boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- post_ideas
+create table post_ideas (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  persona_id uuid references post_personas(id) on delete set null,
+  title text not null,
+  content text not null default '',
+  tags text[] not null default '{}',
+  source text,
+  is_used boolean not null default false,
+  is_important boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- generated_posts
+create table generated_posts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  persona_id uuid references post_personas(id) on delete set null,
+  idea_id uuid references post_ideas(id) on delete set null,
+  content text not null,
+  generation_prompt text,
+  ai_model text,
+  status generated_post_status not null default 'draft',
+  tags text[] not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- scheduled_posts
+create table scheduled_posts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  generated_post_id uuid references generated_posts(id) on delete set null,
+  persona_id uuid references post_personas(id) on delete set null,
+  content text not null,
+  tags text[] not null default '{}',
+  scheduled_at timestamptz not null,
+  published_at timestamptz,
+  status scheduled_post_status not null default 'scheduled',
+  x_post_id text,
+  x_post_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- post_metrics
+create table post_metrics (
+  id uuid primary key default gen_random_uuid(),
+  scheduled_post_id uuid not null references scheduled_posts(id) on delete cascade,
+  measured_at timestamptz not null default now(),
+  likes integer not null default 0,
+  retweets integer not null default 0,
+  replies integer not null default 0,
+  impressions integer not null default 0,
+  bookmarks integer not null default 0,
+  engagement_rate numeric(5,2),
+  created_at timestamptz not null default now()
+);
+```
+
+---
+
+### 4. .env.local を作成
+
+```bash
+cp .env.local.example .env.local
+```
+
+取得したURLとKeyを貼り付けて保存。
+
+---
+
+### 5. 起動確認
+
+```bash
+npm run dev
+```
+
+`http://localhost:3000` を開いてエラーが出なければ完了です。
