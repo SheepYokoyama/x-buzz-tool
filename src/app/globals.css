@@ -89,13 +89,13 @@ body {
   border-radius: 0.875rem;
   font-size: 0.8125rem;          /* 13px */
   font-weight: 400;
-  color: #64748b;
+  color: #94a3b8;
   transition: color 0.18s, background 0.18s;
   overflow: hidden;
 }
 .nav-item:hover {
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Active — left glow bar + frosted bg */
@@ -192,7 +192,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #475569;
+  color: #64748b;
 }
 
 /* ─────────────────────────────────────────

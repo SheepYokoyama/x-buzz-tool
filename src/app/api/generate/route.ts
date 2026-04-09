@@ -47,7 +47,7 @@ async function generateWithAnthropic(input: GenerateInput, theme: string): Promi
 
   const client = new Anthropic({ apiKey });
   const message = await client.messages.create({
-    model: 'claude-haiku-3-5',
+    model: 'claude-haiku-4-5',
     max_tokens: 4096,
     system: buildSystem(input),
     messages: [{ role: 'user', content: buildPrompt(input, theme) }],

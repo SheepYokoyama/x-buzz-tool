@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { GenerateSettings } from '@/components/generate/GenerateSettings';
 import { GenerateResults } from '@/components/generate/GenerateResults';
+import { useSettings } from '@/contexts/SettingsContext';
+
 import type { GenerateInput, GeneratedPattern, PostPersona } from '@/lib/types';
 
-const DEFAULT_INPUT: GenerateInput = {
+const DEFAULT_INPUT: Omit<GenerateInput, 'provider'> = {
   theme:         '',
   selectedTopic: '',
   target:        '',
@@ -13,7 +15,6 @@ const DEFAULT_INPUT: GenerateInput = {
   tone:          '体験談・ストーリー',
   maxLength:     280,
   hasCta:        true,
-  provider:      'gemini',
 };
 
 interface Props {
@@ -21,8 +22,9 @@ interface Props {
 }
 
 export function GenerateClient({ initialPersonas }: Props) {
+  const { settings, setActivePersona } = useSettings();
   const [personas, setPersonas]         = useState<PostPersona[]>(initialPersonas);
-  const [input, setInput]               = useState<GenerateInput>(DEFAULT_INPUT);
+  const [input, setInput]               = useState<GenerateInput>({ ...DEFAULT_INPUT, provider: settings.aiProvider });
   const [results, setResults]           = useState<GeneratedPattern[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError]               = useState<string | null>(null);
@@ -34,6 +36,9 @@ export function GenerateClient({ initialPersonas }: Props) {
   const handleActivatePersona = async (id: string) => {
     // 楽観的UI更新（API完了前にすぐ反映）
     setPersonas((prev) => prev.map((p) => ({ ...p, is_active: p.id === id })));
+    // サイドバーのペルソナ表示を即時更新
+    const activated = personas.find((p) => p.id === id);
+    if (activated) setActivePersona({ id: activated.id, name: activated.name, avatar: activated.avatar, tone: activated.tone, style: activated.style, keywords: activated.keywords, description: activated.description });
     try {
       const res = await fetch('/api/personas/activate', {
         method: 'PATCH',
@@ -44,6 +49,8 @@ export function GenerateClient({ initialPersonas }: Props) {
     } catch {
       // 失敗したら元に戻す
       setPersonas(initialPersonas);
+      const prev = initialPersonas.find((p) => p.is_active);
+      if (prev) setActivePersona({ id: prev.id, name: prev.name, avatar: prev.avatar, tone: prev.tone, style: prev.style, keywords: prev.keywords, description: prev.description });
       alert('ペルソナの切り替えに失敗しました');
     }
   };
@@ -62,6 +69,7 @@ export function GenerateClient({ initialPersonas }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...input,
+          provider: settings.aiProvider,
           personaDescription: activePersona
             ? `${activePersona.name}：${activePersona.description}（トーン: ${activePersona.tone}）`
             : undefined,

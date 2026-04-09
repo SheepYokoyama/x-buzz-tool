@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { PersonaCard } from '@/components/persona/PersonaCard';
 import { PersonaForm } from '@/components/persona/PersonaForm';
 import { Plus } from 'lucide-react';
+import { useSettings } from '@/contexts/SettingsContext';
 import type { PostPersona } from '@/lib/types';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function PersonaClient({ initialPersonas }: Props) {
+  const { setActivePersona } = useSettings();
   const [personas, setPersonas]       = useState<PostPersona[]>(initialPersonas);
   const [activatingId, setActivatingId] = useState<string | null>(null);
   // モーダル制御: null=非表示, 'new'=新規作成, PostPersona=編集対象
@@ -27,6 +29,9 @@ export function PersonaClient({ initialPersonas }: Props) {
       });
       if (!res.ok) throw new Error('切り替えに失敗しました');
       setPersonas((prev) => prev.map((p) => ({ ...p, is_active: p.id === id })));
+      // サイドバーのペルソナ表示を即時更新
+      const activated = personas.find((p) => p.id === id);
+      if (activated) setActivePersona({ id: activated.id, name: activated.name, avatar: activated.avatar, tone: activated.tone, style: activated.style, keywords: activated.keywords, description: activated.description });
     } catch (err) {
       console.error(err);
       alert('ペルソナの切り替えに失敗しました。もう一度お試しください。');

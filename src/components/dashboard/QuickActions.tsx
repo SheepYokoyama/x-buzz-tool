@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Sparkles, CalendarClock, UserCircle, BookOpen, ArrowRight } from 'lucide-react';
+import { Sparkles, CalendarClock, UserCircle, NotebookPen, ArrowRight } from 'lucide-react';
 
 const actions = [
   {
@@ -9,7 +9,6 @@ const actions = [
     icon: Sparkles,
     gradient: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
     borderColor: 'rgba(96,165,250,0.18)',
-    glowColor: 'rgba(96,165,250,0.07)',
   },
   {
     href: '/schedule',
@@ -18,25 +17,22 @@ const actions = [
     icon: CalendarClock,
     gradient: 'linear-gradient(135deg, #22d3ee, #60a5fa)',
     borderColor: 'rgba(34,211,238,0.16)',
-    glowColor: 'rgba(34,211,238,0.06)',
   },
   {
-    href: '/character',
-    label: 'キャラを変更',
+    href: '/persona',
+    label: 'ペルソナを変更',
     description: '投稿スタイルを切り替える',
     icon: UserCircle,
     gradient: 'linear-gradient(135deg, #a78bfa, #f472b6)',
     borderColor: 'rgba(167,139,250,0.18)',
-    glowColor: 'rgba(167,139,250,0.07)',
   },
   {
-    href: '/notes',
-    label: '学習メモを書く',
+    href: '/notebook',
+    label: 'ノートを書く',
     description: 'バズの法則を記録・整理',
-    icon: BookOpen,
+    icon: NotebookPen,
     gradient: 'linear-gradient(135deg, #34d399, #22d3ee)',
     borderColor: 'rgba(52,211,153,0.16)',
-    glowColor: 'rgba(52,211,153,0.06)',
   },
 ];
 

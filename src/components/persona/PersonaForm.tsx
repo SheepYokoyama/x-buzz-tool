@@ -1,15 +1,45 @@
 'use client';
 
-import { useState, useEffect, KeyboardEvent } from 'react';
+import { useState, useEffect, KeyboardEvent, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input, VoiceInput, VoiceTextarea, FieldLabel } from '@/components/ui/Input';
 import { X, Plus } from 'lucide-react';
 import type { PostPersona } from '@/lib/types';
 
-const AVATAR_OPTIONS = ['🚀', '📊', '✍️', '💡', '🎯', '🔥', '💼', '🌟', '🤖', '📱'];
+const AVATAR_GROUPS = [
+  {
+    label: '人物',
+    emojis: [
+      '\uD83E\uDDD1','\uD83D\uDC68','\uD83D\uDC69','\uD83E\uDDD4','\uD83D\uDC71',
+      '\uD83D\uDC82','\uD83D\uDC77','\uD83D\uDC73','\uD83E\uDDB8','\uD83E\uDDB9',
+      '\uD83E\uDD78','\uD83D\uDC6E','\uD83E\uDD77','\uD83E\uDDD9','\uD83E\uDDDA',
+      '\uD83E\uDDDB','\uD83D\uDC7C','\uD83D\uDC70','\uD83D\uDC64','\uD83D\uDC65',
+      '\uD83D\uDC7E','\uD83D\uDC7B','\uD83D\uDC80','\uD83D\uDC7D','\uD83E\uDD20','\uD83E\uDD21',
+    ],
+  },
+  {
+    label: '動物',
+    emojis: [
+      '\uD83D\uDC36','\uD83D\uDC31','\uD83D\uDC2D','\uD83D\uDC39','\uD83D\uDC30',
+      '\uD83E\uDD8A','\uD83D\uDC3B','\uD83D\uDC3C','\uD83D\uDC28','\uD83D\uDC2F',
+      '\uD83E\uDD81','\uD83D\uDC2E','\uD83D\uDC37','\uD83D\uDC38','\uD83D\uDC35',
+      '\uD83E\uDD84','\uD83D\uDC3A','\uD83E\uDD9D','\uD83E\uDD8B','\uD83E\uDD85',
+      '\uD83E\uDD89','\uD83D\uDC2C','\uD83D\uDC33','\uD83E\uDD88','\uD83D\uDC19',
+      '\uD83D\uDC32','\uD83E\uDD95','\uD83E\uDD96','\uD83D\uDC09','\uD83E\uDD93',
+    ],
+  },
+  {
+    label: 'その他',
+    emojis: [
+      '\uD83D\uDE80','\uD83D\uDCCA','\uD83D\uDCA1','\uD83C\uDFAF','\uD83D\uDD25',
+      '\uD83D\uDCBC','\uD83C\uDF1F','\uD83E\uDD16','\uD83D\uDCF1','\u26A1',
+      '\uD83C\uDFB8','\uD83C\uDFAE','\uD83C\uDFAC','\uD83D\uDCF8','\uD83C\uDFC6',
+      '\uD83D\uDC8E','\uD83C\uDF08','\uD83C\uDF40','\uD83C\uDFA9','\uD83D\uDD2E',
+    ],
+  },
+];
 
 interface Props {
-  /** 編集時は既存ペルソナを渡す。新規作成時は undefined */
   persona?: PostPersona;
   onClose: () => void;
   onSave: (persona: PostPersona) => void;
@@ -28,19 +58,24 @@ interface FormState {
 export function PersonaForm({ persona, onClose, onSave }: Props) {
   const isEdit = !!persona;
 
+  const initialTab = persona?.avatar
+    ? (AVATAR_GROUPS.find((g) => g.emojis.includes(persona.avatar))?.label ?? 'その他')
+    : '人物';
+
   const [form, setForm] = useState<FormState>({
     name:         persona?.name        ?? '',
-    avatar:       persona?.avatar      ?? '🚀',
+    avatar:       persona?.avatar      ?? '\uD83E\uDDD1',
     tone:         persona?.tone        ?? '',
     style:        persona?.style       ?? '',
     description:  persona?.description ?? '',
     keywordInput: '',
     keywords:     persona?.keywords    ?? [],
   });
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError]       = useState<string | null>(null);
+  const [avatarTab, setAvatarTab] = useState(initialTab);
+  const [isSaving, setIsSaving]   = useState(false);
+  const [error, setError]         = useState<string | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
-  // ESCキーで閉じる
   useEffect(() => {
     const handleKey = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -54,9 +89,7 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
 
   const addKeyword = () => {
     const kw = form.keywordInput.trim();
-    if (kw && !form.keywords.includes(kw)) {
-      set('keywords', [...form.keywords, kw]);
-    }
+    if (kw && !form.keywords.includes(kw)) set('keywords', [...form.keywords, kw]);
     set('keywordInput', '');
   };
 
@@ -100,13 +133,11 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
   };
 
   return (
-    /* オーバーレイ */
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(2,6,23,0.8)', backdropFilter: 'blur(8px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      {/* モーダル本体 */}
       <div
         className="w-full max-w-lg rounded-[1.5rem] p-6 flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
         style={{
@@ -134,33 +165,55 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
 
         {/* アバター選択 */}
         <div>
-          <FieldLabel>アバター</FieldLabel>
-          <div className="flex flex-wrap gap-2">
-            {AVATAR_OPTIONS.map((emoji) => (
+          <div className="flex items-center justify-between mb-2.5">
+            <FieldLabel>アバター</FieldLabel>
+            <span className="text-2xl leading-none">{form.avatar}</span>
+          </div>
+
+          <div className="flex gap-1.5 mb-2.5">
+            {AVATAR_GROUPS.map((g) => (
+              <button
+                key={g.label}
+                onClick={() => { setAvatarTab(g.label); gridRef.current?.scrollTo(0, 0); }}
+                className="text-[11px] px-2.5 py-1 rounded-lg transition-all"
+                style={{
+                  background: avatarTab === g.label ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.04)',
+                  border: avatarTab === g.label ? '1px solid rgba(167,139,250,0.35)' : '1px solid rgba(255,255,255,0.07)',
+                  color: avatarTab === g.label ? '#c4b5fd' : '#64748b',
+                  fontWeight: avatarTab === g.label ? 600 : 400,
+                }}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+
+          <div
+            ref={gridRef}
+            className="flex flex-wrap gap-1.5 overflow-y-auto rounded-xl p-2"
+            style={{
+              maxHeight: '120px',
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+            }}
+          >
+            {AVATAR_GROUPS.find((g) => g.label === avatarTab)?.emojis.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => set('avatar', emoji)}
-                className="w-10 h-10 rounded-xl text-xl transition-all"
+                className="w-9 h-9 rounded-lg text-xl transition-all flex items-center justify-center"
                 style={{
-                  background: form.avatar === emoji ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.04)',
-                  border: form.avatar === emoji
-                    ? '1px solid rgba(167,139,250,0.4)'
-                    : '1px solid rgba(255,255,255,0.08)',
+                  background: form.avatar === emoji ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.03)',
+                  border: form.avatar === emoji ? '1px solid rgba(167,139,250,0.5)' : '1px solid transparent',
                   boxShadow: form.avatar === emoji ? '0 0 8px rgba(167,139,250,0.3)' : 'none',
+                  transform: form.avatar === emoji ? 'scale(1.15)' : 'scale(1)',
                 }}
               >
                 {emoji}
               </button>
             ))}
-            {/* カスタム絵文字入力 */}
-            <input
-              type="text"
-              maxLength={2}
-              value={!AVATAR_OPTIONS.includes(form.avatar) ? form.avatar : ''}
-              onChange={(e) => set('avatar', e.target.value || form.avatar)}
-              placeholder="✏️"
-              className="w-10 h-10 rounded-xl text-center text-xl bg-white/[0.03] border border-white/[0.08] text-slate-200 focus:outline-none focus:border-[rgba(167,139,250,0.4)]"
-            />
           </div>
         </div>
 

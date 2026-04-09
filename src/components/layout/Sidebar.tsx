@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { useSettings } from '@/contexts/SettingsContext';
 import {
   LayoutDashboard,
   Sparkles,
@@ -11,7 +13,6 @@ import {
   NotebookPen,
   UserCircle,
   BookOpenCheck,
-  Zap,
 } from 'lucide-react';
 
 const mainNav = [
@@ -30,6 +31,23 @@ const subNav = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { activePersona, setActivePersona, xUser, setXUser } = useSettings();
+
+  // 初回マウント時のみ実行（ページ遷移では再フェッチしない）
+  useEffect(() => {
+    // アクティブペルソナを取得
+    fetch('/api/personas/active')
+      .then((r) => r.json())
+      .then((d) => { if (d.persona) setActivePersona(d.persona); })
+      .catch(() => {});
+
+    // X連携ユーザーを取得（1回のみ・エラーは無視）
+    fetch('/api/x/me')
+      .then((r) => r.json())
+      .then((d) => { if (d.user) setXUser(d.user); })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 空配列で初回のみ実行
 
   const isActive = (href: string) =>
     pathname === href || (href !== '/' && pathname.startsWith(href));
@@ -57,7 +75,7 @@ export function Sidebar() {
             }}>
               メガバズX
             </p>
-            <p className="text-[11px] text-slate-600 mt-1 tracking-wide">X バズ投稿ツール</p>
+            <p className="text-[11px] text-slate-500 mt-1 tracking-wide">X バズ投稿ツール</p>
           </div>
         </div>
       </div>
@@ -85,35 +103,99 @@ export function Sidebar() {
       {/* ── Divider ──────────────────────────────── */}
       <div className="mx-5 border-t border-white/[0.04]" />
 
-      {/* ── Active persona chip ───────────────────── */}
-      <div className="px-4 py-5">
-        <p className="section-label mb-3 px-1">使用中のペルソナ</p>
-        <div
-          className="rounded-2xl p-3.5 flex items-center gap-3"
-          style={{
-            background: 'rgba(96,165,250,0.05)',
-            border: '1px solid rgba(96,165,250,0.1)',
-          }}
-        >
-          <span
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
-            style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.15)' }}
+      {/* ── X アカウント ─────────────────────────── */}
+      {xUser && (
+        <div className="px-4 pt-4 pb-2">
+          <p className="section-label mb-2.5 px-1">X アカウント</p>
+          <div
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.07)',
+            }}
           >
-            🚀
-          </span>
-          <div className="min-w-0">
-            <p className="text-[13px] font-medium text-slate-200 leading-tight truncate">
-              テック起業家
-            </p>
-            <p className="text-[11px] text-neon-green flex items-center gap-1.5 mt-1">
-              <span
-                className="w-1.5 h-1.5 rounded-full bg-neon-green inline-block"
-                style={{ boxShadow: '0 0 5px #34d399' }}
+            {/* アバター */}
+            {xUser.profileImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={xUser.profileImageUrl}
+                alt={xUser.name}
+                className="w-7 h-7 rounded-full shrink-0"
+                style={{ border: '1px solid rgba(255,255,255,0.1)' }}
               />
-              アクティブ
-            </p>
+            ) : (
+              <span
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                style={{ background: 'rgba(255,255,255,0.08)', color: '#94a3b8' }}
+              >
+                {xUser.name.charAt(0).toUpperCase()}
+              </span>
+            )}
+            {/* 名前 */}
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-medium text-slate-300 leading-tight truncate">
+                {xUser.name}
+              </p>
+              <p className="text-[11px] leading-tight truncate" style={{ color: '#475569' }}>
+                @{xUser.username}
+              </p>
+            </div>
+            {/* 連携バッジ */}
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={{ background: '#34d399', boxShadow: '0 0 5px #34d399' }}
+            />
           </div>
         </div>
+      )}
+
+      {/* ── Active persona chip ───────────────────── */}
+      <div className="px-4 py-4">
+        <p className="section-label mb-2.5 px-1">使用中のペルソナ</p>
+        {activePersona ? (
+          <div
+            className="rounded-2xl p-3.5 flex items-center gap-3"
+            style={{
+              background: 'rgba(96,165,250,0.05)',
+              border: '1px solid rgba(96,165,250,0.1)',
+            }}
+          >
+            <span
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
+              style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.15)' }}
+            >
+              {activePersona.avatar}
+            </span>
+            <div className="min-w-0">
+              <p className="text-[13px] font-medium text-slate-200 leading-tight truncate">
+                {activePersona.name}
+              </p>
+              <p className="text-[11px] text-neon-green flex items-center gap-1.5 mt-1">
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-neon-green inline-block"
+                  style={{ boxShadow: '0 0 5px #34d399' }}
+                />
+                アクティブ
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="rounded-2xl p-3.5 flex items-center gap-3"
+            style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <span
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+            >
+              👤
+            </span>
+            <p className="text-[12px] text-slate-600">未設定</p>
+          </div>
+        )}
       </div>
     </aside>
   );

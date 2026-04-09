@@ -5,33 +5,92 @@ import { Header } from '@/components/layout/Header';
 import { RewriteStyleSelector } from '@/components/rewrite/RewriteStyleSelector';
 import { RewriteResultCard } from '@/components/rewrite/RewriteResultCard';
 import { Button } from '@/components/ui/Button';
-import { Textarea, FieldLabel } from '@/components/ui/Input';
+import { VoiceTextarea, FieldLabel } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Repeat2, RefreshCw } from 'lucide-react';
+import { useSettings } from '@/contexts/SettingsContext';
+import { Repeat2, RefreshCw, Settings, Copy, Check } from 'lucide-react';
 
-const DUMMY_REWRITES: Record<string, string> = {
-  shorter:   `AIで毎日投稿。フォロワーが3ヶ月で10倍になった。\n\nツールより「習慣」が大事だと気づいた。`,
-  emotional: `もし3ヶ月前の自分に戻れるなら、最初に教えたかった。\n\nAIを使えば、毎日投稿が「5分」でできる。\n\nその積み重ねが、今のフォロワー数をつくった。諦めなくてよかった。`,
-  numbered:  `AIでX運用を自動化した結果👇\n\n① 毎朝5分で1週間分の投稿を作成\n② スケジュール設定で自動投稿\n③ 3ヶ月でフォロワー10倍\n\n道具を使えば誰でも再現できます。`,
-  hook:      `「今日も投稿ネタが思いつかない…」\n\nその悩み、AIが解決してくれます。\n\n私がやっている毎朝5分の投稿作成術を公開します。`,
-  casual:    `ぶっちゃけAI使ってX運用してます笑\n\n毎朝5分だけ。それだけでフォロワーがどんどん増えてる。\n\nやってみる価値、めちゃくちゃありますよ。`,
-  authority: `【実績】AIを活用したX運用戦略を3ヶ月実施。\nフォロワー数：×10倍達成。\n\n毎朝5分の投稿生成ルーティンが鍵でした。再現性100%の手法を公開します。`,
+const PROVIDER_LABELS: Record<string, { label: string; badge: string; badgeColor: string }> = {
+  gemini:    { label: 'Gemini API',    badge: '無料', badgeColor: '#34d399' },
+  anthropic: { label: 'Anthropic API', badge: '有料', badgeColor: '#f59e0b' },
 };
 
+const X_CHAR_LIMIT = 140;
+
 export default function RewritePage() {
-  const [original, setOriginal]   = useState('');
-  const [style, setStyle]         = useState('shorter');
-  const [result, setResult]       = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { settings, activePersona } = useSettings();
+  const [original, setOriginal]         = useState('');
+  const [style, setStyle]               = useState('shorter');
+  const [result, setResult]             = useState('');
+  const [isLoading, setIsLoading]       = useState(false);
+  const [error, setError]               = useState<string | null>(null);
+
+  // X向け要約
+  const [xSummary, setXSummary]         = useState('');
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [copied, setCopied]             = useState(false);
+
+  const providerInfo = PROVIDER_LABELS[settings.aiProvider] ?? PROVIDER_LABELS.gemini;
+
+  const callRewrite = async (text: string, rewriteStyle: string) => {
+    const res = await fetch('/api/rewrite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        originalText: text,
+        style: rewriteStyle,
+        provider: settings.aiProvider,
+        ...(rewriteStyle === 'persona' && activePersona
+          ? { persona: { name: activePersona.name, tone: activePersona.tone, style: activePersona.style, keywords: activePersona.keywords, description: activePersona.description } }
+          : {}),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error ?? '失敗しました');
+    return data.text as string;
+  };
 
   const handleRewrite = async () => {
     if (!original.trim()) return;
     setIsLoading(true);
     setResult('');
-    await new Promise((r) => setTimeout(r, 1200));
-    setResult(DUMMY_REWRITES[style] ?? DUMMY_REWRITES.shorter);
-    setIsLoading(false);
+    setXSummary('');
+    setSummaryError(null);
+    setError(null);
+    try {
+      const text = await callRewrite(original, style);
+      setResult(text);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'リライトに失敗しました');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleXSummary = async () => {
+    if (!result.trim()) return;
+    setIsSummarizing(true);
+    setXSummary('');
+    setSummaryError(null);
+    try {
+      const text = await callRewrite(result, 'x_summary');
+      setXSummary(text);
+    } catch (err) {
+      setSummaryError(err instanceof Error ? err.message : '要約に失敗しました');
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
+  const handleCopyXSummary = () => {
+    navigator.clipboard.writeText(xSummary);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const xCharCount = xSummary.length;
+  const xOverLimit = xCharCount > X_CHAR_LIMIT;
 
   return (
     <>
@@ -47,11 +106,13 @@ export default function RewritePage() {
             </div>
             <div>
               <FieldLabel>投稿テキスト</FieldLabel>
-              <Textarea
+              <VoiceTextarea
                 rows={6}
                 value={original}
-                onChange={(e) => setOriginal(e.target.value)}
+                onValueChange={setOriginal}
                 placeholder="リライトしたい投稿文をここに貼り付けてください…"
+                appendMode
+                showPasteButton
               />
               <p className="text-[11px] text-slate-600 mt-1.5 text-right">{original.length}文字</p>
             </div>
@@ -62,13 +123,42 @@ export default function RewritePage() {
               <h2 className="text-[15px] font-semibold text-slate-200 leading-none">リライトスタイル</h2>
               <p className="section-label mt-1.5">どのように書き直しますか？</p>
             </div>
-            <RewriteStyleSelector selected={style} onChange={setStyle} />
-            <Button
-              className="w-full justify-center"
-              size="lg"
-              onClick={handleRewrite}
-              disabled={!original.trim() || isLoading}
+            <RewriteStyleSelector
+              selected={style}
+              onChange={setStyle}
+              hasActivePersona={!!activePersona}
+              personaName={activePersona?.name}
+              personaAvatar={activePersona?.avatar}
+            />
+
+            {/* AIプロバイダー表示 */}
+            <div
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl"
+              style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}
             >
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] text-slate-500">使用中のAI:</span>
+                <span className="text-[12px] font-medium text-slate-300">{providerInfo.label}</span>
+                <span
+                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                  style={{ color: providerInfo.badgeColor, background: `${providerInfo.badgeColor}18`, border: `1px solid ${providerInfo.badgeColor}30` }}
+                >
+                  {providerInfo.badge}
+                </span>
+              </div>
+              <span className="flex items-center gap-1 text-[11px] text-slate-600">
+                <Settings size={10} />設定で変更
+              </span>
+            </div>
+
+            {error && (
+              <p className="text-[12px] text-red-400 px-3 py-2 rounded-xl"
+                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                {error}
+              </p>
+            )}
+
+            <Button className="w-full justify-center" size="lg" onClick={handleRewrite} disabled={!original.trim() || isLoading}>
               {isLoading
                 ? <><RefreshCw size={14} className="animate-spin" />リライト中…</>
                 : <><Repeat2 size={14} />リライトする</>
@@ -83,6 +173,100 @@ export default function RewritePage() {
             <div className="space-y-4">
               <p className="text-[15px] font-semibold text-slate-200">リライト結果</p>
               <RewriteResultCard text={result} label={style} />
+
+              {/* ── X向け要約ボタン ── */}
+              <button
+                onClick={handleXSummary}
+                disabled={isSummarizing}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all"
+                style={{
+                  background: isSummarizing ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.09)',
+                  color: isSummarizing ? '#475569' : '#94a3b8',
+                  cursor: isSummarizing ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isSummarizing ? (
+                  <><RefreshCw size={13} className="animate-spin" />要約中…</>
+                ) : (
+                  <>
+                    <span
+                      className="w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-black"
+                      style={{ background: 'rgba(255,255,255,0.08)', color: '#94a3b8' }}
+                    >
+                      X
+                    </span>
+                    X向けに140文字へ要約
+                  </>
+                )}
+              </button>
+
+              {/* ── X要約エラー ── */}
+              {summaryError && (
+                <p className="text-[12px] text-red-400 px-3 py-2 rounded-xl"
+                  style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  {summaryError}
+                </p>
+              )}
+
+              {/* ── X向け要約結果 ── */}
+              {xSummary && (
+                <div
+                  className="rounded-2xl p-4 space-y-3"
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${xOverLimit ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.1)'}`,
+                  }}
+                >
+                  {/* ヘッダー */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-black"
+                        style={{ background: 'rgba(255,255,255,0.1)', color: '#e2e8f0' }}
+                      >
+                        X
+                      </span>
+                      <span className="text-[12px] font-semibold text-slate-300">X 投稿用</span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      {/* 文字数カウンター */}
+                      <span
+                        className="text-[12px] font-semibold tabular-nums"
+                        style={{ color: xOverLimit ? '#f87171' : xCharCount > 120 ? '#fbbf24' : '#64748b' }}
+                      >
+                        {xCharCount}
+                        <span className="text-[11px] font-normal" style={{ color: '#334155' }}>/{X_CHAR_LIMIT}</span>
+                      </span>
+                      {/* コピーボタン */}
+                      <button
+                        onClick={handleCopyXSummary}
+                        className="flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-lg transition-all"
+                        style={{
+                          background: copied ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.05)',
+                          border: copied ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(255,255,255,0.09)',
+                          color: copied ? '#34d399' : '#94a3b8',
+                        }}
+                      >
+                        {copied ? <Check size={11} /> : <Copy size={11} />}
+                        {copied ? '済み' : 'コピー'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* テキスト */}
+                  <p className="text-[13px] text-slate-200 whitespace-pre-wrap leading-[1.75]">
+                    {xSummary}
+                  </p>
+
+                  {/* 文字数オーバー警告 */}
+                  {xOverLimit && (
+                    <p className="text-[11px] text-red-400">
+                      ⚠ 140文字を超えています（{xCharCount - X_CHAR_LIMIT}文字オーバー）。再度要約を実行してください。
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="neon-card h-full flex items-center justify-center" style={{ minHeight: 320 }}>
