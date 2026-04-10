@@ -1,32 +1,69 @@
 import { NextResponse } from 'next/server';
 import { encrypt, decrypt } from '@/lib/encryption';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import { getActiveXClient } from '@/lib/x-client';
 
 /**
  * GET /api/debug-enc
- * ENCRYPTION_KEY の動作確認用（確認後に削除すること）
+ * X連携の全チェーン診断用（確認後に削除すること）
  */
 export async function GET() {
   const key = process.env.ENCRYPTION_KEY ?? '(未設定)';
-  const keyLength = key.length;
   const keyPreview = key.slice(0, 4) + '...' + key.slice(-4);
 
+  // ① ENCRYPTION_KEY の動作確認
+  let encOk = false;
   try {
-    const testText = 'hello';
-    const encrypted = encrypt(testText);
-    const decrypted = decrypt(encrypted);
-    const ok = decrypted === testText;
+    encOk = decrypt(encrypt('test')) === 'test';
+  } catch { /* ignore */ }
 
-    return NextResponse.json({
-      key_length: keyLength,
-      key_preview: keyPreview,
-      encrypt_decrypt_ok: ok,
-    });
-  } catch (err) {
-    return NextResponse.json({
-      key_length: keyLength,
-      key_preview: keyPreview,
-      encrypt_decrypt_ok: false,
-      error: err instanceof Error ? err.message : String(err),
-    });
+  // ② DB からアクティブアカウントのトークンを直接取得して復号を試みる
+  let dbTokenPreview = '(取得失敗)';
+  let decryptOk = false;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (getSupabaseAdmin() as any)
+      .from('x_accounts')
+      .select('api_key')
+      .eq('is_active', true)
+      .single();
+
+    if (data?.api_key) {
+      dbTokenPreview = data.api_key.slice(0, 8) + '...'; // 暗号文の先頭
+      try {
+        const plain = decrypt(data.api_key);
+        decryptOk = plain.length > 0;
+      } catch { /* ignore */ }
+    }
+  } catch { /* ignore */ }
+
+  // ③ X クライアントが生成できるか
+  let xClientOk = false;
+  try {
+    const client = await getActiveXClient();
+    xClientOk = client !== null;
+  } catch { /* ignore */ }
+
+  // ④ X API 呼び出し
+  let xApiUser = null;
+  let xApiError = null;
+  if (xClientOk) {
+    try {
+      const client = await getActiveXClient();
+      const { data } = await client!.v2.me({ 'user.fields': ['username'] });
+      xApiUser = data?.username ?? null;
+    } catch (e) {
+      xApiError = e instanceof Error ? e.message : String(e);
+    }
   }
+
+  return NextResponse.json({
+    key_preview: keyPreview,
+    encrypt_decrypt_ok: encOk,
+    db_token_preview: dbTokenPreview,
+    db_decrypt_ok: decryptOk,
+    x_client_ok: xClientOk,
+    x_api_user: xApiUser,
+    x_api_error: xApiError,
+  });
 }
