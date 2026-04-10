@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { XAccountCard } from '@/components/x-accounts/XAccountCard';
 import { XAccountForm } from '@/components/x-accounts/XAccountForm';
 import { Plus } from 'lucide-react';
+import { useSettings } from '@/contexts/SettingsContext';
 import type { XAccount } from '@/lib/types';
 
 interface Props {
@@ -11,9 +12,20 @@ interface Props {
 }
 
 export function XAccountsClient({ initialAccounts }: Props) {
+  const { setXUser } = useSettings();
   const [accounts, setAccounts]         = useState<XAccount[]>(initialAccounts);
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const [formTarget, setFormTarget]     = useState<XAccount | 'new' | null>(null);
+
+  /* ── サイドバーのXユーザー表示を最新化 ── */
+  const refreshXUser = async () => {
+    try {
+      const res = await fetch('/api/x/me');
+      const d = await res.json();
+      if (d.user) setXUser(d.user);
+      else setXUser(null);
+    } catch { /* ignore */ }
+  };
 
   /* ── アクティブ化 ── */
   const handleActivate = async (id: string) => {
@@ -22,6 +34,7 @@ export function XAccountsClient({ initialAccounts }: Props) {
       const res = await fetch(`/api/x-accounts/${id}/activate`, { method: 'PATCH' });
       if (!res.ok) throw new Error('切り替えに失敗しました');
       setAccounts((prev) => prev.map((a) => ({ ...a, is_active: a.id === id })));
+      await refreshXUser(); // サイドバーを即時更新
     } catch (err) {
       console.error(err);
       alert('アカウントの切り替えに失敗しました。もう一度お試しください。');
