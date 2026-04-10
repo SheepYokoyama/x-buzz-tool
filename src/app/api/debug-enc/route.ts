@@ -57,8 +57,14 @@ export async function GET() {
     }
   }
 
+  // 実際に AES キーとして使われる先頭32文字のハッシュ
+  const crypto = await import('crypto');
+  const actualKey = key.padEnd(32, '0').slice(0, 32);
+  const keyHash = crypto.createHash('sha256').update(actualKey).digest('hex').slice(0, 16);
+
   return NextResponse.json({
     key_preview: keyPreview,
+    key_hash_first32: keyHash, // ローカルとVercelで一致すれば同じキー
     encrypt_decrypt_ok: encOk,
     db_token_preview: dbTokenPreview,
     db_decrypt_ok: decryptOk,
