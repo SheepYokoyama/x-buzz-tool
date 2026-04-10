@@ -36,21 +36,20 @@ export function Sidebar() {
   const pathname = usePathname();
   const { activePersona, setActivePersona, xUser, setXUser } = useSettings();
 
-  // 初回マウント時のみ実行（ページ遷移では再フェッチしない）
+  // ページ遷移のたびにX情報・ペルソナを再取得
+  // /api/x/me は 25回/15分（無料）の制限内なので遷移ごとの呼び出しは問題なし
   useEffect(() => {
-    // アクティブペルソナを取得
     fetch('/api/personas/active')
       .then((r) => r.json())
       .then((d) => { if (d.persona) setActivePersona(d.persona); })
       .catch(() => {});
 
-    // X連携ユーザーを取得（1回のみ・エラーは無視）
     fetch('/api/x/me')
       .then((r) => r.json())
-      .then((d) => { if (d.user) setXUser(d.user); })
+      .then((d) => { setXUser(d.user ?? null); })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 空配列で初回のみ実行
+  }, [pathname]); // pathname 変化 = ページ遷移のたびに実行
 
   const isActive = (href: string) =>
     pathname === href || (href !== '/' && pathname.startsWith(href));
