@@ -1,12 +1,11 @@
 import type { XAccount } from '@/lib/types';
 
 export async function getXAccounts(): Promise<XAccount[]> {
-  const { getSupabaseServer } = await import('@/lib/supabase');
+  const { getSupabaseAdmin } = await import('@/lib/supabase');
   const { maskToken, decrypt } = await import('@/lib/encryption');
 
-  const supabase = getSupabaseServer();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await (getSupabaseAdmin() as any)
     .from('x_accounts')
     .select('*')
     .order('created_at', { ascending: true });

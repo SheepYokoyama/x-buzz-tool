@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 
 type Params = { params: Promise<{ id: string }> };
 
 /** PATCH /api/x-accounts/[id]/activate — アクティブアカウントを切り替え */
 export async function PATCH(_: Request, { params }: Params) {
   const { id } = await params;
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
 
   const now = new Date().toISOString();
 

@@ -29,3 +29,20 @@ export function getSupabaseServer() {
     },
   });
 }
+
+// =============================================
+// 管理者用クライアント（RLS をバイパス・サーバー専用）
+// x_accounts など認証不要なサーバー側操作に使用
+// SUPABASE_SERVICE_ROLE_KEY は絶対にクライアントに渡さないこと
+// =============================================
+export function getSupabaseAdmin() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    // フォールバック: service role key 未設定なら anon key で試みる
+    console.warn('[supabase] SUPABASE_SERVICE_ROLE_KEY が未設定です。RLS によって操作が失敗する場合があります。');
+    return getSupabaseServer();
+  }
+  return createClient<Database>(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+}

@@ -1,5 +1,5 @@
 import { TwitterApi } from 'twitter-api-v2';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { encrypt, decrypt } from '@/lib/encryption';
 
 // ─────────────────────────────────────────────────────────────
@@ -21,9 +21,8 @@ function envTokensAvailable(): boolean {
 export async function seedXAccountFromEnv(): Promise<void> {
   if (!envTokensAvailable()) return;
 
-  const supabase = getSupabaseServer();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sb = supabase as any;
+  const sb = getSupabaseAdmin() as any;
 
   // レコードが 1 件でもあればスキップ
   const { count } = await sb
@@ -58,9 +57,8 @@ export async function seedXAccountFromEnv(): Promise<void> {
  * env vars への直接フォールバックは行わない（DB 管理に一本化）。
  */
 export async function getActiveXClient(): Promise<TwitterApi | null> {
-  const supabase = getSupabaseServer();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  const { data } = await (getSupabaseAdmin() as any)
     .from('x_accounts')
     .select('api_key, api_secret, access_token, access_secret')
     .eq('is_active', true)

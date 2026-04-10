@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { encrypt, maskToken } from '@/lib/encryption';
 
 type Params = { params: Promise<{ id: string }> };
@@ -18,7 +18,7 @@ export async function PATCH(req: Request, { params }: Params) {
     is_active?: boolean;
   };
 
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
 
   // 更新対象フィールドを構築（空文字トークンは更新しない）
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,7 +57,7 @@ export async function PATCH(req: Request, { params }: Params) {
 /** DELETE /api/x-accounts/[id] */
 export async function DELETE(_: Request, { params }: Params) {
   const { id } = await params;
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any).from('x_accounts').delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

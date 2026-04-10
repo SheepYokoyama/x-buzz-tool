@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { encrypt, maskToken, decrypt } from '@/lib/encryption';
 
 /** GET /api/x-accounts — マスク済みトークン一覧 */
 export async function GET() {
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('x_accounts')
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: '必須トークンが不足しています' }, { status: 400 });
   }
 
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('x_accounts')
