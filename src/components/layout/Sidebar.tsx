@@ -13,7 +13,9 @@ import {
   NotebookPen,
   UserCircle,
   BookOpenCheck,
+  AtSign,
 } from 'lucide-react';
+import { X_COUNT_RULE, getXPlan, getXLimit, getPlanLabel } from '@/lib/x-char-count';
 
 const mainNav = [
   { href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard },
@@ -24,9 +26,10 @@ const mainNav = [
 ];
 
 const subNav = [
-  { href: '/notebook', label: 'ノート',       icon: NotebookPen   },
-  { href: '/persona',  label: 'ペルソナ',     icon: UserCircle    },
-  { href: '/guide',    label: '使い方ガイド', icon: BookOpenCheck },
+  { href: '/notebook',   label: 'ノート',           icon: NotebookPen   },
+  { href: '/persona',    label: 'ペルソナ',         icon: UserCircle    },
+  { href: '/x-accounts', label: 'Xアカウント管理',  icon: AtSign        },
+  { href: '/guide',      label: '使い方ガイド',     icon: BookOpenCheck },
 ];
 
 export function Sidebar() {
@@ -73,7 +76,7 @@ export function Sidebar() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
             }}>
-              メガバズX
+              Xpresso
             </p>
             <p className="text-[11px] text-slate-500 mt-1 tracking-wide">X バズ投稿ツール</p>
           </div>
@@ -139,6 +142,32 @@ export function Sidebar() {
               <p className="text-[11px] leading-tight truncate" style={{ color: '#475569' }}>
                 @{xUser.username}
               </p>
+              {/* プラン・文字数制限バッジ */}
+              {(() => {
+                const plan  = getXPlan(xUser.verifiedType, xUser.subscriptionType);
+                const label = getPlanLabel(plan);
+                const limit = getXLimit(plan);
+                const isPaid = plan !== 'free';
+                return (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                      style={isPaid
+                        ? { background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }
+                        : { background: 'rgba(255,255,255,0.06)', color: '#64748b', border: '1px solid rgba(255,255,255,0.08)' }}
+                    >
+                      {label}
+                    </span>
+                    <span
+                      className="text-[10px] cursor-help"
+                      style={{ color: '#475569' }}
+                      title={X_COUNT_RULE}
+                    >
+                      {limit.toLocaleString()} cnt
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
             {/* 連携バッジ */}
             <span

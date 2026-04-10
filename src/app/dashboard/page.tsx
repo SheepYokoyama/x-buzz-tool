@@ -5,9 +5,10 @@ import { StatsCard } from '@/components/dashboard/StatsCard';
 import { RecentPosts } from '@/components/dashboard/RecentPosts';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { QuickActions } from '@/components/dashboard/QuickActions';
-import { getDashboardStats } from '@/lib/api/stats';
+import { getDashboardStats, getFollowersCount } from '@/lib/api/stats';
+import { XPostDebug } from '@/components/dashboard/XPostDebug';
 import { getRecentPublishedPosts, getUpcomingScheduledPosts } from '@/lib/api/scheduled-posts';
-import { FileText, Heart, Eye, TrendingUp, Sparkles, ArrowRight } from 'lucide-react';
+import { FileText, Heart, Eye, TrendingUp, Users, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 function fmt(n: number): string {
@@ -17,10 +18,11 @@ function fmt(n: number): string {
 }
 
 export default async function DashboardPage() {
-  const [stats, recentPosts, upcomingPosts] = await Promise.all([
+  const [stats, recentPosts, upcomingPosts, followers] = await Promise.all([
     getDashboardStats(),
     getRecentPublishedPosts(4),
     getUpcomingScheduledPosts(3),
+    getFollowersCount(),
   ]);
 
   return (
@@ -65,7 +67,7 @@ export default async function DashboardPage() {
       <div className="mb-2">
         <p className="section-label mb-4">今月の成果</p>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
         <StatsCard
           title="総投稿数"
           value={stats.totalPosts}
@@ -98,6 +100,12 @@ export default async function DashboardPage() {
           changeLabel="先月比"
           color="green"
         />
+        <StatsCard
+          title="フォロワー数"
+          value={followers !== null ? fmt(followers) : '—'}
+          icon={Users}
+          color="purple"
+        />
       </div>
 
       {/* ── 投稿一覧 + クイックアクション ────────── */}
@@ -108,6 +116,7 @@ export default async function DashboardPage() {
         <div className="space-y-5">
           <ActivityFeed upcomingPosts={upcomingPosts} />
           <QuickActions />
+          <XPostDebug />
         </div>
       </div>
     </>

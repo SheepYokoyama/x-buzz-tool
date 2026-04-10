@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getXClient, isXConfigured } from '@/lib/x-client';
+import { getActiveXClient } from '@/lib/x-client';
 
 /**
  * POST /api/x/tweet
@@ -9,9 +9,10 @@ import { getXClient, isXConfigured } from '@/lib/x-client';
  * response: { tweetId: string; url: string }
  */
 export async function POST(req: Request) {
-  if (!isXConfigured()) {
+  const client = await getActiveXClient();
+  if (!client) {
     return NextResponse.json(
-      { error: 'X API の認証情報が設定されていません。.env.local を確認してください。' },
+      { error: 'X API の認証情報が設定されていません。Xアカウント管理でトークンを登録してください。' },
       { status: 503 }
     );
   }
@@ -21,12 +22,8 @@ export async function POST(req: Request) {
   if (!text?.trim()) {
     return NextResponse.json({ error: '投稿テキストが空です' }, { status: 400 });
   }
-  if (text.length > 280) {
-    return NextResponse.json({ error: '投稿テキストが280文字を超えています' }, { status: 400 });
-  }
 
-  try {
-    const client = getXClient()!;
+  try {;
     const { data } = await client.v2.tweet(text);
 
     const tweetId = data.id;
@@ -34,23 +31,41 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ tweetId, url });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : '投稿に失敗しました';
     console.error('POST /api/x/tweet error:', err);
 
-    // X API エラーコードに応じたメッセージ
-    if (message.includes('401') || message.includes('Unauthorized')) {
+    // twitter-api-v2 の ApiResponseError から詳細を抽出
+    const apiErr = err as {
+      code?: number;
+      data?: { detail?: string; errors?: { message?: string }[] };
+      message?: string;
+    };
+
+    const httpCode  = apiErr.code ?? 500;
+    const detail    = apiErr.data?.detail
+      ?? apiErr.data?.errors?.[0]?.message
+      ?? (err instanceof Error ? err.message : '投稿に失敗しました');
+
+    // 重複投稿
+    if (detail.toLowerCase().includes('duplicate')) {
+      return NextResponse.json({ error: '同じ内容の投稿は重複して投稿できません。内容を変えてから再試行してください。' }, { status: 422 });
+    }
+    // 認証エラー
+    if (httpCode === 401) {
       return NextResponse.json({ error: 'X API の認証に失敗しました。トークンを確認してください。' }, { status: 401 });
     }
-    if (message.includes('403') || message.includes('Forbidden')) {
-      return NextResponse.json({ error: 'X API の権限が不足しています。アプリの権限を "Read and Write" に設定してください。' }, { status: 403 });
+    // 権限 / ポリシー違反
+    if (httpCode === 403) {
+      const isPermission = detail.toLowerCase().includes('permitted') || detail.toLowerCase().includes('forbidden');
+      const msg = isPermission
+        ? `投稿が拒否されました（X側の制限）: ${detail}。内容を変えて再試行してください。`
+        : `X API 403エラー: ${detail}`;
+      return NextResponse.json({ error: msg }, { status: 403 });
     }
-    if (message.includes('429') || message.includes('Too Many Requests')) {
+    // レート制限
+    if (httpCode === 429) {
       return NextResponse.json({ error: 'X API のレート制限に達しました。しばらくお待ちください。' }, { status: 429 });
     }
-    if (message.includes('duplicate')) {
-      return NextResponse.json({ error: '同じ内容の投稿は重複して投稿できません。' }, { status: 422 });
-    }
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: detail }, { status: httpCode > 0 ? httpCode : 500 });
   }
 }

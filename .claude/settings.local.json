@@ -29,7 +29,13 @@
       "Bash(node -e \"console.log\\(''ANTHROPIC_API_KEY in system env:'', JSON.stringify\\(process.env.ANTHROPIC_API_KEY\\)\\)\")",
       "Bash(git -C \"C:/Claude/x-buzz-tool\" log --oneline --since=\"2026-04-06\")",
       "mcp__Claude_Preview__preview_start",
-      "WebSearch"
+      "WebSearch",
+      "Bash(grep -v \"^\\\\s*$\")",
+      "Read(//tmp/**)",
+      "Bash(taskkill /PID 30544 /F)",
+      "Bash(powershell.exe -Command \"Stop-Process -Id 30544 -Force\")",
+      "Bash(powershell.exe -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id, StartTime\")",
+      "Bash(node -e ':*)"
     ]
   }
 }

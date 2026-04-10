@@ -1,26 +1,106 @@
 import { TwitterApi } from 'twitter-api-v2';
+import { getSupabaseServer } from '@/lib/supabase';
+import { encrypt, decrypt } from '@/lib/encryption';
+
+// ─────────────────────────────────────────────────────────────
+// DB のみ参照。env vars は初回自動シード時にのみ読む。
+// ─────────────────────────────────────────────────────────────
 
 /**
- * OAuth 1.0a クライアント（投稿・メトリクス取得）
- * 環境変数が未設定の場合は null を返す
+ * 環境変数に設定されたトークンが揃っているか確認（シード判定用）
  */
-export function getXClient(): TwitterApi | null {
+function envTokensAvailable(): boolean {
   const { X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET } = process.env;
+  return !!(X_API_KEY && X_API_SECRET && X_ACCESS_TOKEN && X_ACCESS_TOKEN_SECRET);
+}
 
-  if (!X_API_KEY || !X_API_SECRET || !X_ACCESS_TOKEN || !X_ACCESS_TOKEN_SECRET) {
-    return null;
-  }
+/**
+ * 環境変数のトークンを暗号化して x_accounts に "しおづけ" として 1 度だけ挿入する。
+ * すでにレコードが存在する場合は何もしない。
+ */
+export async function seedXAccountFromEnv(): Promise<void> {
+  if (!envTokensAvailable()) return;
 
-  return new TwitterApi({
-    appKey:            X_API_KEY,
-    appSecret:         X_API_SECRET,
-    accessToken:       X_ACCESS_TOKEN,
-    accessSecret:      X_ACCESS_TOKEN_SECRET,
+  const supabase = getSupabaseServer();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = supabase as any;
+
+  // レコードが 1 件でもあればスキップ
+  const { count } = await sb
+    .from('x_accounts')
+    .select('*', { count: 'exact', head: true });
+  if ((count ?? 0) > 0) return;
+
+  const {
+    X_API_KEY,
+    X_API_SECRET,
+    X_ACCESS_TOKEN,
+    X_ACCESS_TOKEN_SECRET,
+    X_BEARER_TOKEN,
+    X_USERNAME,
+  } = process.env;
+
+  await sb.from('x_accounts').insert({
+    name:          'しおづけ',
+    username:      X_USERNAME ?? 'trade_cw',
+    api_key:       encrypt(X_API_KEY!),
+    api_secret:    encrypt(X_API_SECRET!),
+    access_token:  encrypt(X_ACCESS_TOKEN!),
+    access_secret: encrypt(X_ACCESS_TOKEN_SECRET!),
+    bearer_token:  X_BEARER_TOKEN ? encrypt(X_BEARER_TOKEN) : null,
+    is_active:     true,
   });
 }
 
 /**
+ * アクティブな X アカウントを DB から取得してクライアントを返す。
+ * DB にレコードがない & env vars が設定されている場合は自動シード後に再取得する。
+ * env vars への直接フォールバックは行わない（DB 管理に一本化）。
+ */
+export async function getActiveXClient(): Promise<TwitterApi | null> {
+  const supabase = getSupabaseServer();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from('x_accounts')
+    .select('api_key, api_secret, access_token, access_secret')
+    .eq('is_active', true)
+    .single();
+
+  if (data?.api_key && data?.api_secret && data?.access_token && data?.access_secret) {
+    try {
+      return new TwitterApi({
+        appKey:       decrypt(data.api_key),
+        appSecret:    decrypt(data.api_secret),
+        accessToken:  decrypt(data.access_token),
+        accessSecret: decrypt(data.access_secret),
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  // DB が空で env vars がある → 一度だけシードして再試行
+  if (envTokensAvailable()) {
+    try {
+      await seedXAccountFromEnv();
+      return getActiveXClient(); // 再帰呼び出し（1 回のみ）
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+/** DB に認証済みアカウントが存在するか確認 */
+export async function isXConfiguredAsync(): Promise<boolean> {
+  const client = await getActiveXClient();
+  return client !== null;
+}
+
+/**
  * Bearer Token クライアント（読み取り専用）
+ * ※ Bearer Token も将来 DB 管理予定。現在は env vars を参照。
  */
 export function getXReadonlyClient(): TwitterApi | null {
   const { X_BEARER_TOKEN } = process.env;
@@ -28,8 +108,21 @@ export function getXReadonlyClient(): TwitterApi | null {
   return new TwitterApi(X_BEARER_TOKEN);
 }
 
-/** 認証情報が揃っているか確認 */
-export function isXConfigured(): boolean {
+/**
+ * @deprecated env vars を直接使う旧関数。新規コードでは getActiveXClient() を使うこと。
+ */
+export function getXClient(): TwitterApi | null {
   const { X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET } = process.env;
-  return !!(X_API_KEY && X_API_SECRET && X_ACCESS_TOKEN && X_ACCESS_TOKEN_SECRET);
+  if (!X_API_KEY || !X_API_SECRET || !X_ACCESS_TOKEN || !X_ACCESS_TOKEN_SECRET) return null;
+  return new TwitterApi({
+    appKey:      X_API_KEY,
+    appSecret:   X_API_SECRET,
+    accessToken: X_ACCESS_TOKEN,
+    accessSecret: X_ACCESS_TOKEN_SECRET,
+  });
+}
+
+/** @deprecated getActiveXClient() を使うこと */
+export function isXConfigured(): boolean {
+  return envTokensAvailable();
 }

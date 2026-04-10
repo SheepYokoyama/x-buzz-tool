@@ -13,6 +13,7 @@ export interface GenerateInput {
   maxLength: number;       // 本文文字数目安
   hasCta: boolean;         // CTA有無
   provider: AiProvider;    // 使用するAI API
+  xLimit: number;          // 連携アカウントの合計上限cnt（プラン依存）
   personaDescription?: string; // ペルソナの説明（システムプロンプト用）
 }
 
@@ -42,6 +43,22 @@ export type PostStatus = GeneratedPostStatus | ScheduledPostStatus;
 // =============================================
 // DB行型（Supabase から返ってくる生データ）
 // =============================================
+
+/** X アカウント（DBから取得・トークンはマスク済み） */
+export interface XAccount {
+  id: string;
+  name: string;
+  username: string | null;
+  /** マスク表示用（例: "abcd...wxyz"）。実際のトークンはサーバー側のみ */
+  api_key_masked: string;
+  api_secret_masked: string;
+  access_token_masked: string;
+  access_secret_masked: string;
+  bearer_token_masked: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface PostPersona {
   id: string;

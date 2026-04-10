@@ -25,6 +25,10 @@ export interface XUserInfo {
   name: string;
   username: string;
   profileImageUrl: string | null;
+  /** 'blue' = X Premium系, 'business'/'government' = 組織認証, null = 無料 */
+  verifiedType: string | null;
+  /** 'Basic' | 'Premium' | 'PremiumPlus' | null */
+  subscriptionType: string | null;
 }
 
 interface SettingsContextValue {

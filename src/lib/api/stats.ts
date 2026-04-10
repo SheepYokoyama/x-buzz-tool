@@ -1,4 +1,5 @@
 import { getSupabaseServer } from '@/lib/supabase';
+import { getXClient, isXConfigured } from '@/lib/x-client';
 import type { DashboardStats } from '@/lib/types';
 
 type MetricsRow = {
@@ -60,6 +61,22 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       ? Math.round((engRateSum / engRateCount) * 10) / 10
       : 0,
     scheduledCount: scheduledResult.count ?? 0,
-    followersGrowth: 0, // X API 連携後に実装
+    followersGrowth: 0,
   };
+}
+
+/**
+ * X API からフォロワー数を取得する。
+ * X 未接続またはエラー時は null を返す。
+ */
+export async function getFollowersCount(): Promise<number | null> {
+  if (!isXConfigured()) return null;
+  try {
+    const client = getXClient()!;
+    const { data } = await client.v2.me({ 'user.fields': ['public_metrics'] });
+    const metrics = data.public_metrics as { followers_count?: number } | undefined;
+    return metrics?.followers_count ?? null;
+  } catch {
+    return null;
+  }
 }

@@ -38,9 +38,9 @@ export function Input({
   );
 }
 
-export function FieldLabel({ children }: { children: React.ReactNode }) {
+export function FieldLabel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className="section-label mb-2.5">{children}</p>
+    <p className={`section-label mb-2.5${className ? ` ${className}` : ''}`}>{children}</p>
   );
 }
 

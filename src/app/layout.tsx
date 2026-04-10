@@ -10,7 +10,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: 'メガバズX - X バズ投稿ツール',
+  title: 'Xpresso - X バズ投稿ツール',
   description: 'AIを使ってXのバズ投稿を自動生成・管理するツール',
 };
 

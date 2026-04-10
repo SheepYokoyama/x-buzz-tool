@@ -1,20 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getXClient, isXConfigured } from '@/lib/x-client';
+import { getActiveXClient } from '@/lib/x-client';
 
 /**
  * GET /api/x/me
  * 連携中の X アカウント情報を返す（1回だけ呼ぶ想定）
  */
 export async function GET() {
-  if (!isXConfigured()) {
+  const client = await getActiveXClient();
+  if (!client) {
     return NextResponse.json({ user: null });   // 未設定は静かに null
   }
 
   try {
-    const client = getXClient()!;
     const { data } = await client.v2.me({
-      'user.fields': ['name', 'username', 'profile_image_url'],
+      'user.fields': ['name', 'username', 'profile_image_url', 'verified_type', 'subscription_type'],
     });
+
+    const raw = data as { verified_type?: string; subscription_type?: string };
+    const verifiedType     = raw.verified_type     ?? null;
+    const subscriptionType = raw.subscription_type ?? null;
 
     return NextResponse.json({
       user: {
@@ -22,6 +26,8 @@ export async function GET() {
         name:             data.name,
         username:         data.username,
         profileImageUrl:  data.profile_image_url ?? null,
+        verifiedType,
+        subscriptionType,
       },
     });
   } catch (err) {

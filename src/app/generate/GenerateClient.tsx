@@ -1,42 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GenerateSettings } from '@/components/generate/GenerateSettings';
 import { GenerateResults } from '@/components/generate/GenerateResults';
 import { useSettings } from '@/contexts/SettingsContext';
+import { getXPlan, getXLimit, getDefaultMaxLength } from '@/lib/x-char-count';
 
 import type { GenerateInput, GeneratedPattern, PostPersona } from '@/lib/types';
-
-const DEFAULT_INPUT: Omit<GenerateInput, 'provider'> = {
-  theme:         '',
-  selectedTopic: '',
-  target:        '',
-  purpose:       'engagement',
-  tone:          '体験談・ストーリー',
-  maxLength:     280,
-  hasCta:        true,
-};
 
 interface Props {
   initialPersonas: PostPersona[];
 }
 
 export function GenerateClient({ initialPersonas }: Props) {
-  const { settings, setActivePersona } = useSettings();
+  const { settings, setActivePersona, xUser } = useSettings();
   const [personas, setPersonas]         = useState<PostPersona[]>(initialPersonas);
-  const [input, setInput]               = useState<GenerateInput>({ ...DEFAULT_INPUT, provider: settings.aiProvider });
   const [results, setResults]           = useState<GeneratedPattern[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError]               = useState<string | null>(null);
+
+  // プランから初期値を決定
+  const plan    = getXPlan(xUser?.verifiedType, xUser?.subscriptionType);
+  const xLimit  = getXLimit(plan);
+
+  const [input, setInput] = useState<GenerateInput>({
+    theme:         '',
+    selectedTopic: '',
+    target:        '',
+    purpose:       'engagement',
+    tone:          '体験談・ストーリー',
+    maxLength:     getDefaultMaxLength(plan),
+    hasCta:        true,
+    provider:      settings.aiProvider,
+    xLimit,
+  });
+
+  // xUser が非同期で読み込まれたらプランに合わせて maxLength / xLimit を更新
+  useEffect(() => {
+    const p = getXPlan(xUser?.verifiedType, xUser?.subscriptionType);
+    setInput((prev) => ({
+      ...prev,
+      maxLength: getDefaultMaxLength(p),
+      xLimit:    getXLimit(p),
+    }));
+  }, [xUser]);
 
   const handleChange = (partial: Partial<GenerateInput>) =>
     setInput((prev) => ({ ...prev, ...partial }));
 
   /* ── ペルソナ切り替え ─────────────────────────── */
   const handleActivatePersona = async (id: string) => {
-    // 楽観的UI更新（API完了前にすぐ反映）
     setPersonas((prev) => prev.map((p) => ({ ...p, is_active: p.id === id })));
-    // サイドバーのペルソナ表示を即時更新
     const activated = personas.find((p) => p.id === id);
     if (activated) setActivePersona({ id: activated.id, name: activated.name, avatar: activated.avatar, tone: activated.tone, style: activated.style, keywords: activated.keywords, description: activated.description });
     try {
@@ -47,7 +61,6 @@ export function GenerateClient({ initialPersonas }: Props) {
       });
       if (!res.ok) throw new Error();
     } catch {
-      // 失敗したら元に戻す
       setPersonas(initialPersonas);
       const prev = initialPersonas.find((p) => p.is_active);
       if (prev) setActivePersona({ id: prev.id, name: prev.name, avatar: prev.avatar, tone: prev.tone, style: prev.style, keywords: prev.keywords, description: prev.description });
@@ -70,6 +83,7 @@ export function GenerateClient({ initialPersonas }: Props) {
         body: JSON.stringify({
           ...input,
           provider: settings.aiProvider,
+          xLimit:   getXLimit(getXPlan(xUser?.verifiedType, xUser?.subscriptionType)),
           personaDescription: activePersona
             ? `${activePersona.name}：${activePersona.description}（トーン: ${activePersona.tone}）`
             : undefined,

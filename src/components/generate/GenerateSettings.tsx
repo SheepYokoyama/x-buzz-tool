@@ -6,6 +6,7 @@ import { VoiceTextarea, VoiceInput, FieldLabel } from '@/components/ui/Input';
 import { Sparkles, RefreshCw, Settings } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import type { GenerateInput, PostPersona } from '@/lib/types';
+import { getXPlan, getXLimit, getLengthOptions, getPlanLabel } from '@/lib/x-char-count';
 
 const QUICK_TOPICS = [
   'AI活用', '生産性', 'X運用', '副業', 'マインドセット',
@@ -27,11 +28,6 @@ const TONE_OPTIONS = [
   { value: '教育・ノウハウ系',   label: '教育・ノウハウ系' },
 ];
 
-const LENGTH_OPTIONS = [
-  { value: 140, label: '140文字（短め）' },
-  { value: 280, label: '280文字（標準）' },
-  { value: 500, label: '500文字（長め）' },
-];
 
 interface Props {
   input: GenerateInput;
@@ -48,7 +44,11 @@ const PROVIDER_LABELS: Record<string, { label: string; badge: string; badgeColor
 };
 
 export function GenerateSettings({ input, personas, isGenerating, onChange, onGenerate, onActivatePersona }: Props) {
-  const { settings } = useSettings();
+  const { settings, xUser } = useSettings();
+  const plan          = getXPlan(xUser?.verifiedType, xUser?.subscriptionType);
+  const xLimit        = getXLimit(plan);
+  const planLabel     = getPlanLabel(plan);
+  const lengthOptions = getLengthOptions(plan);
   const canGenerate = (input.theme.trim() || input.selectedTopic) && !isGenerating;
   const providerInfo = PROVIDER_LABELS[settings.aiProvider] ?? PROVIDER_LABELS.gemini;
 
@@ -237,15 +237,24 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
 
       {/* ── 文字数 ── */}
       <div>
-        <FieldLabel>文字数目安</FieldLabel>
+        <div className="flex items-center justify-between mb-1.5">
+          <FieldLabel className="mb-0">本文カウント目安</FieldLabel>
+          <span
+            className="text-[10px] px-2 py-0.5 rounded-lg cursor-help"
+            style={{ background: 'rgba(34,211,238,0.06)', color: '#475569', border: '1px solid rgba(34,211,238,0.15)' }}
+            title={`全角（ひらがな・漢字等）= 2カウント\n半角（英数字等）= 1カウント\nCTA+ハッシュタグ込みで合計${xLimit.toLocaleString()}cnt以内に生成（${planLabel}プラン）`}
+          >
+            {planLabel} · 合計{xLimit.toLocaleString()}cnt以内
+          </span>
+        </div>
         <div className="flex gap-2">
-          {LENGTH_OPTIONS.map(({ value, label }) => {
+          {lengthOptions.map(({ value, label, note }) => {
             const active = input.maxLength === value;
             return (
               <button
                 key={value}
                 onClick={() => onChange({ maxLength: value })}
-                className="flex-1 text-[12px] py-2 rounded-xl transition-all cursor-pointer"
+                className="flex-1 py-2 rounded-xl transition-all cursor-pointer"
                 style={{
                   background: active ? 'rgba(34,211,238,0.1)' : 'rgba(255,255,255,0.03)',
                   border: active ? '1px solid rgba(34,211,238,0.3)' : '1px solid rgba(255,255,255,0.07)',
@@ -253,7 +262,8 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
                   fontWeight: active ? 500 : 400,
                 }}
               >
-                {label}
+                <p className="text-[12px] leading-tight">{label}</p>
+                <p className="text-[10px] mt-0.5 opacity-60">{note}</p>
               </button>
             );
           })}
