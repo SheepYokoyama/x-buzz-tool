@@ -107,6 +107,7 @@ export interface ScheduledPost {
   user_id: string | null;
   generated_post_id: string | null;
   persona_id: string | null;
+  x_account_id: string | null;
   content: string;
   tags: string[];
   scheduled_at: string;

@@ -1,5 +1,5 @@
 import { getSupabaseServer } from '@/lib/supabase';
-import { getXClient, isXConfigured } from '@/lib/x-client';
+import { getActiveXClient, getActiveXAccountId } from '@/lib/x-client';
 import type { DashboardStats } from '@/lib/types';
 
 // ── 型 ──────────────────────────────────────────────────────────────────────
@@ -58,11 +58,13 @@ function calcChange(current: number, previous: number): number | null {
 
 /**
  * 指定期間内の公開済み投稿＋メトリクスを取得する。
+ * accountId が指定された場合はそのアカウントの投稿のみ返す。
  */
 async function fetchPublishedWithMetrics(
   supabase: ReturnType<typeof getSupabaseServer>,
   startIso: string,
   endIso?: string,
+  accountId?: string | null,
 ): Promise<PostWithMetrics[]> {
   let query = supabase
     .from('scheduled_posts')
@@ -73,6 +75,8 @@ async function fetchPublishedWithMetrics(
     .gte('published_at', startIso);
 
   if (endIso) query = query.lt('published_at', endIso);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (accountId) query = (query as any).eq('x_account_id', accountId);
 
   const { data } = await query;
   return (data ?? []) as PostWithMetrics[];
@@ -80,13 +84,27 @@ async function fetchPublishedWithMetrics(
 
 // ── 公開 API ─────────────────────────────────────────────────────────────────
 
-/** ダッシュボード用の集計統計を取得する（今月分のみ・先月比付き） */
+/** ダッシュボード用の集計統計を取得する（今月分のみ・先月比付き・アクティブアカウント絞り込み） */
 export async function getDashboardStats(): Promise<DashboardStats> {
   const supabase = getSupabaseServer();
+  const activeAccountId = await getActiveXAccountId();
 
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+
+  // 投稿数クエリにアカウント絞り込みを適用するヘルパー
+  function countQuery(startIso: string, endIso?: string) {
+    let q = supabase
+      .from('scheduled_posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'published')
+      .gte('published_at', startIso);
+    if (endIso) q = q.lt('published_at', endIso);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (activeAccountId) q = (q as any).eq('x_account_id', activeAccountId);
+    return q;
+  }
 
   const [
     publishedThisMonth,
@@ -96,31 +114,27 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     postsLastMonth,
   ] = await Promise.all([
     // 今月の公開済み投稿数
-    supabase
-      .from('scheduled_posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'published')
-      .gte('published_at', thisMonthStart),
+    countQuery(thisMonthStart),
 
     // 先月の公開済み投稿数
-    supabase
-      .from('scheduled_posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'published')
-      .gte('published_at', lastMonthStart)
-      .lt('published_at', thisMonthStart),
+    countQuery(lastMonthStart, thisMonthStart),
 
-    // 予約中投稿数
-    supabase
-      .from('scheduled_posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'scheduled'),
+    // 予約中投稿数（アカウント絞り込みあり）
+    (() => {
+      let q = supabase
+        .from('scheduled_posts')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'scheduled');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (activeAccountId) q = (q as any).eq('x_account_id', activeAccountId);
+      return q;
+    })(),
 
     // 今月の投稿＋メトリクス
-    fetchPublishedWithMetrics(supabase, thisMonthStart),
+    fetchPublishedWithMetrics(supabase, thisMonthStart, undefined, activeAccountId),
 
     // 先月の投稿＋メトリクス
-    fetchPublishedWithMetrics(supabase, lastMonthStart, thisMonthStart),
+    fetchPublishedWithMetrics(supabase, lastMonthStart, thisMonthStart, activeAccountId),
   ]);
 
   const thisMonth = aggregateRows(postsThisMonth);
@@ -146,13 +160,13 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 }
 
 /**
- * X API からフォロワー数を取得する。
+ * アクティブな X アカウントのフォロワー数を取得する。
  * X 未接続またはエラー時は null を返す。
  */
 export async function getFollowersCount(): Promise<number | null> {
-  if (!isXConfigured()) return null;
   try {
-    const client = getXClient()!;
+    const client = await getActiveXClient();
+    if (!client) return null;
     const { data } = await client.v2.me({ 'user.fields': ['public_metrics'] });
     const metrics = data.public_metrics as { followers_count?: number } | undefined;
     return metrics?.followers_count ?? null;

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase';
-import { getActiveXClient } from '@/lib/x-client';
+import { getActiveXClient, getActiveXAccountId } from '@/lib/x-client';
 
 export const maxDuration = 60;
 
@@ -53,7 +53,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ processed: 0, results: [] });
   }
 
-  const xClient = await getActiveXClient();
+  const [xClient, activeAccountId] = await Promise.all([
+    getActiveXClient(),
+    getActiveXAccountId(),
+  ]);
   const results: PostResult[] = [];
 
   for (const post of posts) {
@@ -70,12 +73,14 @@ export async function GET(req: Request) {
 
       const { error: updateError } = await supabase
         .from('scheduled_posts')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .update({
-          status:       'published',
-          published_at: new Date().toISOString(),
-          x_post_id:    tweetId,
-          x_post_url:   url,
-        })
+          status:        'published',
+          published_at:  new Date().toISOString(),
+          x_post_id:     tweetId,
+          x_post_url:    url,
+          x_account_id:  activeAccountId,
+        } as any)
         .eq('id', post.id);
 
       if (updateError) {
