@@ -7,6 +7,7 @@ import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { getDashboardStats, getFollowersCount } from '@/lib/api/stats';
 import { XPostDebug } from '@/components/dashboard/XPostDebug';
+import { SyncMetricsButton } from '@/components/dashboard/SyncMetricsButton';
 import { getRecentPublishedPosts, getUpcomingScheduledPosts } from '@/lib/api/scheduled-posts';
 import { FileText, Heart, Eye, TrendingUp, Users, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -64,15 +65,16 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── KPI 4枚 ──────────────────────────────── */}
-      <div className="mb-2">
-        <p className="section-label mb-4">今月の成果</p>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="section-label">今月の成果</p>
+        <SyncMetricsButton />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
         <StatsCard
           title="総投稿数"
           value={stats.totalPosts}
           icon={FileText}
-          change={8.3}
+          change={stats.changes.totalPosts ?? undefined}
           changeLabel="先月比"
           color="blue"
         />
@@ -80,7 +82,7 @@ export default async function DashboardPage() {
           title="総いいね数"
           value={fmt(stats.totalLikes)}
           icon={Heart}
-          change={23.1}
+          change={stats.changes.totalLikes ?? undefined}
           changeLabel="先月比"
           color="pink"
         />
@@ -88,7 +90,7 @@ export default async function DashboardPage() {
           title="インプレッション"
           value={fmt(stats.totalImpressions)}
           icon={Eye}
-          change={15.7}
+          change={stats.changes.totalImpressions ?? undefined}
           changeLabel="先月比"
           color="cyan"
         />
@@ -96,7 +98,7 @@ export default async function DashboardPage() {
           title="エンゲージメント率"
           value={`${stats.avgEngagementRate}%`}
           icon={TrendingUp}
-          change={2.1}
+          change={stats.changes.avgEngagementRate ?? undefined}
           changeLabel="先月比"
           color="green"
         />

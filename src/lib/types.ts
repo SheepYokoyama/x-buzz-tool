@@ -107,6 +107,7 @@ export interface ScheduledPost {
   user_id: string | null;
   generated_post_id: string | null;
   persona_id: string | null;
+  x_account_id: string | null;
   content: string;
   tags: string[];
   scheduled_at: string;
@@ -158,6 +159,13 @@ export interface DashboardStats {
   avgEngagementRate: number;
   scheduledCount: number;
   followersGrowth: number;
+  /** 先月比（%）。先月データが0件の場合は null */
+  changes: {
+    totalPosts: number | null;
+    totalLikes: number | null;
+    totalImpressions: number | null;
+    avgEngagementRate: number | null;
+  };
 }
 
 // =============================================

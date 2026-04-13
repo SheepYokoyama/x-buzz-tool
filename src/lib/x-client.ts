@@ -90,6 +90,17 @@ export async function getActiveXClient(): Promise<TwitterApi | null> {
   return null;
 }
 
+/** アクティブな X アカウントの UUID を返す。未設定の場合は null。 */
+export async function getActiveXAccountId(): Promise<string | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (getSupabaseAdmin() as any)
+    .from('x_accounts')
+    .select('id')
+    .eq('is_active', true)
+    .single();
+  return data?.id ?? null;
+}
+
 /** DB に認証済みアカウントが存在するか確認 */
 export async function isXConfiguredAsync(): Promise<boolean> {
   const client = await getActiveXClient();

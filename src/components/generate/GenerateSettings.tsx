@@ -247,14 +247,14 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
             {planLabel} · 合計{xLimit.toLocaleString()}cnt以内
           </span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {lengthOptions.map(({ value, label, note }) => {
             const active = input.maxLength === value;
             return (
               <button
                 key={value}
                 onClick={() => onChange({ maxLength: value })}
-                className="flex-1 py-2 rounded-xl transition-all cursor-pointer"
+                className="flex-1 min-w-[30%] py-2 rounded-xl transition-all cursor-pointer"
                 style={{
                   background: active ? 'rgba(34,211,238,0.1)' : 'rgba(255,255,255,0.03)',
                   border: active ? '1px solid rgba(34,211,238,0.3)' : '1px solid rgba(255,255,255,0.07)',

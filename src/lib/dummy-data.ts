@@ -7,6 +7,12 @@ export const dummyStats: DashboardStats = {
   avgEngagementRate: 4.2,
   scheduledCount: 7,
   followersGrowth: 12.5,
+  changes: {
+    totalPosts: null,
+    totalLikes: null,
+    totalImpressions: null,
+    avgEngagementRate: null,
+  },
 };
 
 export const dummyPosts: Post[] = [
@@ -77,6 +83,7 @@ export const dummyScheduledPosts: ScheduledPost[] = [
     user_id: null,
     generated_post_id: null,
     persona_id: 'char-1',
+    x_account_id: null,
     content: '【今週の学び】\n\nX運用で一番効果があったのは「スレッド投稿」でした。1ツイートより10倍のリーチが取れます。\n\n今日から試してみてください。',
     scheduled_at: '2026-04-08T09:00:00Z',
     published_at: null,
@@ -92,6 +99,7 @@ export const dummyScheduledPosts: ScheduledPost[] = [
     user_id: null,
     generated_post_id: null,
     persona_id: 'char-1',
+    x_account_id: null,
     content: 'フォロワー1000人達成しました🎉\n\nここまでの道のりで学んだこと全部まとめます。明日のスレッドをお楽しみに。',
     scheduled_at: '2026-04-08T19:00:00Z',
     published_at: null,
@@ -107,6 +115,7 @@ export const dummyScheduledPosts: ScheduledPost[] = [
     user_id: null,
     generated_post_id: null,
     persona_id: 'char-2',
+    x_account_id: null,
     content: 'バズる投稿には共通点があります。\n\n・数字を使う\n・具体的なノウハウ\n・体験談ベース\n\nこの3つを組み合わせるだけで、エンゲージメントが3倍になりました。',
     scheduled_at: '2026-04-09T12:00:00Z',
     published_at: null,
