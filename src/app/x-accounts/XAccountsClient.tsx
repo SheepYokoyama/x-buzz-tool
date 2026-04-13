@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XAccountCard } from '@/components/x-accounts/XAccountCard';
 import { XAccountForm } from '@/components/x-accounts/XAccountForm';
 import { Plus } from 'lucide-react';
@@ -14,6 +14,14 @@ interface Props {
 export function XAccountsClient({ initialAccounts }: Props) {
   const { setXUser } = useSettings();
   const [accounts, setAccounts]         = useState<XAccount[]>(initialAccounts);
+
+  // APIから最新データを取得してinitialAccountsの古いキャッシュを上書き
+  useEffect(() => {
+    fetch('/api/x-accounts')
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d.accounts)) setAccounts(d.accounts); })
+      .catch(() => {/* 失敗時はinitialAccountsのまま */});
+  }, []);
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const [formTarget, setFormTarget]     = useState<XAccount | 'new' | null>(null);
 
