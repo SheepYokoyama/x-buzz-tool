@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Header } from '@/components/layout/Header';
 import { XAccountsClient } from './XAccountsClient';
 import { getXAccounts } from '@/lib/api/x-accounts';
