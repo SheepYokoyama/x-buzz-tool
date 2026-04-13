@@ -3,27 +3,31 @@
 import { useState, useEffect } from 'react';
 import { XAccountCard } from '@/components/x-accounts/XAccountCard';
 import { XAccountForm } from '@/components/x-accounts/XAccountForm';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import type { XAccount } from '@/lib/types';
 
-interface Props {
-  initialAccounts: XAccount[];
-}
-
-export function XAccountsClient({ initialAccounts }: Props) {
+export function XAccountsClient() {
   const { setXUser } = useSettings();
-  const [accounts, setAccounts]         = useState<XAccount[]>(initialAccounts);
-
-  // APIから最新データを取得してinitialAccountsの古いキャッシュを上書き
-  useEffect(() => {
-    fetch('/api/x-accounts')
-      .then((r) => r.json())
-      .then((d) => { if (Array.isArray(d.accounts)) setAccounts(d.accounts); })
-      .catch(() => {/* 失敗時はinitialAccountsのまま */});
-  }, []);
+  const [accounts, setAccounts]         = useState<XAccount[]>([]);
+  const [loading, setLoading]           = useState(true);
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const [formTarget, setFormTarget]     = useState<XAccount | 'new' | null>(null);
+
+  /* ── 一覧取得 ── */
+  const fetchAccounts = async () => {
+    try {
+      const res = await fetch('/api/x-accounts');
+      const d   = await res.json();
+      if (Array.isArray(d.accounts)) setAccounts(d.accounts);
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchAccounts(); }, []);
 
   /* ── サイドバーのXユーザー表示を最新化 ── */
   const refreshXUser = async () => {
@@ -42,7 +46,7 @@ export function XAccountsClient({ initialAccounts }: Props) {
       const res = await fetch(`/api/x-accounts/${id}/activate`, { method: 'PATCH' });
       if (!res.ok) throw new Error('切り替えに失敗しました');
       setAccounts((prev) => prev.map((a) => ({ ...a, is_active: a.id === id })));
-      await refreshXUser(); // サイドバーを即時更新
+      await refreshXUser();
     } catch (err) {
       console.error(err);
       alert('アカウントの切り替えに失敗しました。もう一度お試しください。');
@@ -74,6 +78,15 @@ export function XAccountsClient({ initialAccounts }: Props) {
       alert('削除に失敗しました。もう一度お試しください。');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-slate-600">
+        <Loader2 size={20} className="animate-spin mr-2" />
+        <span className="text-[13px]">読み込み中…</span>
+      </div>
+    );
+  }
 
   return (
     <>

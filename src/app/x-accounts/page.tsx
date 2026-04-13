@@ -1,21 +1,7 @@
-export const dynamic = 'force-dynamic';
-
 import { Header } from '@/components/layout/Header';
 import { XAccountsClient } from './XAccountsClient';
-import { getXAccounts } from '@/lib/api/x-accounts';
-import { seedXAccountFromEnv } from '@/lib/x-client';
 
-export default async function XAccountsPage() {
-  // DB が空で env vars があれば「しおづけ」を自動シード
-  try { await seedXAccountFromEnv(); } catch { /* ignore */ }
-
-  let accounts: import('@/lib/types').XAccount[] = [];
-  try {
-    accounts = await getXAccounts();
-  } catch {
-    // DB未設定時は空配列で表示
-  }
-
+export default function XAccountsPage() {
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
       <Header
@@ -32,7 +18,7 @@ export default async function XAccountsPage() {
         トークンはAES-256-CBCで暗号化してデータベースに保存されます。画面上ではマスク表示のみ行い、平文は一切表示されません。
       </div>
 
-      <XAccountsClient initialAccounts={accounts} />
+      <XAccountsClient />
     </div>
   );
 }
