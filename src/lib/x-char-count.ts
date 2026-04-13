@@ -75,29 +75,44 @@ export function getPlanLabel(plan: XPlan): string {
   }
 }
 
+/** 契約プランに関わらず常に表示する固定選択肢 */
+const FIXED_LENGTH_OPTIONS: { value: number; label: string; note: string }[] = [
+  { value: 4000,  label: '4,000cnt',  note: '≈全角2,000字' },
+  { value: 25000, label: '25,000cnt', note: '≈全角12,500字' },
+];
+
 /** プランに応じた本文カウント選択肢（CTA+hashtags分のバッファを引いた値） */
 export function getLengthOptions(plan: XPlan): { value: number; label: string; note: string }[] {
+  let planOptions: { value: number; label: string; note: string }[];
+
   switch (plan) {
     case 'basic':
-      return [
+      planOptions = [
         { value: 500,  label: '500cnt（短め）',   note: '≈全角250字' },
         { value: 1500, label: '1,500cnt（標準）', note: '≈全角750字' },
         { value: 3500, label: '3,500cnt（長め）', note: '≈全角1,750字' },
       ];
+      break;
     case 'premium':
     case 'premiumPlus':
-      return [
+      planOptions = [
         { value: 1000,  label: '1,000cnt（短め）',  note: '≈全角500字' },
         { value: 5000,  label: '5,000cnt（標準）',  note: '≈全角2,500字' },
         { value: 20000, label: '20,000cnt（長め）', note: '≈全角10,000字' },
       ];
+      break;
     default: // free
-      return [
+      planOptions = [
         { value: 100, label: '100cnt（短め）', note: '≈全角50字' },
         { value: 160, label: '160cnt（標準）', note: '≈全角80字' },
         { value: 210, label: '210cnt（長め）', note: '≈全角105字' },
       ];
   }
+
+  // 固定選択肢を末尾に追加（プラン選択肢と重複する値は除外）
+  const planValues = new Set(planOptions.map((o) => o.value));
+  const extras = FIXED_LENGTH_OPTIONS.filter((o) => !planValues.has(o.value));
+  return [...planOptions, ...extras];
 }
 
 /** プランのデフォルト本文カウント（標準選択肢の値） */

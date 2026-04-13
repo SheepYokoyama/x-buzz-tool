@@ -7,6 +7,12 @@ export const dummyStats: DashboardStats = {
   avgEngagementRate: 4.2,
   scheduledCount: 7,
   followersGrowth: 12.5,
+  changes: {
+    totalPosts: null,
+    totalLikes: null,
+    totalImpressions: null,
+    avgEngagementRate: null,
+  },
 };
 
 export const dummyPosts: Post[] = [
