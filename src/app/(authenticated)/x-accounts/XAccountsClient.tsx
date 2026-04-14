@@ -6,6 +6,7 @@ import { XAccountForm } from '@/components/x-accounts/XAccountForm';
 import { Plus, Loader2 } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import type { XAccount } from '@/lib/types';
+import { apiFetch } from '@/lib/api-fetch';
 
 export function XAccountsClient() {
   const { setXUser } = useSettings();
@@ -16,7 +17,7 @@ export function XAccountsClient() {
   /* ── 取得（1件のみ） ── */
   const fetchAccount = async () => {
     try {
-      const res = await fetch('/api/x-accounts');
+      const res = await apiFetch('/api/x-accounts');
       const d   = await res.json();
       const accounts = Array.isArray(d.accounts) ? d.accounts : [];
       setAccount(accounts[0] ?? null);
@@ -32,7 +33,7 @@ export function XAccountsClient() {
   /* ── サイドバーのXユーザー表示を最新化 ── */
   const refreshXUser = async () => {
     try {
-      const res = await fetch('/api/x/me');
+      const res = await apiFetch('/api/x/me');
       const d = await res.json();
       if (d.user) setXUser(d.user);
       else setXUser(null);
@@ -50,7 +51,7 @@ export function XAccountsClient() {
   const handleDelete = async (id: string) => {
     if (!confirm('このアカウントを削除しますか？\nトークン情報も完全に削除されます。')) return;
     try {
-      const res = await fetch(`/api/x-accounts/${id}`, { method: 'DELETE' });
+      const res = await apiFetch(`/api/x-accounts/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('削除に失敗しました');
       setAccount(null);
       setXUser(null);

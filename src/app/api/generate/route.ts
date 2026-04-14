@@ -7,7 +7,7 @@ import { getAuthUser } from '@/lib/auth';
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  const user = await getAuthUser();
+  const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
   const input = (await req.json()) as GenerateInput;

@@ -6,8 +6,8 @@ import { getAuthUser } from '@/lib/auth';
  * GET /api/x/me
  * 連携中の X アカウント情報を返す（1回だけ呼ぶ想定）
  */
-export async function GET() {
-  const user = await getAuthUser();
+export async function GET(req: Request) {
+  const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
   const client = await getActiveXClient(user.id);

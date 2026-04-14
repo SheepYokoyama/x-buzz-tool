@@ -4,8 +4,8 @@ import { getAuthUser } from '@/lib/auth';
 import { encrypt, maskToken, decrypt } from '@/lib/encryption';
 
 /** GET /api/x-accounts — マスク済みトークン一覧（ログインユーザー分のみ） */
-export async function GET() {
-  const user = await getAuthUser();
+export async function GET(req: Request) {
+  const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
   const supabase = getSupabaseAdmin();
@@ -42,7 +42,7 @@ function tryDecrypt(s: string): string {
 
 /** POST /api/x-accounts — 新規登録（1ユーザー1件のみ） */
 export async function POST(req: Request) {
-  const user = await getAuthUser();
+  const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
   const body = await req.json() as {

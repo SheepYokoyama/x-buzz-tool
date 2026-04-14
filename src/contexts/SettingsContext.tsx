@@ -110,6 +110,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     const supabase = getSupabaseBrowser();
     await supabase.auth.signOut();
+    document.cookie = 'app-auth=; path=/; max-age=0';
     setAuthUser(null);
     router.push('/login');
   }, [router]);

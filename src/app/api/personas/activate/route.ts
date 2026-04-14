@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAuthUser } from '@/lib/auth';
 
 export async function PATCH(req: Request) {
   try {
-    const user = await getAuthUser();
+    const user = await getAuthUser(req);
     if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
     const { id } = (await req.json()) as { id: string };
@@ -12,7 +12,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'id が必要です' }, { status: 400 });
     }
 
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseAdmin();
 
     // 該当ユーザーの全ペルソナを非アクティブ → 指定IDのみアクティブ
     const { error: resetError } = await supabase

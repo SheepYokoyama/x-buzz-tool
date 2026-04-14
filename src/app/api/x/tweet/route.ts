@@ -10,7 +10,7 @@ import { getAuthUser } from '@/lib/auth';
  * response: { tweetId: string; url: string }
  */
 export async function POST(req: Request) {
-  const user = await getAuthUser();
+  const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
   const client = await getActiveXClient(user.id);

@@ -1,4 +1,4 @@
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { getActiveXClient, getActiveXAccountId } from '@/lib/x-client';
 import type { DashboardStats } from '@/lib/types';
 
@@ -77,7 +77,7 @@ async function fetchPublishedWithMetrics(
 
 /** ダッシュボード用の集計統計を取得する */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const supabase = await getSupabaseServer();
+  const supabase = getSupabaseAdmin();
   const activeAccountId = await getActiveXAccountId();
 
   const now = new Date();

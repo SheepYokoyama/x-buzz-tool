@@ -17,6 +17,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { X_COUNT_RULE, getXPlan, getXLimit, getPlanLabel } from '@/lib/x-char-count';
+import { apiFetch } from '@/lib/api-fetch';
 
 const mainNav = [
   { href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard },
@@ -39,12 +40,12 @@ export function Sidebar() {
 
   // ページ遷移のたびにX情報・ペルソナを再取得
   useEffect(() => {
-    fetch('/api/personas/active')
+    apiFetch('/api/personas/active')
       .then((r) => r.json())
       .then((d) => { if (d.persona) setActivePersona(d.persona); })
       .catch(() => {});
 
-    fetch('/api/x/me')
+    apiFetch('/api/x/me')
       .then((r) => r.json())
       .then((d) => { setXUser(d.user ?? null); })
       .catch(() => {});

@@ -9,10 +9,10 @@ import { getAuthUser } from '@/lib/auth';
  * response: { metrics: TweetMetrics }
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ tweetId: string }> }
 ) {
-  const user = await getAuthUser();
+  const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
   const { tweetId } = await params;

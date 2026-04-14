@@ -7,7 +7,7 @@ type Params = { params: Promise<{ id: string }> };
 
 /** PATCH /api/x-accounts/[id] — 更新（トークンは空なら変更しない） */
 export async function PATCH(req: Request, { params }: Params) {
-  const user = await getAuthUser();
+  const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
   const { id } = await params;
@@ -58,8 +58,8 @@ export async function PATCH(req: Request, { params }: Params) {
 }
 
 /** DELETE /api/x-accounts/[id] */
-export async function DELETE(_: Request, { params }: Params) {
-  const user = await getAuthUser();
+export async function DELETE(req: Request, { params }: Params) {
+  const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
   const { id } = await params;

@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAuthUser } from '@/lib/auth';
 
 /** POST /api/personas — 新規ペルソナを作成 */
 export async function POST(req: Request) {
   try {
-    const user = await getAuthUser();
+    const user = await getAuthUser(req);
     if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
     const body = await req.json();
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'ペルソナ名は必須です' }, { status: 400 });
     }
 
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from('post_personas')
       .insert({

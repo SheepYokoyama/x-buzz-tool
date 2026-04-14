@@ -19,12 +19,12 @@ function fmt(n: number): string {
 }
 
 export default async function DashboardPage() {
-  const [stats, recentPosts, upcomingPosts, followers] = await Promise.all([
+  const [stats, recentPosts, upcomingPosts] = await Promise.all([
     getDashboardStats(),
     getRecentPublishedPosts(4),
     getUpcomingScheduledPosts(3),
-    getFollowersCount(),
   ]);
+  const followers: number | null = null; // X API 接続遅延防止のため一時スキップ
 
   return (
     <>

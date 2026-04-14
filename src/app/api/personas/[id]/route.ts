@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAuthUser } from '@/lib/auth';
 
 type Params = { params: Promise<{ id: string }> };
@@ -7,7 +7,7 @@ type Params = { params: Promise<{ id: string }> };
 /** PATCH /api/personas/[id] — ペルソナを更新 */
 export async function PATCH(req: Request, { params }: Params) {
   try {
-    const user = await getAuthUser();
+    const user = await getAuthUser(req);
     if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
     const { id } = await params;
@@ -18,7 +18,7 @@ export async function PATCH(req: Request, { params }: Params) {
       return NextResponse.json({ error: 'ペルソナ名は必須です' }, { status: 400 });
     }
 
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from('post_personas')
       .update({
@@ -45,13 +45,13 @@ export async function PATCH(req: Request, { params }: Params) {
 }
 
 /** DELETE /api/personas/[id] — ペルソナを削除 */
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(req: Request, { params }: Params) {
   try {
-    const user = await getAuthUser();
+    const user = await getAuthUser(req);
     if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
     const { id } = await params;
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseAdmin();
 
     const { error } = await supabase
       .from('post_personas')
