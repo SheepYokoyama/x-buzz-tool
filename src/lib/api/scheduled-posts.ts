@@ -14,7 +14,7 @@ function extractLatestMetrics(row: RowWithMetrics): ScheduledPostWithMetrics {
 
 /** 全ステータスの投稿一覧（scheduled_at 昇順） */
 export async function getScheduledPosts(): Promise<ScheduledPost[]> {
-  const supabase = getSupabaseServer();
+  const supabase = await getSupabaseServer();
   const { data, error } = await supabase
     .from('scheduled_posts')
     .select('*')
@@ -26,7 +26,7 @@ export async function getScheduledPosts(): Promise<ScheduledPost[]> {
 
 /** 投稿履歴（全ステータス、最新メトリクス付き、scheduled_at 降順） */
 export async function getPostHistory(): Promise<ScheduledPostWithMetrics[]> {
-  const supabase = getSupabaseServer();
+  const supabase = await getSupabaseServer();
   const { data, error } = await supabase
     .from('scheduled_posts')
     .select('*, post_metrics(*)')
@@ -38,7 +38,7 @@ export async function getPostHistory(): Promise<ScheduledPostWithMetrics[]> {
 
 /** ダッシュボード用：最近の公開済み投稿（最新メトリクス付き・アクティブアカウント絞り込み） */
 export async function getRecentPublishedPosts(limit = 4): Promise<ScheduledPostWithMetrics[]> {
-  const supabase = getSupabaseServer();
+  const supabase = await getSupabaseServer();
   const activeAccountId = await getActiveXAccountId();
 
   let query = supabase
@@ -58,7 +58,7 @@ export async function getRecentPublishedPosts(limit = 4): Promise<ScheduledPostW
 
 /** ダッシュボード用：次の予約投稿（scheduled_at 昇順・アクティブアカウント絞り込み） */
 export async function getUpcomingScheduledPosts(limit = 3): Promise<ScheduledPost[]> {
-  const supabase = getSupabaseServer();
+  const supabase = await getSupabaseServer();
   const activeAccountId = await getActiveXAccountId();
 
   let query = supabase

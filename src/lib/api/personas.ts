@@ -3,7 +3,7 @@ import type { PostPersona } from '@/lib/types';
 
 /** 全ペルソナを取得（作成日順） */
 export async function getPersonas(): Promise<PostPersona[]> {
-  const supabase = getSupabaseServer();
+  const supabase = await getSupabaseServer();
   const { data, error } = await supabase
     .from('post_personas')
     .select('*')
@@ -18,7 +18,7 @@ export async function getPersonas(): Promise<PostPersona[]> {
 
 /** アクティブなペルソナを1件取得 */
 export async function getActivePersona(): Promise<PostPersona | null> {
-  const supabase = getSupabaseServer();
+  const supabase = await getSupabaseServer();
   const { data, error } = await supabase
     .from('post_personas')
     .select('*')

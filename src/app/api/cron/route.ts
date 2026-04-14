@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { getActiveXClient, getActiveXAccountId } from '@/lib/x-client';
 
 export const maxDuration = 60;
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
 
   // 投稿期限を過ぎた予約済み投稿を取得（古い順）
   const { data, error } = await supabase

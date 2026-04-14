@@ -13,7 +13,8 @@ import {
   NotebookPen,
   UserCircle,
   BookOpenCheck,
-  AtSign,
+  Settings,
+  LogOut,
 } from 'lucide-react';
 import { X_COUNT_RULE, getXPlan, getXLimit, getPlanLabel } from '@/lib/x-char-count';
 
@@ -28,16 +29,15 @@ const mainNav = [
 const subNav = [
   { href: '/notebook',   label: 'ノート',           icon: NotebookPen   },
   { href: '/persona',    label: 'ペルソナ',         icon: UserCircle    },
-  { href: '/x-accounts', label: 'Xアカウント管理',  icon: AtSign        },
+  { href: '/x-accounts', label: 'アカウント管理',   icon: Settings      },
   { href: '/guide',      label: '使い方ガイド',     icon: BookOpenCheck },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { activePersona, setActivePersona, xUser, setXUser } = useSettings();
+  const { activePersona, setActivePersona, xUser, setXUser, authUser, signOut } = useSettings();
 
   // ページ遷移のたびにX情報・ペルソナを再取得
-  // /api/x/me は 25回/15分（無料）の制限内なので遷移ごとの呼び出しは問題なし
   useEffect(() => {
     fetch('/api/personas/active')
       .then((r) => r.json())
@@ -49,7 +49,7 @@ export function Sidebar() {
       .then((d) => { setXUser(d.user ?? null); })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]); // pathname 変化 = ページ遷移のたびに実行
+  }, [pathname]);
 
   const isActive = (href: string) =>
     pathname === href || (href !== '/' && pathname.startsWith(href));
@@ -225,6 +225,48 @@ export function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* ── ログインユーザー ─────────────────────── */}
+      {authUser && (
+        <>
+          <div className="mx-5 border-t border-white/[0.04]" />
+          <div className="px-4 py-4">
+            <div className="flex items-center gap-2.5">
+              {authUser.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={authUser.avatarUrl}
+                  alt={authUser.name}
+                  className="w-8 h-8 rounded-full shrink-0"
+                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+              ) : (
+                <span
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0"
+                  style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa' }}
+                >
+                  {authUser.name.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-medium text-slate-300 leading-tight truncate">
+                  {authUser.name}
+                </p>
+                <p className="text-[11px] leading-tight truncate" style={{ color: '#475569' }}>
+                  {authUser.email}
+                </p>
+              </div>
+              <button
+                onClick={signOut}
+                className="p-1.5 rounded-lg transition-colors hover:bg-white/[0.06]"
+                title="ログアウト"
+              >
+                <LogOut size={14} style={{ color: '#64748b' }} />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </aside>
   );
 }

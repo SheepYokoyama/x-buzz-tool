@@ -5,8 +5,8 @@ export default function XAccountsPage() {
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
       <Header
-        title="X アカウント管理"
-        subtitle="投稿に使用するXアカウントのトークンを安全に管理します"
+        title="アカウント管理"
+        subtitle="投稿に使用する外部サービスアカウントのトークンを安全に管理します"
       />
 
       {/* 注意事項 */}

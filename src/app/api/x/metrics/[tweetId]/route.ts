@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getXClient, isXConfigured } from '@/lib/x-client';
+import { getActiveXClient } from '@/lib/x-client';
+import { getAuthUser } from '@/lib/auth';
 
 /**
  * GET /api/x/metrics/[tweetId]
@@ -11,21 +12,24 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ tweetId: string }> }
 ) {
+  const user = await getAuthUser();
+  if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+
   const { tweetId } = await params;
 
-  if (!isXConfigured()) {
+  if (!tweetId) {
+    return NextResponse.json({ error: 'tweetId が必要です' }, { status: 400 });
+  }
+
+  const client = await getActiveXClient(user.id);
+  if (!client) {
     return NextResponse.json(
       { error: 'X API の認証情報が設定されていません。' },
       { status: 503 }
     );
   }
 
-  if (!tweetId) {
-    return NextResponse.json({ error: 'tweetId が必要です' }, { status: 400 });
-  }
-
   try {
-    const client = getXClient()!;
 
     const tweet = await client.v2.singleTweet(tweetId, {
       'tweet.fields': ['public_metrics', 'non_public_metrics', 'organic_metrics', 'created_at'],

@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getAuthUser } from '@/lib/auth';
 import { encrypt, maskToken, decrypt } from '@/lib/encryption';
 
-/** GET /api/x-accounts — マスク済みトークン一覧 */
+/** GET /api/x-accounts — マスク済みトークン一覧（ログインユーザー分のみ） */
 export async function GET() {
+  const user = await getAuthUser();
+  if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+
   const supabase = getSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('x_accounts')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -35,8 +40,11 @@ function tryDecrypt(s: string): string {
   try { return decrypt(s); } catch { return s; }
 }
 
-/** POST /api/x-accounts — 新規登録 */
+/** POST /api/x-accounts — 新規登録（1ユーザー1件のみ） */
 export async function POST(req: Request) {
+  const user = await getAuthUser();
+  if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+
   const body = await req.json() as {
     name: string;
     username?: string;
@@ -55,10 +63,24 @@ export async function POST(req: Request) {
   }
 
   const supabase = getSupabaseAdmin();
+
+  // 既存チェック（1ユーザー1件のみ）
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existing } = await (supabase as any)
+    .from('x_accounts')
+    .select('id')
+    .eq('user_id', user.id)
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    return NextResponse.json({ error: 'Xアカウントは1件のみ登録できます' }, { status: 409 });
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('x_accounts')
     .insert({
+      user_id:       user.id,
       name:          body.name.trim(),
       username:      body.username?.trim() || null,
       api_key:       encrypt(body.api_key),
@@ -66,7 +88,7 @@ export async function POST(req: Request) {
       access_token:  encrypt(body.access_token),
       access_secret: encrypt(body.access_secret),
       bearer_token:  body.bearer_token ? encrypt(body.bearer_token) : null,
-      is_active:     false,
+      is_active:     true,
     })
     .select('id, name, username, is_active, created_at, updated_at')
     .single();
