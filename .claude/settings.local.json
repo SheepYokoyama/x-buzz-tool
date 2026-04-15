@@ -48,7 +48,9 @@
       "Bash(node -e \"require\\('docx'\\)\")",
       "Bash(node scripts/create-weekly-report.js)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
-      "Bash(gh pr create --title 'feat: Xメトリクス自動同期・ダッシュボード統計リファクタ' --body ':*)"
+      "Bash(gh pr create --title 'feat: Xメトリクス自動同期・ダッシュボード統計リファクタ' --body ':*)",
+      "Bash(ls -la .env*)",
+      "Read(//c/Claude/x-buzz-tool/**)"
     ]
   }
 }
