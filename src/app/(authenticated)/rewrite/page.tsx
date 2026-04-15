@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, FieldLabel } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useSettings } from '@/contexts/SettingsContext';
+import { apiFetch } from '@/lib/api-fetch';
 import { Repeat2, RefreshCw, Settings, Copy, Check } from 'lucide-react';
 
 const PROVIDER_LABELS: Record<string, { label: string; badge: string; badgeColor: string }> = {
@@ -34,9 +35,8 @@ export default function RewritePage() {
   const providerInfo = PROVIDER_LABELS[settings.aiProvider] ?? PROVIDER_LABELS.gemini;
 
   const callRewrite = async (text: string, rewriteStyle: string) => {
-    const res = await fetch('/api/rewrite', {
+    const res = await apiFetch('/api/rewrite', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         originalText: text,
         style: rewriteStyle,

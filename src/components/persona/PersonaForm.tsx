@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input, VoiceInput, VoiceTextarea, FieldLabel } from '@/components/ui/Input';
 import { X, Plus } from 'lucide-react';
 import type { PostPersona } from '@/lib/types';
+import { apiFetch } from '@/lib/api-fetch';
 
 const AVATAR_GROUPS = [
   {
@@ -117,9 +118,8 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
     try {
       const url    = isEdit ? `/api/personas/${persona!.id}` : '/api/personas';
       const method = isEdit ? 'PATCH' : 'POST';
-      const res    = await fetch(url, {
+      const res    = await apiFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       const data = await res.json();

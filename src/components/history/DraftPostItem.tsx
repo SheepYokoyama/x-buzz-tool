@@ -6,6 +6,7 @@ import { getSupabaseBrowser } from '@/lib/supabase';
 import type { GeneratedPost } from '@/lib/types';
 import { countXChars, X_COUNT_RULE, getXPlan, getXLimit } from '@/lib/x-char-count';
 import { useSettings } from '@/contexts/SettingsContext';
+import { apiFetch } from '@/lib/api-fetch';
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('ja-JP', {
@@ -71,9 +72,8 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
     setTweeting(true);
     setTweetError(null);
     try {
-      const res = await fetch('/api/x/tweet', {
+      const res = await apiFetch('/api/x/tweet', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: draft.content }),
       });
       const data = await res.json();

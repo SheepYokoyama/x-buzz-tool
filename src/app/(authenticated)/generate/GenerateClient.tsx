@@ -5,6 +5,7 @@ import { GenerateSettings } from '@/components/generate/GenerateSettings';
 import { GenerateResults } from '@/components/generate/GenerateResults';
 import { useSettings } from '@/contexts/SettingsContext';
 import { getXPlan, getXLimit, getDefaultMaxLength } from '@/lib/x-char-count';
+import { apiFetch } from '@/lib/api-fetch';
 
 import type { GenerateInput, GeneratedPattern, PostPersona } from '@/lib/types';
 
@@ -54,9 +55,8 @@ export function GenerateClient({ initialPersonas }: Props) {
     const activated = personas.find((p) => p.id === id);
     if (activated) setActivePersona({ id: activated.id, name: activated.name, avatar: activated.avatar, tone: activated.tone, style: activated.style, keywords: activated.keywords, description: activated.description });
     try {
-      const res = await fetch('/api/personas/activate', {
+      const res = await apiFetch('/api/personas/activate', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
       if (!res.ok) throw new Error();
@@ -77,9 +77,8 @@ export function GenerateClient({ initialPersonas }: Props) {
     const activePersona = personas.find((p) => p.is_active);
 
     try {
-      const res = await fetch('/api/generate', {
+      const res = await apiFetch('/api/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...input,
           provider: settings.aiProvider,

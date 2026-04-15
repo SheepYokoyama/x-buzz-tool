@@ -37,6 +37,20 @@ export async function POST(req: Request) {
   const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
+  // body からキーワードを受け取る（任意）
+  // - keywords: クライアントが最終決定したキーワード配列（除外反映済）。あればこれを正として使う
+  // - extra_keywords: 後方互換・ペルソナ keywords に追加するフリーキーワード
+  const body = await req.json().catch(() => ({}));
+  const parseKeywords = (src: unknown): string[] =>
+    Array.isArray(src)
+      ? (src as unknown[])
+          .filter((v): v is string => typeof v === 'string')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+      : [];
+  const clientKeywords = parseKeywords(body.keywords);
+  const extraKeywords  = parseKeywords(body.extra_keywords);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sb = getSupabaseAdmin() as any;
 
@@ -56,10 +70,17 @@ export async function POST(req: Request) {
   }
 
   const typedPersona = persona as PostPersona;
-  const keywords = typedPersona.keywords ?? [];
+  const personaKeywords = typedPersona.keywords ?? [];
+
+  // クライアントが keywords を指定してきた場合はそれを信頼（除外済みを反映した結果）。
+  // それ以外はペルソナ keywords + extra_keywords をマージ（従来動作）。
+  const keywords = clientKeywords.length > 0
+    ? Array.from(new Set(clientKeywords))
+    : Array.from(new Set([...personaKeywords, ...extraKeywords]));
+
   if (keywords.length === 0) {
     return NextResponse.json(
-      { error: 'ペルソナにキーワードが登録されていません。' },
+      { error: 'キーワードが1つもありません。ペルソナ設定か追加キーワードを入力してください。' },
       { status: 400 }
     );
   }

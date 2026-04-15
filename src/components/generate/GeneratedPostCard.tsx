@@ -10,6 +10,7 @@ import { Input, FieldLabel } from '@/components/ui/Input';
 import type { GeneratedPattern, GenerateInput } from '@/lib/types';
 import { countXChars, X_COUNT_RULE, getXPlan, getXLimit } from '@/lib/x-char-count';
 import { useSettings } from '@/contexts/SettingsContext';
+import { apiFetch } from '@/lib/api-fetch';
 
 interface Props {
   pattern: GeneratedPattern;
@@ -126,12 +127,20 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
     setSaveError(null);
 
     const supabase = getSupabaseBrowser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setSaving(false);
+      setSaveError('認証情報が取得できませんでした。再ログインしてください。');
+      return;
+    }
+
     const { error } = await supabase.from('generated_posts').insert({
       content: fullText,
       generation_prompt: JSON.stringify(generationInput),
       ai_model: generationInput.provider === 'anthropic' ? 'claude-haiku-4-5' : 'gemini-2.5-flash',
       status: 'draft',
       tags: pattern.hashtags.map((h) => h.replace(/^#/, '')),
+      user_id: user.id,
     });
 
     setSaving(false);
@@ -159,9 +168,8 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
     setTweetError(null);
 
     try {
-      const res = await fetch('/api/x/tweet', {
+      const res = await apiFetch('/api/x/tweet', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: fullText }),
       });
       const data = await res.json();
@@ -173,22 +181,27 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
         setTweetUrl(data.url);
         const supabase = getSupabaseBrowser();
         const now = new Date().toISOString();
-        await supabase.from('generated_posts').insert({
-          content: fullText,
-          generation_prompt: JSON.stringify(generationInput),
-          ai_model: generationInput.provider === 'anthropic' ? 'claude-haiku-4-5' : 'gemini-2.5-flash',
-          status: 'published',
-          tags: pattern.hashtags.map((h) => h.replace(/^#/, '')),
-        });
-        await supabase.from('scheduled_posts').insert({
-          content:      fullText,
-          scheduled_at: now,
-          published_at: now,
-          status:       'published',
-          x_post_id:    data.tweetId ?? null,
-          x_post_url:   data.url,
-          tags:         pattern.hashtags.map((h) => h.replace(/^#/, '')),
-        });
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('generated_posts').insert({
+            content: fullText,
+            generation_prompt: JSON.stringify(generationInput),
+            ai_model: generationInput.provider === 'anthropic' ? 'claude-haiku-4-5' : 'gemini-2.5-flash',
+            status: 'published',
+            tags: pattern.hashtags.map((h) => h.replace(/^#/, '')),
+            user_id: user.id,
+          });
+          await supabase.from('scheduled_posts').insert({
+            content:      fullText,
+            scheduled_at: now,
+            published_at: now,
+            status:       'published',
+            x_post_id:    data.tweetId ?? null,
+            x_post_url:   data.url,
+            tags:         pattern.hashtags.map((h) => h.replace(/^#/, '')),
+            user_id:      user.id,
+          });
+        }
       }
     } catch {
       setTweetError('ネットワークエラーが発生しました');
@@ -210,11 +223,19 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
     setScheduleError(null);
 
     const supabase = getSupabaseBrowser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setScheduling(false);
+      setScheduleError('認証情報が取得できませんでした。再ログインしてください。');
+      return;
+    }
+
     const { error } = await supabase.from('scheduled_posts').insert({
       content: fullText,
       scheduled_at: new Date(scheduleDate).toISOString(),
       tags: pattern.hashtags.map((h) => h.replace(/^#/, '')),
       status: 'scheduled',
+      user_id: user.id,
     });
 
     setScheduling(false);

@@ -30,6 +30,14 @@ export function NewScheduleForm({ onAdd }: Props) {
       .filter(Boolean);
 
     const supabase = getSupabaseBrowser();
+    // RLS (WITH CHECK auth.uid() = user_id) を通すため user_id を明示
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
+      setError('認証情報が取得できませんでした。再ログインしてください。');
+      return;
+    }
+
     const { data, error: sbError } = await supabase
       .from('scheduled_posts')
       .insert({
@@ -37,6 +45,7 @@ export function NewScheduleForm({ onAdd }: Props) {
         scheduled_at: new Date(date).toISOString(),
         tags,
         status: 'scheduled',
+        user_id: user.id,
       })
       .select()
       .single();

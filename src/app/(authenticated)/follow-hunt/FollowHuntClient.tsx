@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Settings as SettingsIcon, Loader2, Sparkles } from 'lucide-react';
+import { Search, Settings as SettingsIcon, Loader2, Sparkles, Tag, AlertTriangle, Plus, X as XIcon, RotateCcw } from 'lucide-react';
 import { useSettings, type ActivePersonaInfo } from '@/contexts/SettingsContext';
 import { apiFetch } from '@/lib/api-fetch';
 import { CandidateCard } from '@/components/follow-hunt/CandidateCard';
@@ -19,6 +19,12 @@ export function FollowHuntClient() {
   const [discovering, setDiscovering] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [message,    setMessage]      = useState<string | null>(null);
+  // フリーキーワード（このセッションのみ有効、ペルソナには保存しない）
+  const [extraKeywords, setExtraKeywords] = useState<string[]>([]);
+  // ペルソナキーワードのうちこのセッションで除外するもの
+  const [excludedPersonaKeywords, setExcludedPersonaKeywords] = useState<string[]>([]);
+  const [keywordInput, setKeywordInput]   = useState('');
+  const [showKeywordInput, setShowKeywordInput] = useState(false);
 
   // context のペルソナが更新されたらローカルに反映
   useEffect(() => {
@@ -56,6 +62,11 @@ export function FollowHuntClient() {
 
   const activePersona = localPersona;
 
+  /* ── 実際に検索に使うキーワード（ペルソナ−除外 + 追加） ── */
+  const effectivePersonaKeywords = (activePersona?.keywords ?? [])
+    .filter((k) => !excludedPersonaKeywords.includes(k));
+  const totalKeywordCount = effectivePersonaKeywords.length + extraKeywords.length;
+
   /* ── 探索実行 ── */
   const handleDiscover = async () => {
     if (!settings) return;
@@ -68,7 +79,18 @@ export function FollowHuntClient() {
     setDiscovering(true);
     setMessage(null);
     try {
-      const res = await apiFetch('/api/follow-hunt/discover', { method: 'POST' });
+      // ペルソナの除外済みを除いたキーワードを extra_keywords に含めることで
+      // サーバー側の「ペルソナ keywords 全部を取る」動作を上書きする。
+      // API 側は extra_keywords とペルソナ keywords をマージするので、
+      // 除外したい場合は API がペルソナ keywords を参照しないようにする必要がある。
+      // → ここでは single source として全部まとめて送る（後述 API 変更）。
+      const res = await apiFetch('/api/follow-hunt/discover', {
+        method: 'POST',
+        body: JSON.stringify({
+          keywords: [...effectivePersonaKeywords, ...extraKeywords],
+          extra_keywords: extraKeywords, // 後方互換
+        }),
+      });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error ?? '探索に失敗しました');
       setMessage(
@@ -82,6 +104,39 @@ export function FollowHuntClient() {
     } finally {
       setDiscovering(false);
     }
+  };
+
+  /* ── フリーキーワード追加/削除 ── */
+  const addExtraKeyword = () => {
+    const kw = keywordInput.trim();
+    if (!kw) return;
+    if (kw.length < 2 || kw.length > 40) {
+      alert('キーワードは 2〜40 文字で入力してください');
+      return;
+    }
+    // ペルソナ既存・追加済みと重複チェック
+    const all = [...(activePersona?.keywords ?? []), ...extraKeywords];
+    if (all.some((k) => k.toLowerCase() === kw.toLowerCase())) {
+      setKeywordInput('');
+      return;
+    }
+    setExtraKeywords((prev) => [...prev, kw]);
+    setKeywordInput('');
+  };
+
+  const removeExtraKeyword = (kw: string) => {
+    setExtraKeywords((prev) => prev.filter((k) => k !== kw));
+  };
+
+  const excludePersonaKeyword = (kw: string) => {
+    setExcludedPersonaKeywords((prev) => prev.includes(kw) ? prev : [...prev, kw]);
+  };
+
+  const resetKeywords = () => {
+    setExtraKeywords([]);
+    setExcludedPersonaKeywords([]);
+    setKeywordInput('');
+    setShowKeywordInput(false);
   };
 
   /* ── フォロー実行 ── */
@@ -189,7 +244,7 @@ export function FollowHuntClient() {
           </button>
           <button
             onClick={handleDiscover}
-            disabled={discovering}
+            disabled={discovering || totalKeywordCount === 0}
             className="flex items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-white rounded-lg transition-all disabled:opacity-40"
             style={{
               background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
@@ -200,6 +255,181 @@ export function FollowHuntClient() {
             候補を探す
           </button>
         </div>
+      </div>
+
+      {/* ── 検索キーワード表示 ── */}
+      <div
+        className="rounded-[1.375rem] p-4 mb-6"
+        style={{ background: 'rgba(167,139,250,0.03)', border: '1px solid rgba(167,139,250,0.1)' }}
+      >
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Tag size={13} className="text-[#a78bfa]" />
+            <p className="text-[12px] font-medium text-slate-300">検索に使うキーワード</p>
+            <span className="text-[11px] text-slate-600">
+              OR 条件 ({totalKeywordCount}個)
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {(extraKeywords.length > 0 || excludedPersonaKeywords.length > 0) && (
+              <button
+                onClick={resetKeywords}
+                className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  color: '#94a3b8',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
+                title="ペルソナ登録時の状態に戻す（除外・追加を取り消し）"
+              >
+                <RotateCcw size={11} />
+                リセット
+              </button>
+            )}
+            {!showKeywordInput && (
+              <button
+                onClick={() => setShowKeywordInput(true)}
+                className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all"
+                style={{
+                  background: 'rgba(167,139,250,0.1)',
+                  color: '#c4b5fd',
+                  border: '1px solid rgba(167,139,250,0.2)',
+                }}
+              >
+                <Plus size={11} />
+                追加キーワード
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* キーワード chip 一覧（ペルソナ + 追加） */}
+        <div className="flex flex-wrap gap-1.5">
+          {effectivePersonaKeywords.map((kw) => (
+            <span
+              key={`persona-${kw}`}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-medium"
+              style={{
+                background: 'rgba(167,139,250,0.12)',
+                color: '#c4b5fd',
+                border: '1px solid rgba(167,139,250,0.25)',
+              }}
+              title="ペルソナから取得（× で今回の検索から除外）"
+            >
+              {kw}
+              <button
+                onClick={() => excludePersonaKeyword(kw)}
+                className="hover:text-white transition-colors"
+                title="今回の検索から除外（ペルソナの登録は消えません）"
+              >
+                <XIcon size={10} />
+              </button>
+            </span>
+          ))}
+          {extraKeywords.map((kw) => (
+            <span
+              key={`extra-${kw}`}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-medium"
+              style={{
+                background: 'rgba(96,165,250,0.12)',
+                color: '#93c5fd',
+                border: '1px solid rgba(96,165,250,0.25)',
+              }}
+              title="追加キーワード（このセッションのみ）"
+            >
+              {kw}
+              <button
+                onClick={() => removeExtraKeyword(kw)}
+                className="hover:text-white transition-colors"
+                title="削除"
+              >
+                <XIcon size={10} />
+              </button>
+            </span>
+          ))}
+
+          {/* インライン入力（+ ボタン押下時に展開） */}
+          {showKeywordInput && (
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); addExtraKeyword(); }
+                  if (e.key === 'Escape') { setShowKeywordInput(false); setKeywordInput(''); }
+                }}
+                autoFocus
+                placeholder="キーワード"
+                maxLength={40}
+                className="px-2 py-1 text-[12px] text-slate-200 rounded-lg w-32"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(96,165,250,0.3)',
+                }}
+              />
+              <button
+                onClick={addExtraKeyword}
+                className="px-2 py-1 text-[11px] font-medium rounded-md"
+                style={{
+                  background: 'rgba(96,165,250,0.15)',
+                  color: '#93c5fd',
+                  border: '1px solid rgba(96,165,250,0.3)',
+                }}
+              >
+                追加
+              </button>
+              <button
+                onClick={() => { setShowKeywordInput(false); setKeywordInput(''); }}
+                className="text-slate-500 hover:text-slate-300 px-1"
+                title="閉じる"
+              >
+                <XIcon size={13} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* キーワードが何もない場合 */}
+        {totalKeywordCount === 0 && !showKeywordInput && (
+          <div
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-amber-300 mt-2"
+            style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)' }}
+          >
+            <AlertTriangle size={13} />
+            キーワードがありません。
+            <Link href="/persona" className="underline hover:text-amber-200">
+              ペルソナに登録
+            </Link>
+            するか、「追加キーワード」ボタンから入力してください。
+          </div>
+        )}
+
+        {/* 除外中のペルソナキーワード（取り消し線） */}
+        {excludedPersonaKeywords.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+            <span className="text-[10px] text-slate-600">今回除外:</span>
+            {excludedPersonaKeywords.map((kw) => (
+              <button
+                key={`excluded-${kw}`}
+                onClick={() => setExcludedPersonaKeywords((prev) => prev.filter((k) => k !== kw))}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] line-through hover:no-underline transition-all"
+                style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  color: '#475569',
+                  border: '1px dashed rgba(255,255,255,0.08)',
+                }}
+                title="クリックして復活"
+              >
+                {kw}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <p className="text-[10px] text-slate-600 mt-3 leading-relaxed">
+          紫=ペルソナ登録済み、青=その場追加（保存されません）。× で除外可。リセットで遷移直後の状態に戻ります。
+        </p>
       </div>
 
       {/* ── メッセージ ── */}

@@ -5,6 +5,7 @@ import { PersonaCard } from '@/components/persona/PersonaCard';
 import { PersonaForm } from '@/components/persona/PersonaForm';
 import { Plus } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
+import { apiFetch } from '@/lib/api-fetch';
 import type { PostPersona } from '@/lib/types';
 
 interface Props {
@@ -22,9 +23,8 @@ export function PersonaClient({ initialPersonas }: Props) {
   const handleActivate = async (id: string) => {
     setActivatingId(id);
     try {
-      const res = await fetch('/api/personas/activate', {
+      const res = await apiFetch('/api/personas/activate', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
       if (!res.ok) throw new Error('切り替えに失敗しました');
@@ -55,7 +55,7 @@ export function PersonaClient({ initialPersonas }: Props) {
   const handleDelete = async (id: string) => {
     if (!confirm('このペルソナを削除しますか？')) return;
     try {
-      const res = await fetch(`/api/personas/${id}`, { method: 'DELETE' });
+      const res = await apiFetch(`/api/personas/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('削除に失敗しました');
       setPersonas((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
