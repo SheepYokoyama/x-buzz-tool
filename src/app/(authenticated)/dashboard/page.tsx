@@ -5,11 +5,13 @@ import { StatsCard } from '@/components/dashboard/StatsCard';
 import { RecentPosts } from '@/components/dashboard/RecentPosts';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { QuickActions } from '@/components/dashboard/QuickActions';
-import { getDashboardStats, getFollowersCount } from '@/lib/api/stats';
+import { getDashboardStats } from '@/lib/api/stats';
 import { XPostDebug } from '@/components/dashboard/XPostDebug';
 import { SyncMetricsButton } from '@/components/dashboard/SyncMetricsButton';
+import { FollowersStatsCard } from '@/components/dashboard/FollowersStatsCard';
 import { getRecentPublishedPosts, getUpcomingScheduledPosts } from '@/lib/api/scheduled-posts';
-import { FileText, Heart, Eye, TrendingUp, Users, Sparkles, ArrowRight } from 'lucide-react';
+import { getTodayDraftSummary } from '@/lib/api/generated-posts';
+import { FileText, Heart, Eye, TrendingUp, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 function fmt(n: number): string {
@@ -19,12 +21,24 @@ function fmt(n: number): string {
 }
 
 export default async function DashboardPage() {
-  const [stats, recentPosts, upcomingPosts] = await Promise.all([
+  const [stats, recentPosts, upcomingPosts, todayDrafts] = await Promise.all([
     getDashboardStats(),
     getRecentPublishedPosts(4),
     getUpcomingScheduledPosts(3),
+    getTodayDraftSummary(),
   ]);
-  const followers: number | null = null; // X API 接続遅延防止のため一時スキップ
+
+  const hasDrafts = todayDrafts.count > 0;
+  const bannerTitle = hasDrafts
+    ? `AIが本日のバズ投稿候補を ${todayDrafts.count}件 生成しました`
+    : '本日のAI生成はまだありません';
+  const bannerSubtitle = hasDrafts
+    ? todayDrafts.latestPersonaName
+      ? `${todayDrafts.latestPersonaName}の投稿案が揃っています`
+      : '投稿案が揃っています'
+    : '新しい投稿案を作成してみましょう';
+  const bannerLinkHref = hasDrafts ? '/history' : '/generate';
+  const bannerLinkLabel = hasDrafts ? '投稿案を確認する' : '投稿案を生成する';
 
   return (
     <>
@@ -47,20 +61,26 @@ export default async function DashboardPage() {
 
         <div className="flex-1 min-w-0">
           <p className="text-[14px] font-medium text-slate-200 leading-none">
-            AIが本日のバズ投稿候補を{' '}
-            <span style={{ color: '#60a5fa' }}>3件</span> 生成しました
+            {hasDrafts ? (
+              <>
+                AIが本日のバズ投稿候補を{' '}
+                <span style={{ color: '#60a5fa' }}>{todayDrafts.count}件</span> 生成しました
+              </>
+            ) : (
+              bannerTitle
+            )}
           </p>
           <p className="text-[12px] text-slate-500 mt-1.5 leading-none">
-            テック起業家キャラで「AI活用」トピックの投稿案が揃っています
+            {bannerSubtitle}
           </p>
         </div>
 
         <Link
-          href="/generate"
+          href={bannerLinkHref}
           className="flex items-center gap-1.5 text-[12px] font-semibold whitespace-nowrap transition-colors"
           style={{ color: '#60a5fa' }}
         >
-          投稿案を確認する <ArrowRight size={13} />
+          {bannerLinkLabel} <ArrowRight size={13} />
         </Link>
       </div>
 
@@ -102,12 +122,7 @@ export default async function DashboardPage() {
           changeLabel="先月比"
           color="green"
         />
-        <StatsCard
-          title="フォロワー数"
-          value={followers !== null ? fmt(followers) : '—'}
-          icon={Users}
-          color="purple"
-        />
+        <FollowersStatsCard />
       </div>
 
       {/* ── 投稿一覧 + クイックアクション ────────── */}
