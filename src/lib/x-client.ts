@@ -53,16 +53,22 @@ export async function seedXAccountFromEnv(): Promise<void> {
 
 /**
  * アクティブな X アカウントを DB から取得してクライアントを返す。
+ * userId が指定された場合はそのユーザーのアクティブアカウントを取得する。
  * DB にレコードがない & env vars が設定されている場合は自動シード後に再取得する。
  * env vars への直接フォールバックは行わない（DB 管理に一本化）。
  */
-export async function getActiveXClient(): Promise<TwitterApi | null> {
+export async function getActiveXClient(userId?: string): Promise<TwitterApi | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (getSupabaseAdmin() as any)
+  let query = (getSupabaseAdmin() as any)
     .from('x_accounts')
     .select('api_key, api_secret, access_token, access_secret')
-    .eq('is_active', true)
-    .single();
+    .eq('is_active', true);
+
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+
+  const { data } = await query.single();
 
   if (data?.api_key && data?.api_secret && data?.access_token && data?.access_secret) {
     try {
@@ -81,7 +87,7 @@ export async function getActiveXClient(): Promise<TwitterApi | null> {
   if (envTokensAvailable()) {
     try {
       await seedXAccountFromEnv();
-      return getActiveXClient(); // 再帰呼び出し（1 回のみ）
+      return getActiveXClient(userId); // 再帰呼び出し（1 回のみ）
     } catch {
       return null;
     }

@@ -30,6 +30,13 @@ export function NewScheduleForm({ onAdd }: Props) {
       .filter(Boolean);
 
     const supabase = getSupabaseBrowser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
+      setError('認証が必要です。再ログインしてください。');
+      return;
+    }
+
     const { data, error: sbError } = await supabase
       .from('scheduled_posts')
       .insert({
@@ -37,6 +44,7 @@ export function NewScheduleForm({ onAdd }: Props) {
         scheduled_at: new Date(date).toISOString(),
         tags,
         status: 'scheduled',
+        user_id: user.id,
       })
       .select()
       .single();

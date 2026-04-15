@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { getActiveXClient } from '@/lib/x-client';
 
 export const maxDuration = 60;
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     );
   }
 
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
 
   // x_post_id を持つ公開済み投稿を全件取得
   const { data, error } = await supabase

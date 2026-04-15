@@ -5,6 +5,7 @@ import { GenerateSettings } from '@/components/generate/GenerateSettings';
 import { GenerateResults } from '@/components/generate/GenerateResults';
 import { useSettings } from '@/contexts/SettingsContext';
 import { getXPlan, getXLimit, getDefaultMaxLength } from '@/lib/x-char-count';
+import { apiFetch } from '@/lib/api-fetch';
 
 import type { GenerateInput, GeneratedPattern, PostPersona } from '@/lib/types';
 
@@ -13,8 +14,8 @@ interface Props {
 }
 
 export function GenerateClient({ initialPersonas }: Props) {
-  const { settings, setActivePersona, xUser } = useSettings();
-  const [personas, setPersonas]         = useState<PostPersona[]>(initialPersonas);
+  const { settings, xUser } = useSettings();
+  const [personas]                      = useState<PostPersona[]>(initialPersonas);
   const [results, setResults]           = useState<GeneratedPattern[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError]               = useState<string | null>(null);
@@ -48,26 +49,6 @@ export function GenerateClient({ initialPersonas }: Props) {
   const handleChange = (partial: Partial<GenerateInput>) =>
     setInput((prev) => ({ ...prev, ...partial }));
 
-  /* ── ペルソナ切り替え ─────────────────────────── */
-  const handleActivatePersona = async (id: string) => {
-    setPersonas((prev) => prev.map((p) => ({ ...p, is_active: p.id === id })));
-    const activated = personas.find((p) => p.id === id);
-    if (activated) setActivePersona({ id: activated.id, name: activated.name, avatar: activated.avatar, tone: activated.tone, style: activated.style, keywords: activated.keywords, description: activated.description });
-    try {
-      const res = await fetch('/api/personas/activate', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      });
-      if (!res.ok) throw new Error();
-    } catch {
-      setPersonas(initialPersonas);
-      const prev = initialPersonas.find((p) => p.is_active);
-      if (prev) setActivePersona({ id: prev.id, name: prev.name, avatar: prev.avatar, tone: prev.tone, style: prev.style, keywords: prev.keywords, description: prev.description });
-      alert('ペルソナの切り替えに失敗しました');
-    }
-  };
-
   /* ── 投稿生成 ────────────────────────────────── */
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -77,9 +58,8 @@ export function GenerateClient({ initialPersonas }: Props) {
     const activePersona = personas.find((p) => p.is_active);
 
     try {
-      const res = await fetch('/api/generate', {
+      const res = await apiFetch('/api/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...input,
           provider: settings.aiProvider,
@@ -112,7 +92,6 @@ export function GenerateClient({ initialPersonas }: Props) {
           isGenerating={isGenerating}
           onChange={handleChange}
           onGenerate={handleGenerate}
-          onActivatePersona={handleActivatePersona}
         />
       </div>
       <div className="lg:col-span-3">

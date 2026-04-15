@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getAuthUser } from '@/lib/auth';
 import { encrypt, maskToken } from '@/lib/encryption';
 
 type Params = { params: Promise<{ id: string }> };
 
 /** PATCH /api/x-accounts/[id] — 更新（トークンは空なら変更しない） */
 export async function PATCH(req: Request, { params }: Params) {
+  const user = await getAuthUser(req);
+  if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+
   const { id } = await params;
   const body = await req.json() as {
     name?: string;
@@ -15,12 +19,10 @@ export async function PATCH(req: Request, { params }: Params) {
     access_token?: string;
     access_secret?: string;
     bearer_token?: string;
-    is_active?: boolean;
   };
 
   const supabase = getSupabaseAdmin();
 
-  // 更新対象フィールドを構築（空文字トークンは更新しない）
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updates: Record<string, any> = { updated_at: new Date().toISOString() };
   if (body.name !== undefined)      updates.name     = body.name.trim();
@@ -38,6 +40,7 @@ export async function PATCH(req: Request, { params }: Params) {
     .from('x_accounts')
     .update(updates)
     .eq('id', id)
+    .eq('user_id', user.id)
     .select('id, name, username, is_active, created_at, updated_at')
     .single();
 
@@ -55,11 +58,14 @@ export async function PATCH(req: Request, { params }: Params) {
 }
 
 /** DELETE /api/x-accounts/[id] */
-export async function DELETE(_: Request, { params }: Params) {
+export async function DELETE(req: Request, { params }: Params) {
+  const user = await getAuthUser(req);
+  if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+
   const { id } = await params;
   const supabase = getSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any).from('x_accounts').delete().eq('id', id);
+  const { error } = await (supabase as any).from('x_accounts').delete().eq('id', id).eq('user_id', user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

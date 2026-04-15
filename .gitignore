@@ -42,3 +42,7 @@ next-env.d.ts
 
 # generated documents
 *.docx
+.env*.local
+
+# Google OAuth secrets
+client_secret_*.json

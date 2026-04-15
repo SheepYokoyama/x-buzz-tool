@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import type { AiProvider } from '@/lib/types';
+import { getAuthUser } from '@/lib/auth';
 
 export const maxDuration = 60;
 
@@ -45,6 +46,9 @@ function buildPersonaInstruction(persona: PersonaInfo): string {
 }
 
 export async function POST(req: Request) {
+  const user = await getAuthUser(req);
+  if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+
   const { originalText, style, provider, persona } = (await req.json()) as RewriteInput;
 
   if (!originalText?.trim()) {

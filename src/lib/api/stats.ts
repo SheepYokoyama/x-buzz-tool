@@ -1,4 +1,4 @@
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { getActiveXClient, getActiveXAccountId } from '@/lib/x-client';
 import type { DashboardStats } from '@/lib/types';
 
@@ -27,7 +27,6 @@ function aggregateRows(posts: PostWithMetrics[]) {
 
   for (const post of posts) {
     if (!post.post_metrics?.length) continue;
-    // 投稿ごとに最新の1件だけ使う
     const latest = [...post.post_metrics].sort(
       (a, b) => new Date(b.measured_at).getTime() - new Date(a.measured_at).getTime(),
     )[0];
@@ -47,21 +46,14 @@ function aggregateRows(posts: PostWithMetrics[]) {
   };
 }
 
-/**
- * 先月比の変化率（%、小数点1桁）を返す。
- * 先月が 0 の場合は null。
- */
 function calcChange(current: number, previous: number): number | null {
   if (previous === 0) return null;
   return Math.round(((current - previous) / previous) * 1000) / 10;
 }
 
-/**
- * 指定期間内の公開済み投稿＋メトリクスを取得する。
- * accountId が指定された場合はそのアカウントの投稿のみ返す。
- */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchPublishedWithMetrics(
-  supabase: ReturnType<typeof getSupabaseServer>,
+  supabase: any,
   startIso: string,
   endIso?: string,
   accountId?: string | null,
@@ -75,8 +67,7 @@ async function fetchPublishedWithMetrics(
     .gte('published_at', startIso);
 
   if (endIso) query = query.lt('published_at', endIso);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (accountId) query = (query as any).eq('x_account_id', accountId);
+  if (accountId) query = query.eq('x_account_id', accountId);
 
   const { data } = await query;
   return (data ?? []) as PostWithMetrics[];
@@ -84,16 +75,15 @@ async function fetchPublishedWithMetrics(
 
 // ── 公開 API ─────────────────────────────────────────────────────────────────
 
-/** ダッシュボード用の集計統計を取得する（今月分のみ・先月比付き・アクティブアカウント絞り込み） */
+/** ダッシュボード用の集計統計を取得する */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
   const activeAccountId = await getActiveXAccountId();
 
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
-  // 投稿数クエリにアカウント絞り込みを適用するヘルパー
   function countQuery(startIso: string, endIso?: string) {
     let q = supabase
       .from('scheduled_posts')
@@ -113,13 +103,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     postsThisMonth,
     postsLastMonth,
   ] = await Promise.all([
-    // 今月の公開済み投稿数
     countQuery(thisMonthStart),
-
-    // 先月の公開済み投稿数
     countQuery(lastMonthStart, thisMonthStart),
-
-    // 予約中投稿数（アカウント絞り込みあり）
     (() => {
       let q = supabase
         .from('scheduled_posts')
@@ -129,11 +114,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       if (activeAccountId) q = (q as any).eq('x_account_id', activeAccountId);
       return q;
     })(),
-
-    // 今月の投稿＋メトリクス
     fetchPublishedWithMetrics(supabase, thisMonthStart, undefined, activeAccountId),
-
-    // 先月の投稿＋メトリクス
     fetchPublishedWithMetrics(supabase, lastMonthStart, thisMonthStart, activeAccountId),
   ]);
 
@@ -159,10 +140,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   };
 }
 
-/**
- * アクティブな X アカウントのフォロワー数を取得する。
- * X 未接続またはエラー時は null を返す。
- */
 export async function getFollowersCount(): Promise<number | null> {
   try {
     const client = await getActiveXClient();

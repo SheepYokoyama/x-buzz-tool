@@ -2,10 +2,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import type { GenerateInput, GeneratedPattern } from '@/lib/types';
+import { getAuthUser } from '@/lib/auth';
 
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
+  const user = await getAuthUser(req);
+  if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+
   const input = (await req.json()) as GenerateInput;
 
   const effectiveTheme = input.theme.trim() || input.selectedTopic.trim();

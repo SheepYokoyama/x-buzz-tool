@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getActiveXClient } from '@/lib/x-client';
+import { getAuthUser } from '@/lib/auth';
 
 /**
  * POST /api/x/tweet
@@ -9,7 +10,10 @@ import { getActiveXClient } from '@/lib/x-client';
  * response: { tweetId: string; url: string }
  */
 export async function POST(req: Request) {
-  const client = await getActiveXClient();
+  const user = await getAuthUser(req);
+  if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+
+  const client = await getActiveXClient(user.id);
   if (!client) {
     return NextResponse.json(
       { error: 'X API の認証情報が設定されていません。Xアカウント管理でトークンを登録してください。' },

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 
 function isAuthorized(req: Request): boolean {
   const host = req.headers.get('host') ?? '';
@@ -29,7 +29,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
 
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('scheduled_posts')
     .update({

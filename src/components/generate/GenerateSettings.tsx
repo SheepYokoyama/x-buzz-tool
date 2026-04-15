@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, VoiceInput, FieldLabel } from '@/components/ui/Input';
 import { Sparkles, RefreshCw, Settings } from 'lucide-react';
@@ -35,7 +35,6 @@ interface Props {
   isGenerating: boolean;
   onChange: (partial: Partial<GenerateInput>) => void;
   onGenerate: () => void;
-  onActivatePersona: (id: string) => void;
 }
 
 const PROVIDER_LABELS: Record<string, { label: string; badge: string; badgeColor: string }> = {
@@ -43,7 +42,7 @@ const PROVIDER_LABELS: Record<string, { label: string; badge: string; badgeColor
   anthropic: { label: 'Anthropic API', badge: '有料', badgeColor: '#f59e0b' },
 };
 
-export function GenerateSettings({ input, personas, isGenerating, onChange, onGenerate, onActivatePersona }: Props) {
+export function GenerateSettings({ input, personas, isGenerating, onChange, onGenerate }: Props) {
   const { settings, xUser } = useSettings();
   const plan          = getXPlan(xUser?.verifiedType, xUser?.subscriptionType);
   const xLimit        = getXLimit(plan);
@@ -52,11 +51,7 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
   const canGenerate = (input.theme.trim() || input.selectedTopic) && !isGenerating;
   const providerInfo = PROVIDER_LABELS[settings.aiProvider] ?? PROVIDER_LABELS.gemini;
 
-  // アクティブなペルソナを初期表示位置にスクロール
-  const activeChipRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    activeChipRef.current?.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
-  }, []);
+  const activePersona = personas.find((p) => p.is_active);
 
   return (
     <div className="neon-card p-6 space-y-5">
@@ -90,53 +85,55 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
         </span>
       </div>
 
-      {/* ── ペルソナ（横スクロール・クリック切り替え）── */}
+      {/* ── ペルソナ（アクティブ1件を表示のみ）── */}
       <div>
-        <FieldLabel>ペルソナ</FieldLabel>
-        {/* 横スクロールコンテナ：高さ固定でレイアウトを圧迫しない */}
-        <div className="flex gap-2.5 overflow-x-auto pb-1.5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
-          {personas.map((char) => (
-            <button
-              key={char.id}
-              ref={char.is_active ? activeChipRef : null}
-              onClick={() => !char.is_active && onActivatePersona(char.id)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all shrink-0"
-              style={{
-                background: char.is_active ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.03)',
-                border: char.is_active
-                  ? '1px solid rgba(167,139,250,0.35)'
-                  : '1px solid rgba(255,255,255,0.07)',
-                cursor: char.is_active ? 'default' : 'pointer',
-                boxShadow: char.is_active ? '0 0 14px rgba(167,139,250,0.15)' : 'none',
-                minWidth: '130px',
-              }}
-            >
-              {/* アバター */}
-              <span className="text-2xl leading-none shrink-0">{char.avatar}</span>
-              {/* テキスト情報 */}
-              <div className="text-left min-w-0 flex-1">
-                <p
-                  className="text-[13px] font-semibold leading-tight truncate"
-                  style={{ color: char.is_active ? '#c4b5fd' : '#cbd5e1' }}
-                >
-                  {char.name}
-                </p>
-                <p className="text-[11px] mt-0.5 leading-tight truncate" style={{ color: '#475569' }}>
-                  {char.tone}
-                </p>
-                {char.is_active && (
-                  <span
-                    className="inline-flex items-center gap-1 text-[10px] font-semibold mt-1 px-1.5 py-0.5 rounded-md"
-                    style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.25)' }}
-                  >
-                    <span className="w-1 h-1 rounded-full bg-current" />
-                    使用中
-                  </span>
-                )}
-              </div>
-            </button>
-          ))}
+        <div className="flex items-center justify-between mb-1.5">
+          <FieldLabel className="mb-0">ペルソナ</FieldLabel>
+          <Link
+            href="/persona"
+            className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            変更するには設定へ
+          </Link>
         </div>
+        {activePersona ? (
+          <div
+            className="flex items-center gap-3 px-4 py-3 rounded-xl"
+            style={{
+              background: 'rgba(167,139,250,0.12)',
+              border: '1px solid rgba(167,139,250,0.35)',
+              boxShadow: '0 0 14px rgba(167,139,250,0.15)',
+            }}
+          >
+            <span className="text-2xl leading-none shrink-0">{activePersona.avatar}</span>
+            <div className="text-left min-w-0 flex-1">
+              <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: '#c4b5fd' }}>
+                {activePersona.name}
+              </p>
+              <p className="text-[11px] mt-0.5 leading-tight truncate" style={{ color: '#475569' }}>
+                {activePersona.tone}
+              </p>
+              <span
+                className="inline-flex items-center gap-1 text-[10px] font-semibold mt-1 px-1.5 py-0.5 rounded-md"
+                style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.25)' }}
+              >
+                <span className="w-1 h-1 rounded-full bg-current" />
+                使用中
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="px-4 py-3 rounded-xl text-[12px] text-slate-500"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.08)' }}
+          >
+            アクティブなペルソナがありません。
+            <Link href="/persona" className="ml-1 text-neon-purple hover:underline">
+              ペルソナ設定
+            </Link>
+            から選択してください。
+          </div>
+        )}
       </div>
 
       {/* ── テーマ ── */}

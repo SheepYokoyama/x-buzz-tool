@@ -1,6 +1,8 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { getSupabaseBrowser } from '@/lib/supabase';
 import type { AiProvider } from '@/lib/types';
 
 // localStorage に保存する設定
@@ -31,6 +33,14 @@ export interface XUserInfo {
   subscriptionType: string | null;
 }
 
+// Google 認証ユーザー情報
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl: string | null;
+}
+
 interface SettingsContextValue {
   settings: PersistedSettings;
   updateSettings: (partial: Partial<PersistedSettings>) => void;
@@ -38,6 +48,8 @@ interface SettingsContextValue {
   setActivePersona: (persona: ActivePersonaInfo | null) => void;
   xUser: XUserInfo | null;
   setXUser: (user: XUserInfo | null) => void;
+  authUser: AuthUser | null;
+  signOut: () => Promise<void>;
 }
 
 const STORAGE_KEY = 'buzzpost_settings';
@@ -53,12 +65,16 @@ const SettingsContext = createContext<SettingsContextValue>({
   setActivePersona: () => {},
   xUser: null,
   setXUser: () => {},
+  authUser: null,
+  signOut: async () => {},
 });
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [settings, setSettings]       = useState<PersistedSettings>(defaultSettings);
   const [activePersona, setActivePersona] = useState<ActivePersonaInfo | null>(null);
   const [xUser, setXUser]             = useState<XUserInfo | null>(null);
+  const [authUser, setAuthUser]       = useState<AuthUser | null>(null);
 
   // localStorageから初期値を読み込む
   useEffect(() => {
@@ -66,6 +82,21 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) setSettings({ ...defaultSettings, ...JSON.parse(stored) });
     } catch {}
+  }, []);
+
+  // Supabase Auth からユーザー情報を取得
+  useEffect(() => {
+    const supabase = getSupabaseBrowser();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setAuthUser({
+          id: user.id,
+          email: user.email ?? '',
+          name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email ?? '',
+          avatarUrl: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
+        });
+      }
+    });
   }, []);
 
   const updateSettings = (partial: Partial<PersistedSettings>) => {
@@ -76,8 +107,16 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const signOut = useCallback(async () => {
+    const supabase = getSupabaseBrowser();
+    await supabase.auth.signOut();
+    document.cookie = 'app-auth=; path=/; max-age=0';
+    setAuthUser(null);
+    router.push('/login');
+  }, [router]);
+
   return (
-    <SettingsContext.Provider value={{ settings, updateSettings, activePersona, setActivePersona, xUser, setXUser }}>
+    <SettingsContext.Provider value={{ settings, updateSettings, activePersona, setActivePersona, xUser, setXUser, authUser, signOut }}>
       {children}
     </SettingsContext.Provider>
   );

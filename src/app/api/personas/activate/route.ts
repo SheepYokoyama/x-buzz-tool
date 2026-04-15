@@ -1,20 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServer } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import { getAuthUser } from '@/lib/auth';
 
 export async function PATCH(req: Request) {
   try {
+    const user = await getAuthUser(req);
+    if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+
     const { id } = (await req.json()) as { id: string };
     if (!id) {
       return NextResponse.json({ error: 'id が必要です' }, { status: 400 });
     }
 
-    const supabase = getSupabaseServer();
+    const supabase = getSupabaseAdmin();
 
-    // 全ペルソナを非アクティブ → 指定IDのみアクティブ
+    // 該当ユーザーの全ペルソナを非アクティブ → 指定IDのみアクティブ
     const { error: resetError } = await supabase
       .from('post_personas')
       .update({ is_active: false, updated_at: new Date().toISOString() })
-      .not('id', 'is', null);  // 全行対象（id は NOT NULL なので必ず全行マッチ）
+      .eq('user_id', user.id);
 
     if (resetError) throw resetError;
 
@@ -22,6 +26,7 @@ export async function PATCH(req: Request) {
       .from('post_personas')
       .update({ is_active: true, updated_at: new Date().toISOString() })
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single();
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Send, ExternalLink } from 'lucide-react';
 import { VoiceTextarea } from '@/components/ui/Input';
 import { getSupabaseBrowser } from '@/lib/supabase';
+import { apiFetch } from '@/lib/api-fetch';
 import { countXChars, X_COUNT_RULE, getXPlan, getXLimit } from '@/lib/x-char-count';
 import { useSettings } from '@/contexts/SettingsContext';
 
@@ -23,9 +24,8 @@ export function XPostDebug() {
     setResult(null);
 
     try {
-      const res  = await fetch('/api/x/tweet', {
+      const res  = await apiFetch('/api/x/tweet', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
       const data = await res.json();
@@ -38,15 +38,19 @@ export function XPostDebug() {
         // ダッシュボード「最近のバズ投稿」に表示されるよう scheduled_posts に保存
         const now = new Date().toISOString();
         const supabase = getSupabaseBrowser();
-        await supabase.from('scheduled_posts').insert({
-          content:      text,
-          scheduled_at: now,
-          published_at: now,
-          status:       'published',
-          x_post_id:    data.tweetId ?? null,
-          x_post_url:   data.url,
-          tags:         [],
-        });
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('scheduled_posts').insert({
+            content:      text,
+            scheduled_at: now,
+            published_at: now,
+            status:       'published',
+            x_post_id:    data.tweetId ?? null,
+            x_post_url:   data.url,
+            tags:         [],
+            user_id:      user.id,
+          });
+        }
       }
     } catch {
       setResult({ ok: false, error: 'ネットワークエラー' });
