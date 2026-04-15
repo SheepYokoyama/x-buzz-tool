@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from './database.types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -6,20 +7,15 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // =============================================
 // ブラウザ用クライアント（Client Components で使用）
-// @supabase/supabase-js の createClient を使用（シングルトン）。
-// PKCE コード検証キーを localStorage に保存するため、
-// OAuth リダイレクト後も確実にセッション交換が成功する。
+// @supabase/ssr の createBrowserClient を使用（シングルトン）。
+// セッションを Cookie に自動同期するため、
+// Server Components / Route Handlers の getSupabaseServer() でも同じセッションを共有できる。
 // =============================================
-let browserClient: ReturnType<typeof createClient<Database>> | null = null;
+let browserClient: ReturnType<typeof createBrowserClient<Database>> | null = null;
 
 export function getSupabaseBrowser() {
   if (!browserClient) {
-    browserClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        flowType: 'implicit',
-        detectSessionInUrl: true,
-      },
-    });
+    browserClient = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
   }
   return browserClient;
 }
