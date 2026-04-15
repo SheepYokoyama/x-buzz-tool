@@ -15,6 +15,7 @@ import {
   BookOpenCheck,
   Settings,
   LogOut,
+  UserPlus,
 } from 'lucide-react';
 import { X_COUNT_RULE, getXPlan, getXLimit, getPlanLabel } from '@/lib/x-char-count';
 import { apiFetch } from '@/lib/api-fetch';
@@ -28,10 +29,11 @@ const mainNav = [
 ];
 
 const subNav = [
-  { href: '/notebook',   label: 'ノート',           icon: NotebookPen   },
-  { href: '/persona',    label: 'ペルソナ',         icon: UserCircle    },
-  { href: '/x-accounts', label: 'アカウント管理',   icon: Settings      },
-  { href: '/guide',      label: '使い方ガイド',     icon: BookOpenCheck },
+  { href: '/notebook',    label: 'ノート',           icon: NotebookPen   },
+  { href: '/persona',     label: 'ペルソナ',         icon: UserCircle    },
+  { href: '/follow-hunt', label: 'フォロー候補',     icon: UserPlus      },
+  { href: '/x-accounts',  label: 'アカウント管理',   icon: Settings      },
+  { href: '/guide',       label: '使い方ガイド',     icon: BookOpenCheck },
 ];
 
 export function Sidebar() {
