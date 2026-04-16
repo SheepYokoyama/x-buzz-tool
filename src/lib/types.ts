@@ -74,6 +74,45 @@ export interface PostPersona {
   updated_at: string;
 }
 
+/** フォロー候補のステータス */
+export type FollowCandidateStatus = 'pending' | 'followed' | 'skipped' | 'failed';
+
+/** フォロー候補（Follow Hunt 機能） */
+export interface FollowCandidate {
+  id: string;
+  user_id: string;
+  persona_id: string;
+  x_user_id: string;
+  username: string;
+  display_name: string | null;
+  bio: string | null;
+  profile_image_url: string | null;
+  followers_count: number | null;
+  following_count: number | null;
+  ff_ratio: number | null;
+  last_tweeted_at: string | null;
+  matched_keywords: string[];
+  sample_tweet_text: string | null;
+  status: FollowCandidateStatus;
+  created_at: string;
+  followed_at: string | null;
+}
+
+/** Follow Hunt 機能のユーザー別設定 */
+export interface FollowHuntSettings {
+  user_id: string;
+  banned_words: string[];
+  min_ff_ratio: number;
+  max_ff_ratio: number;
+  min_followers: number;
+  max_followers: number;
+  active_days: number;
+  daily_follow_cap: number;
+  /** 1 回の探索で取得する tweets の最大数 (10〜100) */
+  max_results: number;
+  updated_at: string;
+}
+
 export interface PostIdea {
   id: string;
   user_id: string | null;

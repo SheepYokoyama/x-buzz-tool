@@ -130,9 +130,10 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setSaving(false);
-      setSaveError('認証が必要です');
+      setSaveError('認証情報が取得できませんでした。再ログインしてください。');
       return;
     }
+
     const { error } = await supabase.from('generated_posts').insert({
       content: fullText,
       generation_prompt: JSON.stringify(generationInput),
@@ -225,9 +226,10 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setScheduling(false);
-      setScheduleError('認証が必要です');
+      setScheduleError('認証情報が取得できませんでした。再ログインしてください。');
       return;
     }
+
     const { error } = await supabase.from('scheduled_posts').insert({
       content: fullText,
       scheduled_at: new Date(scheduleDate).toISOString(),

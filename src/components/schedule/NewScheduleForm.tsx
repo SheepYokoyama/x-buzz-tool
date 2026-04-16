@@ -33,7 +33,7 @@ export function NewScheduleForm({ onAdd }: Props) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setLoading(false);
-      setError('認証が必要です。再ログインしてください。');
+      setError('認証情報が取得できませんでした。再ログインしてください。');
       return;
     }
 

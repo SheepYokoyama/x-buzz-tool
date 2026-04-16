@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Eye, EyeOff, Loader2 } from 'lucide-react';
 import type { XAccount } from '@/lib/types';
+import { apiFetch } from '@/lib/api-fetch';
 
 interface Props {
   account?: XAccount;
@@ -61,11 +62,10 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
         if (tokens[f.key]?.trim()) body[f.key] = tokens[f.key].trim();
       }
 
-      const res = await fetch(
+      const res = await apiFetch(
         isEdit ? `/api/x-accounts/${account.id}` : '/api/x-accounts',
         {
           method: isEdit ? 'PATCH' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         },
       );
