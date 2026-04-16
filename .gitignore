@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Google OAuth secrets
 client_secret_*.json
+.claude/worktrees/
+src/proxy.ts.bak
+CLAUDE.BAK
