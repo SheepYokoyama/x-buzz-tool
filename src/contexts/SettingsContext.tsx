@@ -84,20 +84,24 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
-  // Supabase Auth からユーザー情報を取得
+  // Supabase Auth からユーザー情報を取得（セッション無効時は再ログインへ）
   useEffect(() => {
     const supabase = getSupabaseBrowser();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setAuthUser({
-          id: user.id,
-          email: user.email ?? '',
-          name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email ?? '',
-          avatarUrl: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
-        });
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error || !user) {
+        setAuthUser(null);
+        document.cookie = 'app-auth=; path=/; max-age=0';
+        router.push('/login');
+        return;
       }
+      setAuthUser({
+        id: user.id,
+        email: user.email ?? '',
+        name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email ?? '',
+        avatarUrl: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
+      });
     });
-  }, []);
+  }, [router]);
 
   const updateSettings = (partial: Partial<PersistedSettings>) => {
     setSettings((prev) => {
