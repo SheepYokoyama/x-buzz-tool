@@ -74,6 +74,11 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
       setEditError(error.message);
       return;
     }
+    // RLSで弾かれた場合 data が null になる（PGRST116）ため到達しないが念のため
+    if (!data) {
+      setEditError('更新権限がありません');
+      return;
+    }
     onUpdate(data as ScheduledPost);
     setEditing(false);
   };
@@ -117,7 +122,19 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
   // ── 削除 ──
   const handleDelete = async () => {
     const supabase = getSupabaseBrowser();
-    await supabase.from('scheduled_posts').delete().eq('id', post.id);
+    const { data, error } = await supabase
+      .from('scheduled_posts')
+      .delete()
+      .eq('id', post.id)
+      .select();
+    if (error) {
+      alert(`削除に失敗しました: ${error.message}`);
+      return;
+    }
+    if (!data || data.length === 0) {
+      alert('削除権限がありません');
+      return;
+    }
     onDelete(post.id);
   };
 

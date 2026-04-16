@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Copy, Check, Trash2, Send, AlertCircle, ExternalLink } from 'lucide-react';
 import { getSupabaseBrowser } from '@/lib/supabase';
+import { apiFetch } from '@/lib/api-fetch';
 import type { GeneratedPost } from '@/lib/types';
 import { countXChars, X_COUNT_RULE, getXPlan, getXLimit } from '@/lib/x-char-count';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -71,9 +72,8 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
     setTweeting(true);
     setTweetError(null);
     try {
-      const res = await fetch('/api/x/tweet', {
+      const res = await apiFetch('/api/x/tweet', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: draft.content }),
       });
       const data = await res.json();
@@ -85,19 +85,23 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
         // ステータスを published に更新
         const supabase = getSupabaseBrowser();
         const now = new Date().toISOString();
+        const { data: { user } } = await supabase.auth.getUser();
         await supabase
           .from('generated_posts')
           .update({ status: 'published' })
           .eq('id', draft.id);
-        await supabase.from('scheduled_posts').insert({
-          content:      draft.content,
-          scheduled_at: now,
-          published_at: now,
-          status:       'published',
-          x_post_id:    data.tweetId ?? null,
-          x_post_url:   data.url,
-          tags:         draft.tags,
-        });
+        if (user) {
+          await supabase.from('scheduled_posts').insert({
+            content:      draft.content,
+            scheduled_at: now,
+            published_at: now,
+            status:       'published',
+            x_post_id:    data.tweetId ?? null,
+            x_post_url:   data.url,
+            tags:         draft.tags,
+            user_id:      user.id,
+          });
+        }
       }
     } catch {
       setTweetError('ネットワークエラーが発生しました');
