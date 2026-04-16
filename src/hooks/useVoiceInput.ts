@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 // ブラウザ型拡張（SpeechRecognition はブラウザ標準型のため any で宣言）
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -25,11 +25,14 @@ interface UseVoiceInputReturn {
 
 export function useVoiceInput({ onResult }: UseVoiceInputOptions): UseVoiceInputReturn {
   const [isListening, setIsListening] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  const isSupported =
-    typeof window !== 'undefined' &&
-    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  useEffect(() => {
+    setIsSupported(
+      'SpeechRecognition' in window || 'webkitSpeechRecognition' in window,
+    );
+  }, []);
 
   const stop = useCallback(() => {
     recognitionRef.current?.stop();

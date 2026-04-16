@@ -268,6 +268,13 @@ export function Sidebar() {
           </div>
         </>
       )}
+
+      {/* ── Version ──────────────────────────────── */}
+      <div className="px-5 pb-4 pt-1">
+        <p className="text-[10px] tracking-wide" style={{ color: '#334155' }}>
+          v{process.env.NEXT_PUBLIC_APP_VERSION} · {process.env.NEXT_PUBLIC_GIT_SHA}
+        </p>
+      </div>
     </aside>
   );
 }
