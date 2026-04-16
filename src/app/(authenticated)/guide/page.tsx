@@ -38,7 +38,7 @@ const TIPS = [
 export default function GuidePage() {
   return (
     <>
-      <Header title="使い方ガイド" subtitle="BuzzPostを使いこなすための4ステップ" />
+      <Header title="使い方ガイド" subtitle="Xpressoを使いこなすための4ステップ" />
 
       {/* Hero banner */}
       <div
@@ -52,7 +52,7 @@ export default function GuidePage() {
           AIで毎日5分、<span className="gradient-text">バズ投稿</span>を量産しよう
         </p>
         <p className="text-[13px] text-slate-500 leading-relaxed max-w-xl">
-          BuzzPostはXでバズる投稿をAIで自動生成・管理するツールです。
+          XpressoはXでバズる投稿をAIで自動生成・管理するツールです。
           ペルソナ設定 → 生成 → 予約 → 分析のサイクルを回すことで、
           フォロワーを継続的に増やすことができます。
         </p>
