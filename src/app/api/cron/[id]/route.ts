@@ -30,12 +30,17 @@ export async function PATCH(
   }
 
   const supabase = getSupabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const update: Record<string, any> = { status };
+  if (status === 'published') update.published_at = new Date().toISOString();
+  if (body.x_post_id)    update.x_post_id    = body.x_post_id;
+  if (body.x_post_url)   update.x_post_url   = body.x_post_url;
+  if (body.x_account_id) update.x_account_id = body.x_account_id;
+
   const { data, error } = await supabase
     .from('scheduled_posts')
-    .update({
-      status,
-      ...(status === 'published' ? { published_at: new Date().toISOString() } : {}),
-    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .update(update as any)
     .eq('id', id)
     .select()
     .single();

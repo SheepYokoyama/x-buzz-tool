@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import {
-  CalendarClock, Trash2, Edit2, Check, X, Send, AlertCircle,
+  CalendarClock, Trash2, Edit2, Check, X, Send, Zap, AlertCircle,
 } from 'lucide-react';
 import { getSupabaseBrowser } from '@/lib/supabase';
+import { apiFetch } from '@/lib/api-fetch';
 import { Textarea, Input } from '@/components/ui/Input';
 import type { ScheduledPost, ScheduledPostStatus } from '@/lib/types';
 
@@ -42,6 +43,8 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
   const [tagsInput, setTagsInput]       = useState(post.tags.join(', '));
   const [saving, setSaving]             = useState(false);
   const [publishing, setPublishing]     = useState(false);
+  const [postingNow, setPostingNow]     = useState(false);
+  const [postNowError, setPostNowError] = useState<string | null>(null);
   const [editError, setEditError]       = useState<string | null>(null);
 
   const style = STATUS_STYLES[post.status];
@@ -89,6 +92,41 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
     setTagsInput(post.tags.join(', '));
     setEditError(null);
     setEditing(false);
+  };
+
+  // ── 即時投稿（Xに投稿してステータスも更新） ──
+  const handlePostNow = async () => {
+    setPostingNow(true);
+    setPostNowError(null);
+    try {
+      const res = await apiFetch('/api/x/tweet', {
+        method: 'POST',
+        body: JSON.stringify({ text: post.content }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setPostNowError(data.error ?? '投稿に失敗しました');
+        setPostingNow(false);
+        return;
+      }
+      const patchRes = await fetch(`/api/cron/${post.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'published',
+          x_post_id: data.tweetId,
+          x_post_url: data.url,
+        }),
+      });
+      if (patchRes.ok) {
+        const { post: updated } = await patchRes.json();
+        onUpdate(updated as ScheduledPost);
+      }
+    } catch {
+      setPostNowError('ネットワークエラーが発生しました');
+    } finally {
+      setPostingNow(false);
+    }
   };
 
   // ── テスト公開（ローカルでステータスを published に変更） ──
@@ -161,6 +199,22 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
           <div className="flex items-center gap-1.5 shrink-0">
             {post.status === 'scheduled' && (
               <>
+                {/* 即時投稿 */}
+                <button
+                  onClick={handlePostNow}
+                  disabled={postingNow}
+                  title="今すぐXに投稿する"
+                  className="flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg transition-all"
+                  style={{
+                    background: 'rgba(96,165,250,0.1)',
+                    border: '1px solid rgba(96,165,250,0.25)',
+                    color: postingNow ? '#475569' : '#60a5fa',
+                    cursor: postingNow ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <Zap size={11} />
+                  {postingNow ? '投稿中…' : '即時投稿'}
+                </button>
                 {/* テスト公開 */}
                 <button
                   onClick={handleTestPublish}
@@ -228,6 +282,8 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
           </div>
         )}
       </div>
+
+      {postNowError && <p className="text-[11px] text-red-400 px-1">{postNowError}</p>}
 
       {/* ── 本文（通常表示 or 編集フォーム） ── */}
       {editing ? (
