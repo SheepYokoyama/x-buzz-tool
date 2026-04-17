@@ -32,20 +32,12 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const xClient = await getActiveXClient();
-  if (!xClient) {
-    return NextResponse.json(
-      { error: 'X API が設定されていません。Xアカウント管理でトークンを登録してください。' },
-      { status: 503 },
-    );
-  }
-
   const supabase = getSupabaseAdmin();
 
-  // x_post_id を持つ公開済み投稿を全件取得
+  // x_post_id と user_id を持つ公開済み投稿を全件取得
   const { data, error } = await supabase
     .from('scheduled_posts')
-    .select('id, x_post_id')
+    .select('id, x_post_id, user_id')
     .eq('status', 'published')
     .not('x_post_id', 'is', null);
 
@@ -53,16 +45,34 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const posts = (data ?? []) as { id: string; x_post_id: string }[];
+  const posts = (data ?? []) as { id: string; x_post_id: string; user_id: string | null }[];
 
   if (posts.length === 0) {
     return NextResponse.json({ synced: 0, results: [] });
   }
 
+  // ユーザーごとの X クライアントをキャッシュ（投稿所有者のアカウントでメトリクス取得）
+  const xClientCache = new Map<string, Awaited<ReturnType<typeof getActiveXClient>>>();
+
   const results: SyncResult[] = [];
 
   for (const post of posts) {
     const tweetId = post.x_post_id;
+
+    if (!post.user_id) {
+      results.push({ id: post.id, tweetId, status: 'skipped', reason: 'post has no user_id' });
+      continue;
+    }
+
+    if (!xClientCache.has(post.user_id)) {
+      xClientCache.set(post.user_id, await getActiveXClient(post.user_id));
+    }
+    const xClient = xClientCache.get(post.user_id) ?? null;
+
+    if (!xClient) {
+      results.push({ id: post.id, tweetId, status: 'skipped', reason: 'X API not configured for user' });
+      continue;
+    }
 
     try {
       const tweet = await xClient.v2.singleTweet(tweetId, {

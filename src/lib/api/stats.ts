@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getActiveXClient, getActiveXAccountId } from '@/lib/x-client';
+import { getCurrentUserId } from '@/lib/auth';
 import type { DashboardStats } from '@/lib/types';
 
 // ── 型 ──────────────────────────────────────────────────────────────────────
@@ -51,9 +52,10 @@ function calcChange(current: number, previous: number): number | null {
   return Math.round(((current - previous) / previous) * 1000) / 10;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchPublishedWithMetrics(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
+  userId: string,
   startIso: string,
   endIso?: string,
   accountId?: string | null,
@@ -63,6 +65,7 @@ async function fetchPublishedWithMetrics(
     .select(
       'id, post_metrics(likes, impressions, engagement_rate, measured_at)',
     )
+    .eq('user_id', userId)
     .eq('status', 'published')
     .gte('published_at', startIso);
 
@@ -75,10 +78,28 @@ async function fetchPublishedWithMetrics(
 
 // ── 公開 API ─────────────────────────────────────────────────────────────────
 
-/** ダッシュボード用の集計統計を取得する */
+/** ダッシュボード用の集計統計を取得する（ユーザー自身のみ） */
 export async function getDashboardStats(): Promise<DashboardStats> {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return {
+      totalPosts: 0,
+      totalLikes: 0,
+      totalImpressions: 0,
+      avgEngagementRate: 0,
+      scheduledCount: 0,
+      followersGrowth: 0,
+      changes: {
+        totalPosts: null,
+        totalLikes: null,
+        totalImpressions: null,
+        avgEngagementRate: null,
+      },
+    };
+  }
+
   const supabase = getSupabaseAdmin();
-  const activeAccountId = await getActiveXAccountId();
+  const activeAccountId = await getActiveXAccountId(userId);
 
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -88,6 +109,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     let q = supabase
       .from('scheduled_posts')
       .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId!)
       .eq('status', 'published')
       .gte('published_at', startIso);
     if (endIso) q = q.lt('published_at', endIso);
@@ -109,13 +131,14 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       let q = supabase
         .from('scheduled_posts')
         .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId!)
         .eq('status', 'scheduled');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (activeAccountId) q = (q as any).eq('x_account_id', activeAccountId);
       return q;
     })(),
-    fetchPublishedWithMetrics(supabase, thisMonthStart, undefined, activeAccountId),
-    fetchPublishedWithMetrics(supabase, lastMonthStart, thisMonthStart, activeAccountId),
+    fetchPublishedWithMetrics(supabase, userId, thisMonthStart, undefined, activeAccountId),
+    fetchPublishedWithMetrics(supabase, userId, lastMonthStart, thisMonthStart, activeAccountId),
   ]);
 
   const thisMonth = aggregateRows(postsThisMonth);
@@ -142,7 +165,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 export async function getFollowersCount(): Promise<number | null> {
   try {
-    const client = await getActiveXClient();
+    const userId = await getCurrentUserId();
+    if (!userId) return null;
+    const client = await getActiveXClient(userId);
     if (!client) return null;
     const { data } = await client.v2.me({ 'user.fields': ['public_metrics'] });
     const metrics = data.public_metrics as { followers_count?: number } | undefined;

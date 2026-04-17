@@ -1,8 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import type { AiProvider } from '@/lib/types';
 import { getAuthUser } from '@/lib/auth';
+import { generateWithGeminiRetry, DEFAULT_GEMINI_MODEL } from '@/lib/gemini';
 
 export const maxDuration = 60;
 
@@ -111,14 +111,11 @@ async function rewriteWithGemini(originalText: string, styleInstruction: string)
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY が設定されていません');
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
+  const rawText = await generateWithGeminiRetry({
+    apiKey,
+    modelName: DEFAULT_GEMINI_MODEL,
     systemInstruction: 'あなたはXのバズ投稿専門家です。与えられた投稿テキストを指示に従ってリライトします。リライト後のテキストのみを出力してください。前置きや説明は一切不要です。',
+    prompt: `以下の投稿テキストをリライトしてください。\n\n【リライト指示】\n${styleInstruction}\n\n【元の投稿】\n${originalText}`,
   });
-
-  const result = await model.generateContent(
-    `以下の投稿テキストをリライトしてください。\n\n【リライト指示】\n${styleInstruction}\n\n【元の投稿】\n${originalText}`
-  );
-  return result.response.text().trim();
+  return rawText.trim();
 }

@@ -1,8 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import type { GenerateInput, GeneratedPattern } from '@/lib/types';
 import { getAuthUser } from '@/lib/auth';
+import { generateWithGeminiRetry, DEFAULT_GEMINI_MODEL } from '@/lib/gemini';
 
 export const maxDuration = 60;
 
@@ -69,14 +69,12 @@ async function generateWithGemini(input: GenerateInput, theme: string): Promise<
     throw new Error('GEMINI_API_KEY が設定されていません。.env.local を確認してください。');
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
+  const rawText = await generateWithGeminiRetry({
+    apiKey,
+    modelName: DEFAULT_GEMINI_MODEL,
     systemInstruction: buildSystem(input),
+    prompt: buildPrompt(input, theme),
   });
-
-  const result = await model.generateContent(buildPrompt(input, theme));
-  const rawText = result.response.text();
   return parsePatterns(rawText);
 }
 
@@ -123,6 +121,10 @@ function buildPrompt(input: GenerateInput, theme: string): string {
 
   const totalLimit = xLimit ?? 280;
 
+  const targetLine = target
+    ? `・ターゲット読者: ${target}`
+    : '・ターゲット読者: 指定なし（テーマから自然に想定される読者層に合わせてください）';
+
   return `以下の条件でX投稿を3パターン生成してください。
 
 【X文字カウントルール（厳守）】
@@ -133,7 +135,7 @@ function buildPrompt(input: GenerateInput, theme: string): string {
 
 【条件】
 ・テーマ: ${theme}
-・ターゲット読者: ${target || '副業・情報発信に興味がある20〜40代'}
+${targetLine}
 ・目的: ${purposeLabel}
 ・トーン: ${tone}
 ・CTA: ${ctaNote}

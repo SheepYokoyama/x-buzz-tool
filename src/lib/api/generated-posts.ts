@@ -1,12 +1,17 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getCurrentUserId } from '@/lib/auth';
 import type { GeneratedPost } from '@/lib/types';
 
-/** AI生成の下書き一覧（created_at 降順） */
+/** AI生成の下書き一覧（created_at 降順・ユーザー自身のみ） */
 export async function getDraftPosts(): Promise<GeneratedPost[]> {
+  const userId = await getCurrentUserId();
+  if (!userId) return [];
+
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('generated_posts')
     .select('*')
+    .eq('user_id', userId)
     .eq('status', 'draft')
     .order('created_at', { ascending: false });
 
@@ -34,6 +39,9 @@ export async function getTodayDraftSummary(): Promise<{
   count: number;
   latestPersonaName: string | null;
 }> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { count: 0, latestPersonaName: null };
+
   const supabase = getSupabaseAdmin();
   const startIso = startOfTodayJstIso();
 
@@ -41,11 +49,13 @@ export async function getTodayDraftSummary(): Promise<{
     supabase
       .from('generated_posts')
       .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
       .eq('status', 'draft')
       .gte('created_at', startIso),
     supabase
       .from('generated_posts')
       .select('persona:post_personas(name)')
+      .eq('user_id', userId)
       .eq('status', 'draft')
       .gte('created_at', startIso)
       .order('created_at', { ascending: false })

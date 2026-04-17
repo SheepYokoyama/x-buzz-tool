@@ -9,8 +9,11 @@ import { getDashboardStats } from '@/lib/api/stats';
 import { XPostDebug } from '@/components/dashboard/XPostDebug';
 import { SyncMetricsButton } from '@/components/dashboard/SyncMetricsButton';
 import { FollowersStatsCard } from '@/components/dashboard/FollowersStatsCard';
+import { XAccountSetupBanner } from '@/components/dashboard/XAccountSetupBanner';
 import { getRecentPublishedPosts, getUpcomingScheduledPosts } from '@/lib/api/scheduled-posts';
 import { getTodayDraftSummary } from '@/lib/api/generated-posts';
+import { getCurrentUserId } from '@/lib/auth';
+import { getActiveXAccountId } from '@/lib/x-client';
 import { FileText, Heart, Eye, TrendingUp, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -21,11 +24,13 @@ function fmt(n: number): string {
 }
 
 export default async function DashboardPage() {
-  const [stats, recentPosts, upcomingPosts, todayDrafts] = await Promise.all([
+  const userId = await getCurrentUserId();
+  const [stats, recentPosts, upcomingPosts, todayDrafts, activeXAccountId] = await Promise.all([
     getDashboardStats(),
     getRecentPublishedPosts(4),
     getUpcomingScheduledPosts(3),
     getTodayDraftSummary(),
+    userId ? getActiveXAccountId(userId) : Promise.resolve(null),
   ]);
 
   const hasDrafts = todayDrafts.count > 0;
@@ -46,6 +51,9 @@ export default async function DashboardPage() {
         title="ダッシュボード"
         subtitle="今月のパフォーマンス概要"
       />
+
+      {/* ── X アカウント未登録時のみ表示 ───────────── */}
+      <XAccountSetupBanner hasXAccount={!!activeXAccountId} />
 
       {/* ── バナー ────────────────────────────────── */}
       <div className="banner-glass rounded-[1.375rem] px-5 py-4 mb-10 flex flex-col sm:flex-row sm:items-center gap-4">

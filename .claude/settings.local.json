@@ -50,7 +50,29 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
       "Bash(gh pr create --title 'feat: Xメトリクス自動同期・ダッシュボード統計リファクタ' --body ':*)",
       "Bash(ls -la .env*)",
-      "Read(//c/Claude/x-buzz-tool/**)"
+      "Read(//c/Claude/x-buzz-tool/**)",
+      "Bash(ls -la /c/Claude/x-buzz-tool/.env*)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(ls -la .claude/settings*.json)",
+      "Read(//c/Users/s-yok/.claude/**)",
+      "Bash(git check-ignore:*)",
+      "Bash(bash -c ':*)",
+      "Bash(node -e \"const s = require\\('./.claude/settings.local.json'\\); console.log\\('OK'\\); console.log\\(s.hooks.SessionStart[0].hooks[0].command\\)\")",
+      "Bash(bash -c 'm=$\\(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null\\); [ -z \"$m\" ] && exit 0; m=$\\(dirname \"$m\"\\); t=$\\(git rev-parse --show-toplevel 2>/dev/null\\); if [ ! -f \"$t/.env.local\" ] && [ \"$m\" != \"$t\" ] && [ -f \"$m/.env.local\" ]; then cp \"$m/.env.local\" \"$t/.env.local\"; printf \"%s\" \"{\\\\\"systemMessage\\\\\":\\\\\".env.local を main リポジトリからコピーしました\\\\\"}\"; fi')",
+      "Bash(grep -v \"//\")"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "m=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); [ -z \"$m\" ] && exit 0; m=$(dirname \"$m\"); t=$(git rev-parse --show-toplevel 2>/dev/null); if [ ! -f \"$t/.env.local\" ] && [ \"$m\" != \"$t\" ] && [ -f \"$m/.env.local\" ]; then cp \"$m/.env.local\" \"$t/.env.local\"; printf '%s' '{\"systemMessage\":\".env.local を main リポジトリからコピーしました\"}'; fi"
+          }
+        ]
+      }
     ]
   }
 }

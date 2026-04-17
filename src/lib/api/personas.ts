@@ -1,12 +1,17 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getCurrentUserId } from '@/lib/auth';
 import type { PostPersona } from '@/lib/types';
 
-/** 全ペルソナを取得（作成日順） */
+/** 全ペルソナを取得（作成日順・ユーザー自身のみ） */
 export async function getPersonas(): Promise<PostPersona[]> {
+  const userId = await getCurrentUserId();
+  if (!userId) return [];
+
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('post_personas')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -16,14 +21,18 @@ export async function getPersonas(): Promise<PostPersona[]> {
   return data ?? [];
 }
 
-/** アクティブなペルソナを1件取得 */
+/** アクティブなペルソナを1件取得（ユーザー自身のみ） */
 export async function getActivePersona(): Promise<PostPersona | null> {
+  const userId = await getCurrentUserId();
+  if (!userId) return null;
+
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('post_personas')
     .select('*')
+    .eq('user_id', userId)
     .eq('is_active', true)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('getActivePersona error:', error);

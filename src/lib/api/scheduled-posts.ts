@@ -57,7 +57,7 @@ export async function getRecentPublishedPosts(limit = 4): Promise<ScheduledPostW
   if (!userId) return [];
 
   const supabase = getSupabaseAdmin();
-  const activeAccountId = await getActiveXAccountId();
+  const activeAccountId = await getActiveXAccountId(userId);
 
   let query = supabase
     .from('scheduled_posts')
@@ -81,7 +81,7 @@ export async function getUpcomingScheduledPosts(limit = 3): Promise<ScheduledPos
   if (!userId) return [];
 
   const supabase = getSupabaseAdmin();
-  const activeAccountId = await getActiveXAccountId();
+  const activeAccountId = await getActiveXAccountId(userId);
 
   let query = supabase
     .from('scheduled_posts')

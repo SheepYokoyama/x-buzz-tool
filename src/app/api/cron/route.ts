@@ -127,10 +127,10 @@ export async function GET(req: Request) {
     }
   }
 
-  const [xClient, activeAccountId] = await Promise.all([
-    getActiveXClient(),
-    getActiveXAccountId(),
-  ]);
+  // ユーザーごとの X クライアント・アカウントIDをキャッシュ（投稿所有者のアカウントで配信する）
+  const xClientCache = new Map<string, Awaited<ReturnType<typeof getActiveXClient>>>();
+  const accountIdCache = new Map<string, string | null>();
+
   const results: PostResult[] = [];
   let processed = 0;
 
@@ -152,9 +152,28 @@ export async function GET(req: Request) {
       await sleep(delay);
     }
 
+    const postUserId = (post as { user_id?: string | null }).user_id ?? null;
+    if (!postUserId) {
+      results.push({ id: post.id, status: 'skipped', reason: 'post has no user_id' });
+      processed++;
+      continue;
+    }
+
+    // 投稿所有者の X クライアント／アカウントIDを取得（キャッシュ利用）
+    if (!xClientCache.has(postUserId)) {
+      const [client, accountId] = await Promise.all([
+        getActiveXClient(postUserId),
+        getActiveXAccountId(postUserId),
+      ]);
+      xClientCache.set(postUserId, client);
+      accountIdCache.set(postUserId, accountId);
+    }
+    const xClient = xClientCache.get(postUserId) ?? null;
+    const activeAccountId = accountIdCache.get(postUserId) ?? null;
+
     // X API 未設定: スキップ（ステータスは変えない）
     if (!xClient) {
-      results.push({ id: post.id, status: 'skipped', reason: 'X API not configured' });
+      results.push({ id: post.id, status: 'skipped', reason: 'X API not configured for user' });
       processed++;
       continue;
     }

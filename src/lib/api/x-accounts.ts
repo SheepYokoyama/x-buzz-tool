@@ -1,6 +1,10 @@
 import type { XAccount } from '@/lib/types';
+import { getCurrentUserId } from '@/lib/auth';
 
 export async function getXAccounts(): Promise<XAccount[]> {
+  const userId = await getCurrentUserId();
+  if (!userId) return [];
+
   const { getSupabaseAdmin } = await import('@/lib/supabase');
   const { maskToken, decrypt } = await import('@/lib/encryption');
 
@@ -8,6 +12,7 @@ export async function getXAccounts(): Promise<XAccount[]> {
   const { data, error } = await (getSupabaseAdmin() as any)
     .from('x_accounts')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: true });
 
   if (error) throw new Error(error.message);
