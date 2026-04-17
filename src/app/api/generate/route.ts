@@ -121,6 +121,10 @@ function buildPrompt(input: GenerateInput, theme: string): string {
 
   const totalLimit = xLimit ?? 280;
 
+  const targetLine = target
+    ? `・ターゲット読者: ${target}`
+    : '・ターゲット読者: 指定なし（テーマから自然に想定される読者層に合わせてください）';
+
   return `以下の条件でX投稿を3パターン生成してください。
 
 【X文字カウントルール（厳守）】
@@ -131,7 +135,7 @@ function buildPrompt(input: GenerateInput, theme: string): string {
 
 【条件】
 ・テーマ: ${theme}
-・ターゲット読者: ${target || '副業・情報発信に興味がある20〜40代'}
+${targetLine}
 ・目的: ${purposeLabel}
 ・トーン: ${tone}
 ・CTA: ${ctaNote}
