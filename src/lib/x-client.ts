@@ -52,23 +52,25 @@ export async function seedXAccountFromEnv(): Promise<void> {
 }
 
 /**
- * アクティブな X アカウントを DB から取得してクライアントを返す。
- * userId が指定された場合はそのユーザーのアクティブアカウントを取得する。
+ * 指定ユーザーのアクティブな X アカウントを DB から取得してクライアントを返す。
+ * userId は必須（ユーザー分離のため）。未指定の場合は null を返す。
  * DB にレコードがない & env vars が設定されている場合は自動シード後に再取得する。
  * env vars への直接フォールバックは行わない（DB 管理に一本化）。
  */
 export async function getActiveXClient(userId?: string): Promise<TwitterApi | null> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (getSupabaseAdmin() as any)
-    .from('x_accounts')
-    .select('api_key, api_secret, access_token, access_secret')
-    .eq('is_active', true);
-
-  if (userId) {
-    query = query.eq('user_id', userId);
+  if (!userId) {
+    console.warn('[x-client] getActiveXClient: userId 未指定のため null を返します');
+    return null;
   }
 
-  const { data } = await query.single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const query = (getSupabaseAdmin() as any)
+    .from('x_accounts')
+    .select('api_key, api_secret, access_token, access_secret')
+    .eq('is_active', true)
+    .eq('user_id', userId);
+
+  const { data } = await query.maybeSingle();
 
   if (data?.api_key && data?.api_secret && data?.access_token && data?.access_secret) {
     try {
@@ -96,20 +98,21 @@ export async function getActiveXClient(userId?: string): Promise<TwitterApi | nu
   return null;
 }
 
-/** アクティブな X アカウントの UUID を返す。未設定の場合は null。 */
-export async function getActiveXAccountId(): Promise<string | null> {
+/** 指定ユーザーのアクティブな X アカウントの UUID を返す。未設定の場合は null。 */
+export async function getActiveXAccountId(userId: string): Promise<string | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (getSupabaseAdmin() as any)
     .from('x_accounts')
     .select('id')
     .eq('is_active', true)
-    .single();
+    .eq('user_id', userId)
+    .maybeSingle();
   return data?.id ?? null;
 }
 
-/** DB に認証済みアカウントが存在するか確認 */
-export async function isXConfiguredAsync(): Promise<boolean> {
-  const client = await getActiveXClient();
+/** 指定ユーザーに認証済みアカウントが存在するか確認 */
+export async function isXConfiguredAsync(userId: string): Promise<boolean> {
+  const client = await getActiveXClient(userId);
   return client !== null;
 }
 
