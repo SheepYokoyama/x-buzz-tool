@@ -1,8 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import type { GenerateInput, GeneratedPattern } from '@/lib/types';
 import { getAuthUser } from '@/lib/auth';
+import { generateWithGeminiRetry, DEFAULT_GEMINI_MODEL } from '@/lib/gemini';
 
 export const maxDuration = 60;
 
@@ -69,14 +69,12 @@ async function generateWithGemini(input: GenerateInput, theme: string): Promise<
     throw new Error('GEMINI_API_KEY が設定されていません。.env.local を確認してください。');
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
+  const rawText = await generateWithGeminiRetry({
+    apiKey,
+    modelName: DEFAULT_GEMINI_MODEL,
     systemInstruction: buildSystem(input),
+    prompt: buildPrompt(input, theme),
   });
-
-  const result = await model.generateContent(buildPrompt(input, theme));
-  const rawText = result.response.text();
   return parsePatterns(rawText);
 }
 
