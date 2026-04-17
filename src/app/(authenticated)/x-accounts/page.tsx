@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/Header';
 import { XAccountsClient } from './XAccountsClient';
+import { XApiPricingNotice } from '@/components/x-accounts/XApiPricingNotice';
 
 export default function XAccountsPage() {
   return (
@@ -17,6 +18,9 @@ export default function XAccountsPage() {
         <span className="text-slate-400 font-medium">セキュリティについて:</span>{' '}
         トークンはAES-256-CBCで暗号化してデータベースに保存されます。画面上ではマスク表示のみ行い、平文は一切表示されません。
       </div>
+
+      {/* X API 料金プラン案内 */}
+      <XApiPricingNotice />
 
       <XAccountsClient />
     </div>
