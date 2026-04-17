@@ -27,7 +27,7 @@ function sleep(ms: number): Promise<void> {
  * 一時的なエラー（503 など）を自動再試行する。永続エラー・タイムアウト上限到達時は例外を送出。
  *
  * @param apiKey     GEMINI_API_KEY
- * @param modelName  利用するモデル名（例: 'gemini-2.0-flash'）
+ * @param modelName  利用するモデル名（例: 'gemini-2.5-flash'）
  * @param systemInstruction  system プロンプト
  * @param prompt     user プロンプト
  * @param options    タイムアウト・リトライ上限の上書き
@@ -80,5 +80,5 @@ export async function generateWithGeminiRetry(params: {
   throw lastErr ?? new Error('gemini unknown error');
 }
 
-/** デフォルトで使用する Gemini モデル。安定性重視で 2.0-flash。 */
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash';
+/** デフォルトで使用する Gemini モデル。503 対策はリトライで担保。 */
+export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
