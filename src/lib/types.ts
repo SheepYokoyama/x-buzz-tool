@@ -214,14 +214,15 @@ export interface DashboardStats {
 /** @deprecated DB型 PostPersona を使ってください */
 export type Character = PostPersona;
 
-/** @deprecated DB型 PostIdea を使ってください */
 export interface Note {
   id: string;
+  user_id: string;
   title: string;
   content: string;
   tags: string[];
-  createdAt: string;
-  isImportant: boolean;
+  is_important: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 /** @deprecated DB型 GeneratedPost / ScheduledPost を使ってください */
