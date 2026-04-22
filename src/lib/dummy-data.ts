@@ -1,4 +1,4 @@
-import type { Post, ScheduledPost, Character, Note, DashboardStats } from './types';
+import type { Post, ScheduledPost, Character, DashboardStats } from './types';
 
 export const dummyStats: DashboardStats = {
   totalPosts: 142,
@@ -154,33 +154,6 @@ export const dummyCharacters: Character[] = [
     is_active: false,
     created_at: '2026-04-01T00:00:00Z',
     updated_at: '2026-04-01T00:00:00Z',
-  },
-];
-
-export const dummyNotes: Note[] = [
-  {
-    id: 'note-1',
-    title: 'バズった投稿のパターン分析',
-    content: '## バズる投稿の共通点\n\n1. **冒頭3行で引き込む** - スクロールを止める一文が必要\n2. **数字を使う** - 「3倍」「10分」「1000人」など具体的な数字\n3. **体験談ベース** - 「私が実際にやった結果」が反応を生む\n4. **行動を促す** - 最後に「あなたはどう思いますか？」など\n\n## NGパターン\n- 抽象的すぎる内容\n- 自慢だけで終わる\n- CTA（行動喚起）がない',
-    tags: ['バズ分析', 'ノウハウ', '参考'],
-    createdAt: '2026-04-01T10:00:00Z',
-    isImportant: true,
-  },
-  {
-    id: 'note-2',
-    title: '最適な投稿時間帯メモ',
-    content: '## 調査結果（自分のアカウント分析）\n\n- **7:00-8:00** → 通勤時間、インプレッション高い\n- **12:00-13:00** → 昼休み、エンゲージメント最高\n- **21:00-22:00** → 帰宅後リラックス、拡散されやすい\n\n**土日は11:00がピーク**\n\n週3回は夜の投稿を入れること。',
-    tags: ['投稿時間', 'アナリティクス'],
-    createdAt: '2026-04-02T14:00:00Z',
-    isImportant: false,
-  },
-  {
-    id: 'note-3',
-    title: 'AIプロンプトのベストプラクティス',
-    content: '## 使えるプロンプトテンプレート\n\n```\nあなたは[キャラクター設定]です。\n以下のトピックについて、[文字数]文字以内でX投稿を作成してください。\n\nトピック: [内容]\nトーン: [カジュアル/フォーマル]\n目的: [認知拡大/エンゲージメント向上/フォロワー増加]\n```\n\n## コツ\n- 具体的な制約を与えるほど品質が上がる\n- 過去のバズった投稿を参考例として与える\n- 複数パターン生成して選ぶ',
-    tags: ['AIプロンプト', 'ChatGPT', 'ノウハウ'],
-    createdAt: '2026-04-03T09:00:00Z',
-    isImportant: true,
   },
 ];
 

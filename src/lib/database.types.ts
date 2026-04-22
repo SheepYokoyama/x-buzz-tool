@@ -48,6 +48,39 @@ export interface Database {
         Relationships: [];
       };
 
+      notes: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          content: string;
+          tags: string[];
+          is_important: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title?: string;
+          content?: string;
+          tags?: string[];
+          is_important?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          content?: string;
+          tags?: string[];
+          is_important?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
       post_ideas: {
         Row: {
           id: string;

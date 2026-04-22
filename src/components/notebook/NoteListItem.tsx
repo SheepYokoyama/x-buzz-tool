@@ -12,6 +12,9 @@ function fmtDate(iso: string) {
 }
 
 export function NoteListItem({ note, isSelected, onClick }: Props) {
+  const displayTitle = note.title.trim() || '（無題）';
+  const previewText = note.content.replace(/[#*`\n]/g, ' ').trim() || '本文なし';
+
   return (
     <button
       onClick={onClick}
@@ -22,11 +25,11 @@ export function NoteListItem({ note, isSelected, onClick }: Props) {
       }}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
-        <p className="text-[13px] font-medium text-slate-200 leading-snug line-clamp-1">{note.title}</p>
-        {note.isImportant && <Star size={12} className="text-yellow-400 shrink-0 mt-0.5" fill="currentColor" />}
+        <p className="text-[13px] font-medium text-slate-200 leading-snug line-clamp-1">{displayTitle}</p>
+        {note.is_important && <Star size={12} className="text-yellow-400 shrink-0 mt-0.5" fill="currentColor" />}
       </div>
       <p className="text-[12px] text-slate-600 line-clamp-2 leading-relaxed mb-2.5">
-        {note.content.replace(/[#*`\n]/g, ' ')}
+        {previewText}
       </p>
       <div className="flex items-center gap-2">
         {note.tags.slice(0, 2).map((tag) => (
@@ -38,7 +41,7 @@ export function NoteListItem({ note, isSelected, onClick }: Props) {
             {tag}
           </span>
         ))}
-        <span className="text-[11px] text-slate-700 ml-auto">{fmtDate(note.createdAt)}</span>
+        <span className="text-[11px] text-slate-700 ml-auto">{fmtDate(note.updated_at)}</span>
       </div>
     </button>
   );
