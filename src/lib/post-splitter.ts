@@ -10,7 +10,7 @@ import { countXChars } from './x-char-count';
 // URL / メンション / ハッシュタグ の途中では分割しない。
 // ─────────────────────────────────────────────────────────────
 
-export type SplitMode = 'thread' | 'separate';
+export type SplitMode = 'thread' | 'separate' | 'none';
 
 export type SplitLevel = 'paragraph' | 'sentence' | 'char';
 

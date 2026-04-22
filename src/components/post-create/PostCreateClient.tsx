@@ -16,11 +16,14 @@ import {
   SplitSquareHorizontal,
   Hash,
   Sparkles,
+  AlignLeft,
+  AlertTriangle,
 } from 'lucide-react';
 
 const LIMIT_OPTIONS = [
-  { value: 140, label: '140字相当', note: '無料（全角140字）' },
-  { value: 280, label: '280カウント', note: 'X 標準上限' },
+  { value: 140, label: '140カウント', note: '無料（全角70字 / 半角140字）' },
+  { value: 280, label: '280カウント', note: 'X 標準（全角140字 / 半角280字）' },
+  { value: 25000, label: '25,000カウント', note: 'Premium / Basic（長文投稿）' },
 ];
 
 export function PostCreateClient() {
@@ -33,14 +36,35 @@ export function PostCreateClient() {
   const [success, setSuccess] = useState<string | null>(null);
 
   // 分割結果（リアルタイム）
+  // mode === 'none' の場合は分割せず原文を単一ポストとして扱う
   const splitResult = useMemo(
     () => splitPosts(text, { maxCount, numbering }),
     [text, maxCount, numbering],
   );
 
   const totalXCount = useMemo(() => countXChars(text), [text]);
-  const chunks = splitResult.chunks;
-  const over = splitResult.error;
+
+  const chunks = useMemo(() => {
+    if (mode !== 'none') return splitResult.chunks;
+    const trimmed = text.trim();
+    if (!trimmed) return [];
+    return [
+      {
+        text: trimmed,
+        charCount: totalXCount,
+        start: 0,
+        end: trimmed.length,
+      },
+    ];
+  }, [mode, splitResult.chunks, text, totalXCount]);
+
+  // none モードでは上限超過は「警告」扱い（ボタンは押せる）、
+  // それ以外は分割不能エラー（ボタン無効）
+  const splitError = mode === 'none' ? undefined : splitResult.error;
+  const noneOverWarning =
+    mode === 'none' && totalXCount > maxCount
+      ? `X ${maxCount}カウント上限を超えています（現在 ${totalXCount}）。契約プランによっては投稿が拒否されます。`
+      : null;
 
   const handlePost = async () => {
     if (chunks.length === 0) return;
@@ -52,7 +76,8 @@ export function PostCreateClient() {
         method: 'POST',
         body: JSON.stringify({
           texts: chunks.map((c) => c.text),
-          mode,
+          // 'none' は1件なのでサーバー側では 'separate' と等価
+          mode: mode === 'none' ? 'separate' : mode,
         }),
       });
       const data = await res.json();
@@ -125,7 +150,7 @@ export function PostCreateClient() {
               <p className="section-label mt-1.5">どのように投稿しますか？</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <ModeCard
                 active={mode === 'thread'}
                 onClick={() => setMode('thread')}
@@ -142,6 +167,14 @@ export function PostCreateClient() {
                 desc="それぞれが独立したポスト。個別にバズらせやすい。"
                 accent="#a78bfa"
               />
+              <ModeCard
+                active={mode === 'none'}
+                onClick={() => setMode('none')}
+                icon={<AlignLeft size={14} />}
+                title="分割無し（原文そのまま）"
+                desc="本文をそのまま1ポスト。長文プラン契約時向け。"
+                accent="#f472b6"
+              />
             </div>
           </div>
 
@@ -150,15 +183,21 @@ export function PostCreateClient() {
             <div>
               <h2 className="text-[15px] font-semibold text-slate-200 leading-none flex items-center gap-2">
                 <Hash size={15} className="text-neon-pink" />
-                分割設定
+                {mode === 'none' ? '上限チェック' : '分割設定'}
               </h2>
-              <p className="section-label mt-1.5">1ポストあたりの上限と番号付与</p>
+              <p className="section-label mt-1.5">
+                {mode === 'none'
+                  ? '契約プランに応じた上限カウントで警告を出します'
+                  : '1ポストあたりの上限と番号付与'}
+              </p>
             </div>
 
             {/* 文字数上限 */}
             <div>
-              <FieldLabel>1ポストあたりの上限（カウント）</FieldLabel>
-              <div className="grid grid-cols-2 gap-2">
+              <FieldLabel>
+                {mode === 'none' ? '警告を出す上限（カウント）' : '1ポストあたりの上限（カウント）'}
+              </FieldLabel>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {LIMIT_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -180,29 +219,31 @@ export function PostCreateClient() {
               </div>
             </div>
 
-            {/* 番号付与 */}
-            <label
-              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl cursor-pointer"
-              style={{
-                background: 'rgba(255,255,255,0.025)',
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
-              <div>
-                <p className="text-[12px] font-semibold text-slate-200">番号を自動付与</p>
-                <p className="text-[10px] text-slate-600 mt-0.5">
-                  「1/5」「2/5」を各ポストの先頭に自動追加
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={numbering}
-                onChange={(e) => setNumbering(e.target.checked)}
-                className="w-4 h-4 accent-neon-purple cursor-pointer"
-              />
-            </label>
+            {/* 番号付与（none モードでは非表示） */}
+            {mode !== 'none' && (
+              <label
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl cursor-pointer"
+                style={{
+                  background: 'rgba(255,255,255,0.025)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}
+              >
+                <div>
+                  <p className="text-[12px] font-semibold text-slate-200">番号を自動付与</p>
+                  <p className="text-[10px] text-slate-600 mt-0.5">
+                    「1/5」「2/5」を各ポストの先頭に自動追加
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={numbering}
+                  onChange={(e) => setNumbering(e.target.checked)}
+                  className="w-4 h-4 accent-neon-purple cursor-pointer"
+                />
+              </label>
+            )}
 
-            {over && (
+            {splitError && (
               <p
                 className="text-[12px] text-red-400 px-3 py-2 rounded-xl"
                 style={{
@@ -210,7 +251,20 @@ export function PostCreateClient() {
                   border: '1px solid rgba(239,68,68,0.2)',
                 }}
               >
-                {over}
+                {splitError}
+              </p>
+            )}
+
+            {noneOverWarning && (
+              <p
+                className="text-[12px] text-amber-300 px-3 py-2 rounded-xl flex items-start gap-2"
+                style={{
+                  background: 'rgba(251,191,36,0.08)',
+                  border: '1px solid rgba(251,191,36,0.25)',
+                }}
+              >
+                <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                <span>{noneOverWarning}</span>
               </p>
             )}
 
@@ -242,7 +296,7 @@ export function PostCreateClient() {
               className="w-full justify-center"
               size="lg"
               onClick={handlePost}
-              disabled={chunks.length === 0 || isPosting || !!over}
+              disabled={chunks.length === 0 || isPosting || !!splitError}
             >
               {isPosting ? (
                 <>
@@ -253,7 +307,7 @@ export function PostCreateClient() {
                 <>
                   <Send size={14} />
                   {chunks.length > 0
-                    ? `Xに投稿（${chunks.length}ポスト・${mode === 'thread' ? 'スレッド' : '独立'}）`
+                    ? `Xに投稿（${chunks.length}ポスト・${mode === 'thread' ? 'スレッド' : mode === 'separate' ? '独立' : '分割無し'}）`
                     : 'Xに投稿'}
                 </>
               )}
