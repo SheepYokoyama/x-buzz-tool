@@ -16,16 +16,18 @@ import {
   Settings,
   LogOut,
   UserPlus,
+  PenLine,
 } from 'lucide-react';
 import { X_COUNT_RULE, getXPlan, getXLimit, getPlanLabel } from '@/lib/x-char-count';
 import { apiFetch } from '@/lib/api-fetch';
 
 const mainNav = [
-  { href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard },
-  { href: '/generate',  label: 'AI投稿生成',     icon: Sparkles       },
-  { href: '/rewrite',   label: 'リライト',         icon: Repeat2        },
-  { href: '/schedule',  label: '予約投稿',         icon: CalendarClock  },
-  { href: '/history',   label: '投稿履歴',         icon: History        },
+  { href: '/dashboard',   label: 'ダッシュボード', icon: LayoutDashboard },
+  { href: '/post-create', label: 'ポスト作成',     icon: PenLine        },
+  { href: '/generate',    label: 'AI投稿生成',     icon: Sparkles       },
+  { href: '/rewrite',     label: 'リライト',         icon: Repeat2        },
+  { href: '/schedule',    label: '予約投稿',         icon: CalendarClock  },
+  { href: '/history',     label: '投稿履歴',         icon: History        },
 ];
 
 const subNav = [
