@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, TextareaHTMLAttributes, InputHTMLAttributes } from 'react';
+import { forwardRef, useState, TextareaHTMLAttributes, InputHTMLAttributes } from 'react';
 import { Clipboard, Check } from 'lucide-react';
 import { MicButton } from './MicButton';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
@@ -80,64 +80,70 @@ interface VoiceTextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement>
   showPasteButton?: boolean;
 }
 
-export function VoiceTextarea({
-  onValueChange,
-  appendMode = false,
-  showPasteButton = false,
-  className = '',
-  value,
-  ...props
-}: VoiceTextareaProps) {
-  const [pasted, setPasted] = useState(false);
-
-  const { isListening, isSupported, toggle } = useVoiceInput({
-    onResult: (text) => {
-      if (appendMode && value) {
-        onValueChange(`${value}　${text}`);
-      } else {
-        onValueChange(text);
-      }
+export const VoiceTextarea = forwardRef<HTMLTextAreaElement, VoiceTextareaProps>(
+  function VoiceTextarea(
+    {
+      onValueChange,
+      appendMode = false,
+      showPasteButton = false,
+      className = '',
+      value,
+      ...props
     },
-  });
+    ref,
+  ) {
+    const [pasted, setPasted] = useState(false);
 
-  const handlePaste = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        onValueChange(text);
-        setPasted(true);
-        setTimeout(() => setPasted(false), 1500);
+    const { isListening, isSupported, toggle } = useVoiceInput({
+      onResult: (text) => {
+        if (appendMode && value) {
+          onValueChange(`${value}　${text}`);
+        } else {
+          onValueChange(text);
+        }
+      },
+    });
+
+    const handlePaste = async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          onValueChange(text);
+          setPasted(true);
+          setTimeout(() => setPasted(false), 1500);
+        }
+      } catch {
+        // クリップボードへのアクセスが拒否された場合は何もしない
       }
-    } catch {
-      // クリップボードへのアクセスが拒否された場合は何もしない
-    }
-  };
+    };
 
-  return (
-    <div className="relative">
-      <textarea
-        className={`${baseClass} px-4 py-3 resize-none leading-relaxed ${showPasteButton ? 'pr-20' : 'pr-10'} ${className}`}
-        value={value}
-        onChange={(e) => onValueChange(e.target.value)}
-        {...props}
-      />
-      <span className="absolute top-2.5 right-2 flex items-center gap-1">
-        {showPasteButton && (
-          <button
-            type="button"
-            onClick={handlePaste}
-            title="クリップボードからペースト"
-            className="w-6 h-6 flex items-center justify-center rounded-md transition-all"
-            style={{
-              color: pasted ? '#34d399' : '#475569',
-              background: pasted ? 'rgba(52,211,153,0.1)' : 'transparent',
-            }}
-          >
-            {pasted ? <Check size={13} /> : <Clipboard size={13} />}
-          </button>
-        )}
-        <MicButton isListening={isListening} isSupported={isSupported} onToggle={toggle} />
-      </span>
-    </div>
-  );
-}
+    return (
+      <div className="relative">
+        <textarea
+          ref={ref}
+          className={`${baseClass} px-4 py-3 resize-none leading-relaxed ${showPasteButton ? 'pr-20' : 'pr-10'} ${className}`}
+          value={value}
+          onChange={(e) => onValueChange(e.target.value)}
+          {...props}
+        />
+        <span className="absolute top-2.5 right-2 flex items-center gap-1">
+          {showPasteButton && (
+            <button
+              type="button"
+              onClick={handlePaste}
+              title="クリップボードからペースト"
+              className="w-6 h-6 flex items-center justify-center rounded-md transition-all"
+              style={{
+                color: pasted ? '#34d399' : '#475569',
+                background: pasted ? 'rgba(52,211,153,0.1)' : 'transparent',
+              }}
+            >
+              {pasted ? <Check size={13} /> : <Clipboard size={13} />}
+            </button>
+          )}
+          <MicButton isListening={isListening} isSupported={isSupported} onToggle={toggle} />
+        </span>
+      </div>
+    );
+  },
+);

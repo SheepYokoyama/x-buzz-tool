@@ -139,24 +139,45 @@ function rangeCount(prefix: number[], start: number, end: number): number {
   return prefix[end] - prefix[start];
 }
 
+// ── 手動分割マーカー（Word の改ページ挿入相当） ─────────────
+// 行全体が "---"（3個以上のハイフン）のみ・前後タブ/スペース許容を
+// マーカーとみなす。マーカー位置で強制分割し、マーカー自体は出力しない。
+
+/** 入力テキスト中に挿入できる人間可読な分割マーカー */
+export const MANUAL_SPLIT_MARKER = '---';
+
+/** マーカー行を行単位でマッチする正規表現（複数行モード） */
+const MANUAL_SPLIT_MARKER_RE = /^[ \t]*-{3,}[ \t]*$/gm;
+
+/** マーカーを含むかどうか */
+export function hasManualSplitMarker(text: string): boolean {
+  MANUAL_SPLIT_MARKER_RE.lastIndex = 0;
+  return MANUAL_SPLIT_MARKER_RE.test(text);
+}
+
+/** マーカーを除去して返す（none モード等で本文をそのまま使う場合に利用） */
+export function stripManualSplitMarkers(text: string): string {
+  return text
+    .replace(MANUAL_SPLIT_MARKER_RE, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^\s+|\s+$/g, '');
+}
+
 // ── メイン: 動的計画法で最適分割 ─────────────────────────────
 
-export function splitPosts(text: string, options: SplitOptions = {}): SplitResult {
-  const { maxCount = 280, numbering = false } = options;
+/** 単一セグメント（マーカー区切り内）を DP で分割するコア関数 */
+function splitSegmentCore(
+  text: string,
+  effectiveMax: number,
+): { chunks: PostChunk[]; error?: string } {
   const trimmed = text.replace(/\s+$/g, '');
   if (!trimmed.trim()) {
-    return { chunks: [], totalCount: 0 };
+    return { chunks: [] };
   }
 
   const prefix = buildPrefixCount(trimmed);
   const totalLen = trimmed.length;
 
-  // 番号プレフィクスを使う場合は予算を確保。推定: 最大でも "10/10 " = 8 カウント分程度
-  // 厳密には chunk 数確定後に再調整するが、ここでは粗い上限で十分
-  const numberingReserve = numbering ? 8 : 0;
-  const effectiveMax = Math.max(maxCount - numberingReserve, 20);
-
-  // 分割候補点: 0（開始）と totalLen（終了）は必ず含む
   const points = collectSplitPoints(trimmed);
   const allPoints: SplitPoint[] = [
     { index: 0, level: 'paragraph' },
@@ -165,7 +186,6 @@ export function splitPosts(text: string, options: SplitOptions = {}): SplitResul
   ];
 
   const n = allPoints.length;
-  // dp[i] = allPoints[0..i] まで到達する最小コスト, prev[i] = 直前のポイント index
   const dp = new Array<number>(n).fill(Number.POSITIVE_INFINITY);
   const prevIdx = new Array<number>(n).fill(-1);
   dp[0] = 0;
@@ -176,12 +196,11 @@ export function splitPosts(text: string, options: SplitOptions = {}): SplitResul
       const start = allPoints[i].index;
       const end = allPoints[j].index;
       const cnt = rangeCount(prefix, start, end);
-      if (cnt > effectiveMax) break; // 以降はさらに長くなる一方
+      if (cnt > effectiveMax) break;
       if (cnt === 0) continue;
 
       const splitCost = LEVEL_COST[allPoints[j].level];
       const fill = fillPenalty(cnt, effectiveMax);
-      // 最後の chunk（= j が終点）の充填率ペナルティは軽減
       const isLastChunk = j === n - 1;
       const cost = dp[i] + splitCost + (isLastChunk ? 0 : fill);
 
@@ -193,15 +212,12 @@ export function splitPosts(text: string, options: SplitOptions = {}): SplitResul
   }
 
   if (!Number.isFinite(dp[n - 1])) {
-    // 到達不能 = 単一の連続列が上限超過（保護範囲により分割不可など）
     return {
       chunks: [],
-      totalCount: 0,
-      error: `1ポストに収まらない連続テキストがあります（${effectiveMax}カウント超）。URLや長い語を短くしてください。`,
+      error: `1ポストに収まらない連続テキストがあります（${effectiveMax}カウント超）。URLや長い語を短くするか、手動で「---」を挿入して分割してください。`,
     };
   }
 
-  // 経路復元
   const path: number[] = [];
   for (let cur = n - 1; cur !== -1; cur = prevIdx[cur]) path.push(cur);
   path.reverse();
@@ -220,20 +236,66 @@ export function splitPosts(text: string, options: SplitOptions = {}): SplitResul
     });
   }
 
-  // 番号プレフィクス付与
-  if (numbering && chunks.length > 1) {
-    const total = chunks.length;
-    for (let i = 0; i < chunks.length; i++) {
+  return { chunks };
+}
+
+export function splitPosts(text: string, options: SplitOptions = {}): SplitResult {
+  const { maxCount = 280, numbering = false } = options;
+  if (!text.trim()) {
+    return { chunks: [], totalCount: 0 };
+  }
+
+  // 番号プレフィクスを使う場合は予算を確保
+  const numberingReserve = numbering ? 8 : 0;
+  const effectiveMax = Math.max(maxCount - numberingReserve, 20);
+
+  // ── 手動マーカーで一次分割 ───────────────────────────────
+  // マーカーが無い場合は単一セグメントとして DP に渡す。
+  MANUAL_SPLIT_MARKER_RE.lastIndex = 0;
+  const segments: Array<{ text: string; offset: number }> = [];
+  let cursor = 0;
+  for (const m of text.matchAll(MANUAL_SPLIT_MARKER_RE)) {
+    if (m.index === undefined) continue;
+    segments.push({ text: text.slice(cursor, m.index), offset: cursor });
+    cursor = m.index + m[0].length;
+  }
+  segments.push({ text: text.slice(cursor), offset: cursor });
+
+  // ── 各セグメントを DP で分割し連結 ───────────────────────
+  const allChunks: PostChunk[] = [];
+  let firstError: string | undefined;
+  for (const seg of segments) {
+    if (!seg.text.trim()) continue;
+    const sub = splitSegmentCore(seg.text, effectiveMax);
+    if (sub.error && !firstError) firstError = sub.error;
+    for (const c of sub.chunks) {
+      allChunks.push({
+        text: c.text,
+        charCount: c.charCount,
+        start: seg.offset + c.start,
+        end: seg.offset + c.end,
+      });
+    }
+  }
+
+  if (firstError) {
+    return { chunks: [], totalCount: 0, error: firstError };
+  }
+
+  // ── 番号プレフィクス付与（全セグメント通し番号） ────────
+  if (numbering && allChunks.length > 1) {
+    const total = allChunks.length;
+    for (let i = 0; i < allChunks.length; i++) {
       const prefixStr = `${i + 1}/${total} `;
-      const withPrefix = prefixStr + chunks[i].text;
-      chunks[i] = {
-        ...chunks[i],
+      const withPrefix = prefixStr + allChunks[i].text;
+      allChunks[i] = {
+        ...allChunks[i],
         text: withPrefix,
         charCount: countXChars(withPrefix),
       };
     }
   }
 
-  const totalCount = chunks.reduce((s, c) => s + c.charCount, 0);
-  return { chunks, totalCount };
+  const totalCount = allChunks.reduce((s, c) => s + c.charCount, 0);
+  return { chunks: allChunks, totalCount };
 }
