@@ -203,6 +203,7 @@ export async function POST(req: Request) {
       ff_ratio: calcFfRatio(metrics.followers_count, metrics.following_count),
       last_tweeted_at: tweet?.created_at ?? null,
       matched_keywords: matched,
+      sample_tweet_id: tweet?.id ?? null,
       sample_tweet_text: sample || null,
       status: 'pending',
     });

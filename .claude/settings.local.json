@@ -63,7 +63,8 @@
       "Bash(grep -v \"//\")",
       "WebFetch(domain:zenn.dev)",
       "Bash(ls src/app/generate/)",
-      "Bash(ls \"src/app/\\(authenticated\\)/generate/\")"
+      "Bash(ls \"src/app/\\(authenticated\\)/generate/\")",
+      "Bash(netstat -ano)"
     ]
   },
   "hooks": {

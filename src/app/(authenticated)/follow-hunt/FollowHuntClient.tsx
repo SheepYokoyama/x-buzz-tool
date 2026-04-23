@@ -147,12 +147,45 @@ export function FollowHuntClient() {
         body: JSON.stringify({ action: 'follow' }),
       });
       const d = await res.json();
-      if (!res.ok) throw new Error(d.error ?? 'フォローに失敗しました');
-      // リストから削除
+      if (!res.ok) {
+        // クレジット枯渇は失敗扱いの候補をリストから外し、メッセージで案内
+        if (d.reason === 'credits_depleted') {
+          setCandidates((prev) => prev.filter((c) => c.id !== id));
+          setMessage(d.error);
+          return;
+        }
+        throw new Error(d.error ?? 'フォローに失敗しました');
+      }
       setCandidates((prev) => prev.filter((c) => c.id !== id));
       setFollowedToday((prev) => prev + 1);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'フォローに失敗しました');
+    }
+  };
+
+  /* ── いいね＆フォロー実行（サーバー側でいいね→ディレイ→フォロー） ── */
+  const handleLikeAndFollow = async (id: string) => {
+    try {
+      const res = await apiFetch(`/api/follow-hunt/candidates/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ action: 'like_and_follow' }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        if (d.reason === 'credits_depleted') {
+          setCandidates((prev) => prev.filter((c) => c.id !== id));
+          setMessage(d.error);
+          return;
+        }
+        throw new Error(d.error ?? 'いいね＆フォローに失敗しました');
+      }
+      setCandidates((prev) => prev.filter((c) => c.id !== id));
+      setFollowedToday((prev) => prev + 1);
+      if (d.like_status === 'like_failed') {
+        setMessage('フォローは成功しましたが、いいねは失敗しました（ツイート削除や非公開等の可能性）');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'いいね＆フォローに失敗しました');
     }
   };
 
@@ -466,6 +499,7 @@ export function FollowHuntClient() {
               candidate={c}
               canFollow={canFollow}
               onFollow={handleFollow}
+              onLikeAndFollow={handleLikeAndFollow}
               onSkip={handleSkip}
             />
           ))}
