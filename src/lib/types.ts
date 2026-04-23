@@ -92,6 +92,7 @@ export interface FollowCandidate {
   ff_ratio: number | null;
   last_tweeted_at: string | null;
   matched_keywords: string[];
+  sample_tweet_id: string | null;
   sample_tweet_text: string | null;
   status: FollowCandidateStatus;
   created_at: string;

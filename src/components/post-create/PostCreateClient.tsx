@@ -1,13 +1,20 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, FieldLabel } from '@/components/ui/Input';
 import { PostPreview } from './PostPreview';
-import { splitPosts, type SplitMode } from '@/lib/post-splitter';
+import {
+  splitPosts,
+  stripManualSplitMarkers,
+  hasManualSplitMarker,
+  MANUAL_SPLIT_MARKER,
+  type SplitMode,
+} from '@/lib/post-splitter';
 import { countXChars } from '@/lib/x-char-count';
 import { apiFetch } from '@/lib/api-fetch';
+import { useSettings } from '@/contexts/SettingsContext';
 import {
   PenLine,
   Send,
@@ -18,6 +25,7 @@ import {
   Sparkles,
   AlignLeft,
   AlertTriangle,
+  Scissors,
 } from 'lucide-react';
 
 const LIMIT_OPTIONS = [
@@ -27,13 +35,23 @@ const LIMIT_OPTIONS = [
 ];
 
 export function PostCreateClient() {
+  const { xUser } = useSettings();
   const [text, setText] = useState('');
   const [mode, setMode] = useState<SplitMode>('thread');
-  const [maxCount, setMaxCount] = useState<number>(280);
+  // ユーザーが LIMIT_OPTIONS で明示的に選んだ値。null の間はプランから自動判定。
+  const [maxCountOverride, setMaxCountOverride] = useState<number | null>(null);
   const [numbering, setNumbering] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // X の有料プラン契約者は長文投稿可能なので 25,000 をデフォルトに。
+  // subscriptionType は 'Basic' | 'Premium' | 'PremiumPlus' | null。
+  const isPaidPlan = xUser?.subscriptionType != null;
+  const defaultMaxCount = isPaidPlan ? 25000 : 280;
+  const maxCount = maxCountOverride ?? defaultMaxCount;
+  const setMaxCount = (n: number) => setMaxCountOverride(n);
 
   // 分割結果（リアルタイム）
   // mode === 'none' の場合は分割せず原文を単一ポストとして扱う
@@ -43,20 +61,49 @@ export function PostCreateClient() {
   );
 
   const totalXCount = useMemo(() => countXChars(text), [text]);
+  const hasMarker = useMemo(() => hasManualSplitMarker(text), [text]);
 
   const chunks = useMemo(() => {
     if (mode !== 'none') return splitResult.chunks;
-    const trimmed = text.trim();
-    if (!trimmed) return [];
+    // none モードでは手動マーカーは投稿に出ないよう除去する
+    const cleaned = stripManualSplitMarkers(text);
+    if (!cleaned) return [];
     return [
       {
-        text: trimmed,
-        charCount: totalXCount,
+        text: cleaned,
+        charCount: countXChars(cleaned),
         start: 0,
-        end: trimmed.length,
+        end: cleaned.length,
       },
     ];
-  }, [mode, splitResult.chunks, text, totalXCount]);
+  }, [mode, splitResult.chunks, text]);
+
+  /** カーソル位置に分割マーカーを挿入する。前後に必要な改行を補う。 */
+  const insertSplitMarker = () => {
+    const ta = textareaRef.current;
+    const caretStart = ta?.selectionStart ?? text.length;
+    const caretEnd = ta?.selectionEnd ?? text.length;
+    const before = text.slice(0, caretStart);
+    const after = text.slice(caretEnd);
+
+    const leading = before.length === 0 || before.endsWith('\n\n')
+      ? ''
+      : before.endsWith('\n') ? '\n' : '\n\n';
+    const trailing = after.length === 0 || after.startsWith('\n\n')
+      ? ''
+      : after.startsWith('\n') ? '\n' : '\n\n';
+    const insertion = `${leading}${MANUAL_SPLIT_MARKER}${trailing}`;
+    const newText = before + insertion + after;
+    setText(newText);
+
+    // 挿入後、カーソルをマーカーの直後に置く
+    const newCaret = before.length + insertion.length;
+    requestAnimationFrame(() => {
+      if (!ta) return;
+      ta.focus();
+      ta.setSelectionRange(newCaret, newCaret);
+    });
+  };
 
   // none モードでは上限超過は「警告」扱い（ボタンは押せる）、
   // それ以外は分割不能エラー（ボタン無効）
@@ -120,23 +167,50 @@ export function PostCreateClient() {
             <div>
               <FieldLabel>投稿テキスト</FieldLabel>
               <VoiceTextarea
+                ref={textareaRef}
                 rows={10}
                 value={text}
                 onValueChange={setText}
-                placeholder="ここに長文を入力してください。自動でX投稿サイズに分割されます…"
+                placeholder={`ここに長文を入力してください。自動でX投稿サイズに分割されます…\n\n強制的に分割したい位置に「${MANUAL_SPLIT_MARKER}」を入れると、その位置で必ず分かれます。`}
                 appendMode
                 showPasteButton
               />
-              <div className="flex items-center justify-between mt-1.5 text-[11px]">
+              <div className="flex items-center justify-between gap-2 mt-1.5 text-[11px] flex-wrap">
                 <span className="text-slate-600">
                   {text.length}文字 ／ X換算 {totalXCount}カウント
                 </span>
-                {chunks.length > 0 && (
-                  <span className="text-neon-cyan font-semibold">
-                    {chunks.length}ポストに分割
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={insertSplitMarker}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md transition-all"
+                    style={{
+                      background: 'rgba(96,165,250,0.08)',
+                      border: '1px solid rgba(96,165,250,0.22)',
+                      color: '#93c5fd',
+                    }}
+                    title={`カーソル位置に「${MANUAL_SPLIT_MARKER}」を挿入（強制分割マーカー）`}
+                  >
+                    <Scissors size={11} />
+                    ここで分割
+                  </button>
+                  {chunks.length > 0 && (
+                    <span className="text-neon-cyan font-semibold">
+                      {chunks.length}ポストに分割
+                    </span>
+                  )}
+                </div>
               </div>
+              {hasMarker && mode === 'none' && (
+                <p className="text-[10px] text-slate-600 mt-1.5 leading-relaxed">
+                  「分割無し」モードのため、本文中の「{MANUAL_SPLIT_MARKER}」は投稿時に除去されます。
+                </p>
+              )}
+              {hasMarker && mode !== 'none' && (
+                <p className="text-[10px] text-slate-600 mt-1.5 leading-relaxed">
+                  本文中の「{MANUAL_SPLIT_MARKER}」位置で強制分割され、各セグメント内は自動分割されます。
+                </p>
+              )}
             </div>
           </div>
 

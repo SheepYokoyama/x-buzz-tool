@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { UserPlus, SkipForward, ExternalLink, Loader2 } from 'lucide-react';
+import { UserPlus, SkipForward, ExternalLink, Loader2, Heart } from 'lucide-react';
 import type { FollowCandidate } from '@/lib/types';
 
 interface Props {
   candidate: FollowCandidate;
   canFollow: boolean;
   onFollow: (id: string) => Promise<void>;
+  onLikeAndFollow: (id: string) => Promise<void>;
   onSkip: (id: string) => Promise<void>;
 }
 
@@ -33,18 +34,25 @@ function formatCount(n: number | null): string {
   return String(n);
 }
 
-export function CandidateCard({ candidate, canFollow, onFollow, onSkip }: Props) {
-  const [acting, setActing] = useState<'follow' | 'skip' | null>(null);
+export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow, onSkip }: Props) {
+  const [acting, setActing] = useState<'follow' | 'like_and_follow' | 'skip' | null>(null);
 
   const handleFollow = async () => {
     setActing('follow');
     try { await onFollow(candidate.id); } finally { setActing(null); }
   };
 
+  const handleLikeAndFollow = async () => {
+    setActing('like_and_follow');
+    try { await onLikeAndFollow(candidate.id); } finally { setActing(null); }
+  };
+
   const handleSkip = async () => {
     setActing('skip');
     try { await onSkip(candidate.id); } finally { setActing(null); }
   };
+
+  const canLikeAndFollow = canFollow && !!candidate.sample_tweet_id;
 
   const ffRatio = candidate.ff_ratio;
   const ffRatioColor = ffRatio && ffRatio >= 1.0 && ffRatio <= 1.5 ? '#a78bfa' : '#64748b';
@@ -144,33 +152,75 @@ export function CandidateCard({ candidate, canFollow, onFollow, onSkip }: Props)
       )}
 
       {/* ── アクションボタン ── */}
-      <div className="flex items-center gap-2 pt-1">
-        <button
-          onClick={handleFollow}
-          disabled={acting !== null || !canFollow}
-          className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{
-            background: canFollow ? 'linear-gradient(135deg, #60a5fa, #a78bfa)' : 'rgba(255,255,255,0.04)',
-            color: canFollow ? 'white' : '#64748b',
-            boxShadow: canFollow ? '0 0 14px rgba(167,139,250,0.2)' : undefined,
-          }}
-        >
-          {acting === 'follow' ? <Loader2 size={13} className="animate-spin" /> : <UserPlus size={13} />}
-          フォロー
-        </button>
-        <button
-          onClick={handleSkip}
-          disabled={acting !== null}
-          className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40"
-          style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            color: '#64748b',
-          }}
-        >
-          {acting === 'skip' ? <Loader2 size={13} className="animate-spin" /> : <SkipForward size={13} />}
-          スキップ
-        </button>
+      <div className="flex flex-col gap-2 pt-1">
+        {/* 1段目: いいね＆フォロー（推奨） + フォローのみ + スキップ */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleLikeAndFollow}
+            disabled={acting !== null || !canLikeAndFollow}
+            className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: canLikeAndFollow
+                ? 'linear-gradient(135deg, #f472b6, #a78bfa)'
+                : 'rgba(255,255,255,0.04)',
+              color: canLikeAndFollow ? 'white' : '#64748b',
+              boxShadow: canLikeAndFollow ? '0 0 14px rgba(244,114,182,0.22)' : undefined,
+            }}
+            title={
+              !candidate.sample_tweet_id
+                ? '直近ツイートが記録されていないため利用できません'
+                : 'いいね → 数秒待機 → フォロー（スパム判定回避）'
+            }
+          >
+            {acting === 'like_and_follow' ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <Heart size={13} />
+            )}
+            いいね＆フォロー
+          </button>
+          <button
+            onClick={handleFollow}
+            disabled={acting !== null || !canFollow}
+            className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: 'rgba(96,165,250,0.08)',
+              border: '1px solid rgba(96,165,250,0.2)',
+              color: canFollow ? '#93c5fd' : '#64748b',
+            }}
+            title="フォローのみ実行"
+          >
+            {acting === 'follow' ? <Loader2 size={13} className="animate-spin" /> : <UserPlus size={13} />}
+            フォロー
+          </button>
+          <button
+            onClick={handleSkip}
+            disabled={acting !== null}
+            className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              color: '#64748b',
+            }}
+            title="スキップ（候補から除外）"
+          >
+            {acting === 'skip' ? <Loader2 size={13} className="animate-spin" /> : <SkipForward size={13} />}
+          </button>
+        </div>
+
+        {/* 注意書き: API トークン消費を抑えたい場合は X 直接操作を案内 */}
+        <p className="text-[10px] text-slate-600 leading-relaxed">
+          API 消費を抑えたい場合は、上の{' '}
+          <a
+            href={`https://x.com/${candidate.username}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-500 hover:text-slate-300 underline underline-offset-2"
+          >
+            外部リンク
+          </a>
+          {' '}から X で直接操作してください。
+        </p>
       </div>
     </div>
   );

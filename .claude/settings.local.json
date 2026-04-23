@@ -63,7 +63,9 @@
       "Bash(grep -v \"//\")",
       "WebFetch(domain:zenn.dev)",
       "Bash(ls src/app/generate/)",
-      "Bash(ls \"src/app/\\(authenticated\\)/generate/\")"
+      "Bash(ls \"src/app/\\(authenticated\\)/generate/\")",
+      "Bash(netstat -ano)",
+      "Bash(gh pr create --title 'feat: いいね＆フォロー / 手動分割マーカー / Premium デフォルト上限' --body ' *)"
     ]
   },
   "hooks": {
