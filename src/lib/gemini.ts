@@ -35,6 +35,8 @@ function sleep(ms: number): Promise<void> {
 export async function generateWithGeminiRetry(params: {
   apiKey: string;
   modelName: string;
+  /** primary が一時エラーで尽きたときに使う軽量モデル（例: gemini-2.5-flash-lite） */
+  fallbackModelName?: string;
   systemInstruction: string;
   prompt: string;
   perAttemptTimeoutMs?: number;
@@ -44,6 +46,7 @@ export async function generateWithGeminiRetry(params: {
   const {
     apiKey,
     modelName,
+    fallbackModelName,
     systemInstruction,
     prompt,
     perAttemptTimeoutMs = 20_000,
@@ -52,35 +55,49 @@ export async function generateWithGeminiRetry(params: {
   } = params;
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: modelName, systemInstruction, generationConfig });
 
-  let lastErr: unknown = null;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      const result = await Promise.race([
-        model.generateContent(prompt),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`gemini timeout after ${perAttemptTimeoutMs}ms`)), perAttemptTimeoutMs),
-        ),
-      ]);
-      return result.response.text();
-    } catch (err) {
-      lastErr = err;
-      const transient = isTransientGeminiError(err);
-      console.warn(`[gemini] attempt ${attempt}/${maxAttempts} failed`, {
-        transient,
-        message: err instanceof Error ? err.message : String(err),
-      });
-      if (!transient || attempt === maxAttempts) throw err;
-      // 指数バックオフ: 1s, 2s, 4s （+ ±25% ジッター）
-      const base = 1000 * 2 ** (attempt - 1);
-      const jitter = base * 0.25 * (Math.random() * 2 - 1);
-      await sleep(Math.round(base + jitter));
+  const runAttempts = async (mdl: string, attempts: number): Promise<string> => {
+    const model = genAI.getGenerativeModel({ model: mdl, systemInstruction, generationConfig });
+    let lastErr: unknown = null;
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        const result = await Promise.race([
+          model.generateContent(prompt),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`gemini timeout after ${perAttemptTimeoutMs}ms`)), perAttemptTimeoutMs),
+          ),
+        ]);
+        return result.response.text();
+      } catch (err) {
+        lastErr = err;
+        const transient = isTransientGeminiError(err);
+        console.warn(`[gemini:${mdl}] attempt ${attempt}/${attempts} failed`, {
+          transient,
+          message: err instanceof Error ? err.message : String(err),
+        });
+        if (!transient || attempt === attempts) throw err;
+        // 指数バックオフ: 1s, 2s, 4s （+ ±25% ジッター）
+        const base = 1000 * 2 ** (attempt - 1);
+        const jitter = base * 0.25 * (Math.random() * 2 - 1);
+        await sleep(Math.round(base + jitter));
+      }
     }
+    throw lastErr ?? new Error('gemini unknown error');
+  };
+
+  try {
+    return await runAttempts(modelName, maxAttempts);
+  } catch (err) {
+    if (fallbackModelName && isTransientGeminiError(err)) {
+      console.warn(`[gemini] primary ${modelName} exhausted, falling back to ${fallbackModelName}`);
+      return await runAttempts(fallbackModelName, 2);
+    }
+    throw err;
   }
-  // 到達しないはず
-  throw lastErr ?? new Error('gemini unknown error');
 }
 
-/** デフォルトで使用する Gemini モデル。503 対策はリトライで担保。 */
+/** 既定の Gemini モデル。503 対策はリトライ＋フォールバックで担保。 */
 export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
+
+/** 既定のフォールバックモデル。primary が 503 連発したときに使う軽量版。 */
+export const FALLBACK_GEMINI_MODEL = 'gemini-2.5-flash-lite';
