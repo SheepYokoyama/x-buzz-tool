@@ -12,7 +12,7 @@ const STEPS = [
   {
     step: 2, color: '#a78bfa', icon: Sparkles,
     title: 'AI投稿を生成する',
-    description: '「AI投稿生成」ページでトピックを選択するだけ。AIが3つのパターンを提案します。気に入ったものをコピーするか、そのまま予約投稿へ送ることができます。',
+    description: '「AI投稿生成」ページでトピックを選択するだけ。AIが複数のパターンを提案します。気に入ったものをコピーするか、そのまま予約投稿へ送ることができます。',
   },
   {
     step: 3, color: '#22d3ee', icon: CalendarClock,

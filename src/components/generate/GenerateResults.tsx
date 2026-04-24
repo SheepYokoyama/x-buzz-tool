@@ -26,7 +26,7 @@ export function GenerateResults({ results, generationInput, isGenerating, error,
         </div>
         <div className="text-center space-y-1.5">
           <p className="text-[15px] font-semibold text-slate-200">AIが投稿を生成しています</p>
-          <p className="text-[13px] text-slate-500">3パターンのバズ投稿を用意しています…</p>
+          <p className="text-[13px] text-slate-500">バズ投稿を用意しています…</p>
           <p className="text-[12px] text-slate-600">通常 10〜20 秒かかります</p>
         </div>
         {/* ローディングバー */}

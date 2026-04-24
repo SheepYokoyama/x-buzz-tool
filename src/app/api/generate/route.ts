@@ -1,10 +1,34 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
+import { SchemaType, type Schema } from '@google/generative-ai';
 import type { GenerateInput, GeneratedPattern } from '@/lib/types';
 import { getAuthUser } from '@/lib/auth';
 import { generateWithGeminiRetry, DEFAULT_GEMINI_MODEL } from '@/lib/gemini';
 
 export const maxDuration = 60;
+
+const PATTERN_COUNT = 2;
+
+const PATTERN_SCHEMA: Schema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    patterns: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          titleIdea: { type: SchemaType.STRING },
+          hook:      { type: SchemaType.STRING },
+          body:      { type: SchemaType.STRING },
+          cta:       { type: SchemaType.STRING, nullable: true },
+          hashtags:  { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        },
+        required: ['titleIdea', 'hook', 'body', 'hashtags'],
+      },
+    },
+  },
+  required: ['patterns'],
+};
 
 export async function POST(req: Request) {
   const user = await getAuthUser(req);
@@ -74,6 +98,12 @@ async function generateWithGemini(input: GenerateInput, theme: string): Promise<
     modelName: DEFAULT_GEMINI_MODEL,
     systemInstruction: buildSystem(input),
     prompt: buildPrompt(input, theme),
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: PATTERN_SCHEMA,
+      maxOutputTokens: 2048,
+      temperature: 0.9,
+    },
   });
   return parsePatterns(rawText);
 }
@@ -81,90 +111,55 @@ async function generateWithGemini(input: GenerateInput, theme: string): Promise<
 // ── 共通ユーティリティ ─────────────────────────────────────────────────────
 
 function parsePatterns(rawText: string): GeneratedPattern[] {
-  const jsonMatch =
-    rawText.match(/```json\s*([\s\S]*?)```/) ??
-    rawText.match(/(\{[\s\S]*\})/);
-
+  // JSON モード時は純粋な JSON が返る。念のため ```json ... ``` も剥がす
+  const cleaned = rawText.trim().replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+  const jsonMatch = cleaned.startsWith('{') ? cleaned : cleaned.match(/(\{[\s\S]*\})/)?.[1];
   if (!jsonMatch) {
     console.error('No JSON found in response:', rawText);
     throw new Error('AI応答の解析に失敗しました');
   }
-
-  const parsed = JSON.parse(jsonMatch[1] ?? jsonMatch[0]) as { patterns: GeneratedPattern[] };
+  const parsed = JSON.parse(jsonMatch) as { patterns: GeneratedPattern[] };
   return parsed.patterns;
 }
 
 function buildSystem(input: GenerateInput): string {
-  const base = `あなたはXのバズ投稿専門家です。指定された条件に基づき、必ずJSON形式のみで回答します。
-JSONの前後に説明文・前置き・コードブロック記法は一切不要です。純粋なJSONオブジェクトのみ出力してください。`;
-
-  if (input.personaDescription) {
-    return `${base}\n\nペルソナ設定: ${input.personaDescription}`;
-  }
-  return base;
+  const base = 'あなたはXのバズ投稿専門家です。指定された条件のJSONスキーマに沿って出力します。';
+  return input.personaDescription
+    ? `${base}\nペルソナ: ${input.personaDescription}`
+    : base;
 }
 
 function buildPrompt(input: GenerateInput, theme: string): string {
   const { target, purpose, tone, maxLength, hasCta, xLimit } = input;
 
   const purposeMap: Record<string, string> = {
-    awareness:   '認知拡大（新しい読者に届ける）',
-    engagement:  'エンゲージメント向上（いいね・RT・返信を増やす）',
-    followers:   'フォロワー増加（フォローしてもらう）',
+    awareness:   '認知拡大',
+    engagement:  'エンゲージメント向上',
+    followers:   'フォロワー増加',
     promotion:   '商品・サービス告知',
   };
   const purposeLabel = purposeMap[purpose] ?? purpose;
+  const totalLimit   = xLimit ?? 280;
+  const targetLine   = target || '指定なし（テーマから自然に想定される層）';
+  const ctaNote      = hasCta ? 'CTAを文末に1行追加' : 'CTA不要（cta は null）';
 
-  const ctaNote = hasCta
-    ? 'CTAを文末に追加する（例：「フォローお願いします」「コメントで教えてください」など）'
-    : 'CTAは不要。cta フィールドは null にすること';
-
-  const totalLimit = xLimit ?? 280;
-
-  const targetLine = target
-    ? `・ターゲット読者: ${target}`
-    : '・ターゲット読者: 指定なし（テーマから自然に想定される読者層に合わせてください）';
-
-  return `以下の条件でX投稿を3パターン生成してください。
-
-【X文字カウントルール（厳守）】
-・全角文字（ひらがな・カタカナ・漢字・全角記号）= 2カウント
-・半角文字（英数字・半角スペース・半角記号）= 1カウント
-・body + CTA + ハッシュタグ の合計カウントが必ず${totalLimit}cnt以内に収まること（絶対条件）
-・bodyのカウントは${maxLength}cnt以内を目標とする
+  return `X投稿を${PATTERN_COUNT}パターン生成。各パターンは異なる切り口にする。
 
 【条件】
-・テーマ: ${theme}
-${targetLine}
-・目的: ${purposeLabel}
-・トーン: ${tone}
-・CTA: ${ctaNote}
+テーマ: ${theme}
+ターゲット: ${targetLine}
+目的: ${purposeLabel} / トーン: ${tone} / ${ctaNote}
 
-【バズる投稿の鉄則】
-1. 冒頭1〜2行でスクロールを止める（数字・問いかけ・驚きの事実）
-2. 具体的な数字・期間・体験を入れる
-3. 読者が「自分のことだ」と思える切り口
-4. 改行・箇条書きで読みやすくする
-5. 各パターンは異なるアプローチ・切り口にする
+【文字数ルール（厳守）】
+全角=2cnt・半角=1cnt。body+CTA+hashtags合計≤${totalLimit}cnt、bodyは${maxLength}cnt以内。
 
-【文字数の考え方】
-・日本語（全角）は1文字=2カウントなので、全角文字のみの場合body上限は約${Math.floor(maxLength / 2)}文字
-・ハッシュタグ3個で約30〜50cnt消費することを考慮して本文を調整すること
-・合計${totalLimit}cntを超える投稿は X に投稿できないため、必ずカウント内に収めること
+【バズの鉄則】
+冒頭で数字/問いかけ/驚きを入れてスクロールを止める。具体的な数字・体験を入れ、「自分のことだ」と思わせる。改行で読みやすく。
 
-以下の JSON スキーマで3パターン分を出力してください:
-
+出力スキーマ:
 {
   "patterns": [
-    {
-      "titleIdea": "この投稿の核心メッセージ（20字以内）",
-      "hook": "冒頭フック（スクロールを止める最初の1〜2行）",
-      "body": "本文（冒頭フックを含む投稿テキスト全体。CTAとハッシュタグは含めない。全角換算で${maxLength}cnt以内）",
-      "cta": "CTA文 または null",
-      "hashtags": ["ハッシュタグ1", "ハッシュタグ2", "ハッシュタグ3"]
-    },
-    { },
-    { }
+    { "titleIdea": "核心メッセージ20字", "hook": "冒頭フック", "body": "投稿本文（${maxLength}cnt以内）", "cta": "CTA or null", "hashtags": ["タグ1","タグ2","タグ3"] }
   ]
 }`;
 }
