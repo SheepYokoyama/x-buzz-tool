@@ -7,6 +7,7 @@ import { RewriteResultCard } from '@/components/rewrite/RewriteResultCard';
 import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, FieldLabel } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { TokenCostHint } from '@/components/ui/TokenCostHint';
 import { useSettings } from '@/contexts/SettingsContext';
 import { apiFetch } from '@/lib/api-fetch';
 import { Repeat2, RefreshCw, Settings, Copy, Check } from 'lucide-react';
@@ -164,6 +165,9 @@ export default function RewritePage() {
                 : <><Repeat2 size={14} />リライトする</>
               }
             </Button>
+            <div className="flex justify-center">
+              <TokenCostHint />
+            </div>
           </div>
         </div>
 
@@ -200,6 +204,9 @@ export default function RewritePage() {
                   </>
                 )}
               </button>
+              <div className="flex justify-center">
+                <TokenCostHint />
+              </div>
 
               {/* ── X要約エラー ── */}
               {summaryError && (

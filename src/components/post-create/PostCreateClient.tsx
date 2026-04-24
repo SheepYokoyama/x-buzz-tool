@@ -40,7 +40,7 @@ export function PostCreateClient() {
   const [mode, setMode] = useState<SplitMode>('thread');
   // ユーザーが LIMIT_OPTIONS で明示的に選んだ値。null の間はプランから自動判定。
   const [maxCountOverride, setMaxCountOverride] = useState<number | null>(null);
-  const [numbering, setNumbering] = useState(true);
+  const [numbering, setNumbering] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
