@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, VoiceInput, FieldLabel } from '@/components/ui/Input';
+import { TokenCostHint } from '@/components/ui/TokenCostHint';
 import { Sparkles, RefreshCw, Settings } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import type { GenerateInput, PostPersona } from '@/lib/types';
@@ -303,6 +304,9 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
           : <><Sparkles size={14} />投稿を生成する</>
         }
       </Button>
+      <div className="flex justify-center">
+        <TokenCostHint />
+      </div>
     </div>
   );
 }
