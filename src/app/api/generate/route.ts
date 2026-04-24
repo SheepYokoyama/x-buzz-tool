@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { SchemaType, type Schema } from '@google/generative-ai';
 import type { GenerateInput, GeneratedPattern } from '@/lib/types';
 import { getAuthUser } from '@/lib/auth';
-import { generateWithGeminiRetry, DEFAULT_GEMINI_MODEL } from '@/lib/gemini';
+import { generateWithGeminiRetry, DEFAULT_GEMINI_MODEL, FALLBACK_GEMINI_MODEL } from '@/lib/gemini';
 
 export const maxDuration = 60;
 
@@ -96,12 +96,14 @@ async function generateWithGemini(input: GenerateInput, theme: string): Promise<
   const rawText = await generateWithGeminiRetry({
     apiKey,
     modelName: DEFAULT_GEMINI_MODEL,
+    fallbackModelName: FALLBACK_GEMINI_MODEL,
     systemInstruction: buildSystem(input),
     prompt: buildPrompt(input, theme),
     generationConfig: {
       responseMimeType: 'application/json',
       responseSchema: PATTERN_SCHEMA,
-      maxOutputTokens: 2048,
+      // 2 パターン × body(最大25,000cnt≒12,500字≒12,500token) + JSON 足回り分の余裕を確保
+      maxOutputTokens: 8192,
       temperature: 0.9,
     },
   });

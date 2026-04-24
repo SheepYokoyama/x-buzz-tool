@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
 import type { AiProvider } from '@/lib/types';
 import { getAuthUser } from '@/lib/auth';
-import { generateWithGeminiRetry, DEFAULT_GEMINI_MODEL } from '@/lib/gemini';
+import { generateWithGeminiRetry, DEFAULT_GEMINI_MODEL, FALLBACK_GEMINI_MODEL } from '@/lib/gemini';
 
 export const maxDuration = 60;
 
@@ -114,10 +114,11 @@ async function rewriteWithGemini(originalText: string, styleInstruction: string)
   const rawText = await generateWithGeminiRetry({
     apiKey,
     modelName: DEFAULT_GEMINI_MODEL,
+    fallbackModelName: FALLBACK_GEMINI_MODEL,
     systemInstruction: 'Xのバズ投稿専門家。指示に従ってリライトし、リライト後のテキストのみ出力。前置き・説明は不要。',
     prompt: `【指示】${styleInstruction}\n\n【元の投稿】\n${originalText}`,
     generationConfig: {
-      maxOutputTokens: 512,
+      maxOutputTokens: 2048,
       temperature: 0.8,
     },
   });
