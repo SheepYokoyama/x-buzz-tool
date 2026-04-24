@@ -66,7 +66,9 @@
       "Bash(ls \"src/app/\\(authenticated\\)/generate/\")",
       "Bash(netstat -ano)",
       "Bash(gh pr create --title 'feat: いいね＆フォロー / 手動分割マーカー / Premium デフォルト上限' --body ' *)",
-      "Bash(gh pr *)"
+      "Bash(gh pr *)",
+      "Bash(git branch *)",
+      "Bash(git worktree *)"
     ]
   },
   "hooks": {
