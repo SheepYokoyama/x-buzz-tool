@@ -10,6 +10,7 @@ import { XPostDebug } from '@/components/dashboard/XPostDebug';
 import { SyncMetricsButton } from '@/components/dashboard/SyncMetricsButton';
 import { FollowersStatsCard } from '@/components/dashboard/FollowersStatsCard';
 import { XAccountSetupBanner } from '@/components/dashboard/XAccountSetupBanner';
+import { IdentityCards } from '@/components/dashboard/IdentityCards';
 import { getRecentPublishedPosts, getUpcomingScheduledPosts } from '@/lib/api/scheduled-posts';
 import { getTodayDraftSummary } from '@/lib/api/generated-posts';
 import { getCurrentUserId } from '@/lib/auth';
@@ -54,6 +55,9 @@ export default async function DashboardPage() {
 
       {/* ── X アカウント未登録時のみ表示 ───────────── */}
       <XAccountSetupBanner hasXAccount={!!activeXAccountId} />
+
+      {/* ── X アカウント / ペルソナ 識別カード ───── */}
+      <IdentityCards />
 
       {/* ── バナー ────────────────────────────────── */}
       <div className="banner-glass rounded-[1.375rem] px-5 py-4 mb-10 flex flex-col sm:flex-row sm:items-center gap-4">
