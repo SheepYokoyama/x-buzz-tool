@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, FieldLabel } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TokenCostHint } from '@/components/ui/TokenCostHint';
+import { MissingKeyBanner } from '@/components/ai-keys/MissingKeyBanner';
 import { useSettings } from '@/contexts/SettingsContext';
 import { apiFetch } from '@/lib/api-fetch';
 import { Repeat2, RefreshCw, Settings, Copy, Check } from 'lucide-react';
@@ -158,6 +159,8 @@ export default function RewritePage() {
                 {error}
               </p>
             )}
+
+            <MissingKeyBanner provider={settings.aiProvider === 'anthropic' ? 'anthropic' : 'gemini'} />
 
             <Button className="w-full justify-center" size="lg" onClick={handleRewrite} disabled={!original.trim() || isLoading}>
               {isLoading

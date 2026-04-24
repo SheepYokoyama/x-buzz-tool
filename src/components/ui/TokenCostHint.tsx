@@ -7,7 +7,7 @@ interface TokenCostHintProps {
 }
 
 export function TokenCostHint({
-  detail = 'このアクションは AI API のトークンを消費します。設定で選択中のプロバイダ（Gemini 無料 / Anthropic 有料）に応じて課金・クォータが発生します。',
+  detail = 'このアクションはあなたが登録した AI API キーを使用し、選択中のプロバイダ（Gemini 無料枠 / Anthropic 有料）のトークンを消費します。課金・クォータはあなたのアカウントに計上されます。',
   className = '',
 }: TokenCostHintProps) {
   return (

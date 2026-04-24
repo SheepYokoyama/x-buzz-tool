@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import type { AiProvider } from '@/lib/types';
 import { getAuthUser } from '@/lib/auth';
 import { generateWithGeminiRetry, DEFAULT_GEMINI_MODEL, FALLBACK_GEMINI_MODEL } from '@/lib/gemini';
+import { getUserAIKey } from '@/lib/ai-keys';
 
 export const maxDuration = 60;
 
@@ -64,11 +65,24 @@ export async function POST(req: Request) {
       ? buildPersonaInstruction(persona)
       : (STYLE_INSTRUCTIONS[style] ?? STYLE_INSTRUCTIONS.shorter);
 
+  const apiKey = await getUserAIKey(user.id, provider === 'anthropic' ? 'anthropic' : 'gemini');
+  if (!apiKey) {
+    const providerLabel = provider === 'anthropic' ? 'Anthropic' : 'Gemini';
+    return NextResponse.json(
+      {
+        error: `${providerLabel} API キーが未登録です。「AI API キー」ページから登録してください。`,
+        errorCode: 'api_key_missing',
+        provider,
+      },
+      { status: 400 },
+    );
+  }
+
   try {
     const rewritten =
       provider === 'anthropic'
-        ? await rewriteWithAnthropic(originalText, styleInstruction)
-        : await rewriteWithGemini(originalText, styleInstruction);
+        ? await rewriteWithAnthropic(apiKey, originalText, styleInstruction)
+        : await rewriteWithGemini(apiKey, originalText, styleInstruction);
 
     return NextResponse.json({ text: rewritten });
   } catch (err) {
@@ -87,10 +101,7 @@ export async function POST(req: Request) {
   }
 }
 
-async function rewriteWithAnthropic(originalText: string, styleInstruction: string): Promise<string> {
-  const apiKey = process.env.MEGA_BUZZ_AI_KEY;
-  if (!apiKey) throw new Error('MEGA_BUZZ_AI_KEY が設定されていません');
-
+async function rewriteWithAnthropic(apiKey: string, originalText: string, styleInstruction: string): Promise<string> {
   const client = new Anthropic({ apiKey });
   const message = await client.messages.create({
     model: 'claude-haiku-4-5',
@@ -107,10 +118,7 @@ async function rewriteWithAnthropic(originalText: string, styleInstruction: stri
   return message.content.find((b) => b.type === 'text')?.text.trim() ?? '';
 }
 
-async function rewriteWithGemini(originalText: string, styleInstruction: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY が設定されていません');
-
+async function rewriteWithGemini(apiKey: string, originalText: string, styleInstruction: string): Promise<string> {
   const rawText = await generateWithGeminiRetry({
     apiKey,
     modelName: DEFAULT_GEMINI_MODEL,

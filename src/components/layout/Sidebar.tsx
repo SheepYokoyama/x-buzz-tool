@@ -17,6 +17,7 @@ import {
   LogOut,
   UserPlus,
   PenLine,
+  KeyRound,
 } from 'lucide-react';
 import { X_COUNT_RULE, getXPlan, getXLimit, getPlanLabel } from '@/lib/x-char-count';
 import { apiFetch } from '@/lib/api-fetch';
@@ -35,6 +36,7 @@ const subNav = [
   { href: '/persona',     label: 'ペルソナ',         icon: UserCircle    },
   { href: '/follow-hunt', label: 'フォロー候補',     icon: UserPlus      },
   { href: '/x-accounts',  label: 'アカウント管理',   icon: Settings      },
+  { href: '/ai-keys',     label: 'AI API キー',      icon: KeyRound      },
   { href: '/guide',       label: '使い方ガイド',     icon: BookOpenCheck },
 ];
 
