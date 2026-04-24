@@ -31,7 +31,6 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
   const isEdit = !!account;
 
   const [name, setName]         = useState(account?.name ?? '');
-  const [username, setUsername] = useState(account?.username ?? '');
   const [tokens, setTokens]     = useState<Record<string, string>>({
     api_key: '', api_secret: '', access_token: '', access_secret: '', bearer_token: '',
   });
@@ -48,7 +47,6 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
     setError(null);
     setSuccessUser(null);
 
-    if (!name.trim()) { setError('アカウント名は必須です'); return; }
     if (!isEdit) {
       for (const f of TOKEN_FIELDS.filter((f) => f.required)) {
         if (!tokens[f.key]?.trim()) {
@@ -60,7 +58,8 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
 
     setSaving(true);
     try {
-      const body: Record<string, string> = { name: name.trim(), username: username.trim() };
+      const body: Record<string, string> = {};
+      if (name.trim()) body.name = name.trim();
       for (const f of TOKEN_FIELDS) {
         if (tokens[f.key]?.trim()) body[f.key] = tokens[f.key].trim();
       }
@@ -126,34 +125,22 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
 
         {/* ── フォーム ── */}
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          {/* アカウント名 */}
+          {/* アカウント名（任意） */}
           <div>
             <label className="block text-[12px] font-medium text-slate-400 mb-1.5">
-              アカウント名 <span className="text-red-400">*</span>
+              アカウント名 <span className="text-slate-600 font-normal">（任意）</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="例: メインアカウント"
+              placeholder="空欄の場合は X の表示名を使用します"
               className="w-full rounded-lg px-3 py-2.5 text-[13px] text-slate-200 outline-none transition-colors"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
             />
-          </div>
-
-          {/* ユーザー名 */}
-          <div>
-            <label className="block text-[12px] font-medium text-slate-400 mb-1.5">
-              X ユーザー名（@なし）
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="例: username"
-              className="w-full rounded-lg px-3 py-2.5 text-[13px] text-slate-200 outline-none"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-            />
+            <p className="text-[11px] text-slate-500 mt-1.5">
+              @ユーザー名・表示名・アイコンはトークンを検証して X から自動取得します
+            </p>
           </div>
 
           {/* トークンフィールド */}

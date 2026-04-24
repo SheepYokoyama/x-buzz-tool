@@ -13,6 +13,7 @@ export function XAccountsClient() {
   const [account, setAccount]   = useState<XAccount | null>(null);
   const [loading, setLoading]   = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   /* ── 取得（1件のみ） ── */
   const fetchAccount = async () => {
@@ -45,6 +46,28 @@ export function XAccountsClient() {
     setAccount(saved);
     setShowForm(false);
     await refreshXUser();
+  };
+
+  /* ── X 最新情報で更新 ── */
+  const handleRefresh = async (id: string) => {
+    setRefreshing(true);
+    try {
+      const res = await apiFetch(`/api/x-accounts/${id}/refresh`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json.error ?? '更新に失敗しました');
+        return;
+      }
+      // 既存の account にマスク済みトークンを維持しつつ新情報で上書き
+      if (account) {
+        setAccount({ ...account, ...json.account });
+      }
+      await refreshXUser();
+    } catch {
+      alert('更新に失敗しました。もう一度お試しください。');
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   /* ── 削除 ── */
@@ -87,9 +110,11 @@ export function XAccountsClient() {
             <XAccountCard
               account={account}
               isActivating={false}
+              isRefreshing={refreshing}
               onActivate={() => {}}
               onEdit={() => setShowForm(true)}
               onDelete={handleDelete}
+              onRefresh={handleRefresh}
             />
           </div>
         ) : (

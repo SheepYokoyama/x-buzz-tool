@@ -29,6 +29,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   // トークン変更がある場合は既存トークンをマージして X API で検証
   let verifiedUsername: string | null = null;
+  let verifiedProfileImageUrl: string | null = null;
   if (hasTokenChange) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (supabase as any)
@@ -57,6 +58,7 @@ export async function PATCH(req: Request, { params }: Params) {
       );
     }
     verifiedUsername = verified.user?.username ?? null;
+    verifiedProfileImageUrl = verified.user?.profileImageUrl ?? null;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,6 +72,11 @@ export async function PATCH(req: Request, { params }: Params) {
   if (body.bearer_token !== undefined) {
     updates.bearer_token = body.bearer_token?.trim() ? encrypt(body.bearer_token) : null;
   }
+  // トークン更新時は最新の @username / アイコンを自動で書き戻す
+  if (hasTokenChange) {
+    if (verifiedUsername !== null) updates.username = verifiedUsername;
+    updates.profile_image_url = verifiedProfileImageUrl;
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
@@ -77,7 +84,7 @@ export async function PATCH(req: Request, { params }: Params) {
     .update(updates)
     .eq('id', id)
     .eq('user_id', user.id)
-    .select('id, name, username, is_active, created_at, updated_at')
+    .select('id, name, username, profile_image_url, is_active, created_at, updated_at')
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

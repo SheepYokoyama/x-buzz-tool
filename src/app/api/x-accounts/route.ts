@@ -24,6 +24,7 @@ export async function GET(req: Request) {
     id:                   row.id,
     name:                 row.name,
     username:             row.username ?? null,
+    profile_image_url:    row.profile_image_url ?? null,
     api_key_masked:       maskToken(row.api_key ? tryDecrypt(row.api_key) : null),
     api_secret_masked:    maskToken(row.api_secret ? tryDecrypt(row.api_secret) : null),
     access_token_masked:  maskToken(row.access_token ? tryDecrypt(row.access_token) : null),
@@ -47,8 +48,7 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
   const body = await req.json() as {
-    name: string;
-    username?: string;
+    name?: string;
     api_key: string;
     api_secret: string;
     access_token: string;
@@ -56,9 +56,6 @@ export async function POST(req: Request) {
     bearer_token?: string;
   };
 
-  if (!body.name?.trim()) {
-    return NextResponse.json({ error: 'アカウント名は必須です' }, { status: 400 });
-  }
   if (!body.api_key || !body.api_secret || !body.access_token || !body.access_secret) {
     return NextResponse.json({ error: '必須トークンが不足しています' }, { status: 400 });
   }
@@ -92,24 +89,27 @@ export async function POST(req: Request) {
     );
   }
 
-  // 検証済み username をユーザー未入力時のフォールバックに使う
-  const effectiveUsername = body.username?.trim() || verified.user?.username || null;
+  // name が省略された場合は X の表示名をそのまま使う
+  const effectiveName     = body.name?.trim() || verified.user?.name || 'Xアカウント';
+  const effectiveUsername = verified.user?.username ?? null;
+  const profileImageUrl   = verified.user?.profileImageUrl ?? null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('x_accounts')
     .insert({
-      user_id:       user.id,
-      name:          body.name.trim(),
-      username:      effectiveUsername,
-      api_key:       encrypt(body.api_key),
-      api_secret:    encrypt(body.api_secret),
-      access_token:  encrypt(body.access_token),
-      access_secret: encrypt(body.access_secret),
-      bearer_token:  body.bearer_token ? encrypt(body.bearer_token) : null,
-      is_active:     true,
+      user_id:           user.id,
+      name:              effectiveName,
+      username:          effectiveUsername,
+      profile_image_url: profileImageUrl,
+      api_key:           encrypt(body.api_key),
+      api_secret:        encrypt(body.api_secret),
+      access_token:      encrypt(body.access_token),
+      access_secret:     encrypt(body.access_secret),
+      bearer_token:      body.bearer_token ? encrypt(body.bearer_token) : null,
+      is_active:         true,
     })
-    .select('id, name, username, is_active, created_at, updated_at')
+    .select('id, name, username, profile_image_url, is_active, created_at, updated_at')
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
