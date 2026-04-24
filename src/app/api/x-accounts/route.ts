@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAuthUser } from '@/lib/auth';
 import { encrypt, maskToken, decrypt } from '@/lib/encryption';
+import { verifyXTokens } from '@/lib/x-client';
 
 /** GET /api/x-accounts — マスク済みトークン一覧（ログインユーザー分のみ） */
 export async function GET(req: Request) {
@@ -76,13 +77,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Xアカウントは1件のみ登録できます' }, { status: 409 });
   }
 
+  // ── X API で認証確立を確認 ──
+  const verified = await verifyXTokens({
+    api_key:       body.api_key,
+    api_secret:    body.api_secret,
+    access_token:  body.access_token,
+    access_secret: body.access_secret,
+  });
+
+  if (!verified.ok) {
+    return NextResponse.json(
+      { error: verified.error, errorCode: verified.errorCode },
+      { status: verified.errorCode === 'invalid_tokens' ? 401 : 400 },
+    );
+  }
+
+  // 検証済み username をユーザー未入力時のフォールバックに使う
+  const effectiveUsername = body.username?.trim() || verified.user?.username || null;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('x_accounts')
     .insert({
       user_id:       user.id,
       name:          body.name.trim(),
-      username:      body.username?.trim() || null,
+      username:      effectiveUsername,
       api_key:       encrypt(body.api_key),
       api_secret:    encrypt(body.api_secret),
       access_token:  encrypt(body.access_token),
@@ -94,5 +113,15 @@ export async function POST(req: Request) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ account: { ...data, api_key_masked: maskToken(body.api_key), api_secret_masked: maskToken(body.api_secret), access_token_masked: maskToken(body.access_token), access_secret_masked: maskToken(body.access_secret), bearer_token_masked: body.bearer_token ? maskToken(body.bearer_token) : null } });
+  return NextResponse.json({
+    account: {
+      ...data,
+      api_key_masked:       maskToken(body.api_key),
+      api_secret_masked:    maskToken(body.api_secret),
+      access_token_masked:  maskToken(body.access_token),
+      access_secret_masked: maskToken(body.access_secret),
+      bearer_token_masked:  body.bearer_token ? maskToken(body.bearer_token) : null,
+    },
+    verifiedUser: verified.user,
+  });
 }

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAuthUser } from '@/lib/auth';
-import { encrypt, maskToken } from '@/lib/encryption';
+import { encrypt, maskToken, decrypt } from '@/lib/encryption';
+import { verifyXTokens } from '@/lib/x-client';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -22,6 +23,41 @@ export async function PATCH(req: Request, { params }: Params) {
   };
 
   const supabase = getSupabaseAdmin();
+
+  const hasTokenChange =
+    !!(body.api_key?.trim() || body.api_secret?.trim() || body.access_token?.trim() || body.access_secret?.trim());
+
+  // トークン変更がある場合は既存トークンをマージして X API で検証
+  let verifiedUsername: string | null = null;
+  if (hasTokenChange) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existing } = await (supabase as any)
+      .from('x_accounts')
+      .select('api_key, api_secret, access_token, access_secret')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!existing) {
+      return NextResponse.json({ error: 'アカウントが見つかりません' }, { status: 404 });
+    }
+
+    const merged = {
+      api_key:       body.api_key?.trim()       || tryDecrypt(existing.api_key),
+      api_secret:    body.api_secret?.trim()    || tryDecrypt(existing.api_secret),
+      access_token:  body.access_token?.trim()  || tryDecrypt(existing.access_token),
+      access_secret: body.access_secret?.trim() || tryDecrypt(existing.access_secret),
+    };
+
+    const verified = await verifyXTokens(merged);
+    if (!verified.ok) {
+      return NextResponse.json(
+        { error: verified.error, errorCode: verified.errorCode },
+        { status: verified.errorCode === 'invalid_tokens' ? 401 : 400 },
+      );
+    }
+    verifiedUsername = verified.user?.username ?? null;
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updates: Record<string, any> = { updated_at: new Date().toISOString() };
@@ -54,7 +90,12 @@ export async function PATCH(req: Request, { params }: Params) {
       access_secret_masked: body.access_secret?.trim() ? maskToken(body.access_secret) : undefined,
       bearer_token_masked:  body.bearer_token?.trim()  ? maskToken(body.bearer_token)  : undefined,
     },
+    verifiedUsername,
   });
+}
+
+function tryDecrypt(s: string): string {
+  try { return decrypt(s); } catch { return s; }
 }
 
 /** DELETE /api/x-accounts/[id] */
