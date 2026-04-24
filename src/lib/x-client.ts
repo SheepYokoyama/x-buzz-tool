@@ -2,6 +2,98 @@ import { TwitterApi } from 'twitter-api-v2';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { encrypt, decrypt } from '@/lib/encryption';
 
+const VERIFY_TIMEOUT_MS = 10_000;
+
+export interface VerifiedXUser {
+  id: string;
+  name: string;
+  username: string;
+}
+
+export type VerifyErrorCode =
+  | 'invalid_tokens'
+  | 'forbidden'
+  | 'rate_limit'
+  | 'network'
+  | 'unknown';
+
+export interface VerifyResult {
+  ok: boolean;
+  user?: VerifiedXUser;
+  errorCode?: VerifyErrorCode;
+  error?: string;
+}
+
+/**
+ * 与えられた OAuth 1.0a トークンが有効かを X API の v2.me で検証する。
+ * 登録・更新時の認証確立確認に使用。失敗時はユーザー向け日本語メッセージで理由を返す。
+ */
+export async function verifyXTokens(tokens: {
+  api_key: string;
+  api_secret: string;
+  access_token: string;
+  access_secret: string;
+}): Promise<VerifyResult> {
+  try {
+    const client = new TwitterApi({
+      appKey:       tokens.api_key,
+      appSecret:    tokens.api_secret,
+      accessToken:  tokens.access_token,
+      accessSecret: tokens.access_secret,
+    });
+
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), VERIFY_TIMEOUT_MS),
+    );
+    const { data } = await Promise.race([
+      client.v2.me({ 'user.fields': ['username', 'name'] }),
+      timeout,
+    ]);
+
+    return {
+      ok: true,
+      user: { id: data.id, name: data.name, username: data.username },
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const status  = (err as { code?: number })?.code;
+
+    if (message === 'timeout') {
+      return {
+        ok: false,
+        errorCode: 'network',
+        error: 'X API への接続がタイムアウトしました。時間をおいて再試行してください。',
+      };
+    }
+    if (status === 401) {
+      return {
+        ok: false,
+        errorCode: 'invalid_tokens',
+        error: 'トークンが無効です。X Developer Console で Access Token を再発行してから登録してください。',
+      };
+    }
+    if (status === 403) {
+      return {
+        ok: false,
+        errorCode: 'forbidden',
+        error: 'アプリが Project に紐付いていない、または権限が不足しています。Pay-per-use 加入と User authentication settings（Read and Write）をご確認ください。',
+      };
+    }
+    if (status === 429) {
+      return {
+        ok: false,
+        errorCode: 'rate_limit',
+        error: 'X API のレート制限に達しました。しばらく待ってから再試行してください。',
+      };
+    }
+    return {
+      ok: false,
+      errorCode: 'unknown',
+      error: `認証確認に失敗しました: ${message}`,
+    };
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // DB のみ参照。env vars は初回自動シード時にのみ読む。
 // ─────────────────────────────────────────────────────────────

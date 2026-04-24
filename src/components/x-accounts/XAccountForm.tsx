@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { X, Eye, EyeOff, Loader2, BookOpen } from 'lucide-react';
+import { X, Eye, EyeOff, Loader2, BookOpen, CheckCircle2 } from 'lucide-react';
 import type { XAccount } from '@/lib/types';
 import { apiFetch } from '@/lib/api-fetch';
 
@@ -38,6 +38,7 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
   const [showMap, setShowMap]   = useState<Record<string, boolean>>({});
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
+  const [successUser, setSuccessUser] = useState<{ username: string; name: string } | null>(null);
 
   const toggleShow = (key: string) =>
     setShowMap((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -45,6 +46,7 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessUser(null);
 
     if (!name.trim()) { setError('アカウント名は必須です'); return; }
     if (!isEdit) {
@@ -71,11 +73,29 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
         },
       );
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? '保存に失敗しました');
+      if (!res.ok) {
+        setError(json.error ?? '保存に失敗しました');
+        setSaving(false);
+        return;
+      }
+
+      // 認証確立済みの場合は成功メッセージを 1.5 秒表示してから閉じる
+      const verified = json.verifiedUser as { username: string; name: string } | undefined;
+      const verifiedUsernameOnly = typeof json.verifiedUsername === 'string' ? json.verifiedUsername : null;
+      if (verified?.username) {
+        setSuccessUser(verified);
+      } else if (verifiedUsernameOnly) {
+        setSuccessUser({ username: verifiedUsernameOnly, name: verifiedUsernameOnly });
+      }
+
+      if (verified?.username || verifiedUsernameOnly) {
+        // saving は true のままにして二重送信を防止しつつ成功メッセージを見せる
+        setTimeout(() => onSave(json.account), 1500);
+        return;
+      }
       onSave(json.account);
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存に失敗しました');
-    } finally {
       setSaving(false);
     }
   };
@@ -193,8 +213,25 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
           {/* エラー */}
           {error && (
             <p className="text-[12px] text-red-400 rounded-lg px-3 py-2" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
-              {error}
+              認証に失敗しました: {error}
             </p>
+          )}
+
+          {/* 成功 */}
+          {successUser && !error && (
+            <div
+              className="flex items-center gap-2 text-[12px] rounded-lg px-3 py-2"
+              style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}
+            >
+              <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+              <span className="text-emerald-300">
+                認証成功: @{successUser.username}{' '}
+                {successUser.name !== successUser.username && (
+                  <span className="text-emerald-400/60">（{successUser.name}）</span>
+                )}
+                で連携しました
+              </span>
+            </div>
           )}
 
           {/* ボタン */}
@@ -213,8 +250,13 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
               className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-60"
               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff' }}
             >
-              {saving && <Loader2 size={14} className="animate-spin" />}
-              {saving ? '保存中…' : (isEdit ? '更新する' : '追加する')}
+              {saving && !successUser && <Loader2 size={14} className="animate-spin" />}
+              {successUser && <CheckCircle2 size={14} />}
+              {successUser
+                ? '完了'
+                : saving
+                  ? (isEdit ? '検証中…' : '認証確認中…')
+                  : (isEdit ? '更新する' : '追加する')}
             </button>
           </div>
         </form>
