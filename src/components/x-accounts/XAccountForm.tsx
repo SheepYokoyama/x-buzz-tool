@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Eye, EyeOff, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { X, Eye, EyeOff, Loader2, BookOpen } from 'lucide-react';
 import type { XAccount } from '@/lib/types';
 import { apiFetch } from '@/lib/api-fetch';
 
@@ -141,8 +142,18 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
             style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
           >
             <p className="text-[11px] text-slate-500">
-              {isEdit ? 'トークンを変更する場合のみ入力してください（空欄は変更しません）' : 'X Developer Portal から取得した認証情報を入力してください'}
+              {isEdit ? 'トークンを変更する場合のみ入力してください（空欄は変更しません）' : 'X Developer Console から取得した認証情報を入力してください'}
             </p>
+            {!isEdit && (
+              <Link
+                href="/guide/x-account"
+                target="_blank"
+                className="inline-flex items-center gap-1.5 text-[11px] text-sky-300 hover:underline"
+              >
+                <BookOpen size={11} />
+                トークンの取得方法（登録マニュアル）を見る
+              </Link>
+            )}
             {TOKEN_FIELDS.map((f) => (
               <div key={f.key}>
                 <label className="block text-[11px] font-medium text-slate-500 mb-1">
