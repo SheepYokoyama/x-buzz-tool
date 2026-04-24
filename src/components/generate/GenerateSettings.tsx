@@ -233,19 +233,20 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
         </div>
       </div>
 
-      {/* ── 文字数 ── */}
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <FieldLabel className="mb-0">本文カウント目安</FieldLabel>
-          <span
-            className="text-[10px] px-2 py-0.5 rounded-lg cursor-help"
-            style={{ background: 'rgba(34,211,238,0.06)', color: '#475569', border: '1px solid rgba(34,211,238,0.15)' }}
-            title={`全角（ひらがな・漢字等）= 2カウント\n半角（英数字等）= 1カウント\nCTA+ハッシュタグ込みで合計${xLimit.toLocaleString()}cnt以内に生成（${planLabel}プラン）`}
-          >
-            {planLabel} · 合計{xLimit.toLocaleString()}cnt以内
+      {/* ── 文字数（任意調整・折りたたみ） ── */}
+      <details className="group">
+        <summary
+          className="flex items-center gap-2 cursor-pointer list-none text-[11px] text-slate-600 hover:text-slate-400 py-1 transition-colors"
+          title={`全角=2カウント・半角=1カウント。CTA+ハッシュタグ込みで合計${xLimit.toLocaleString()}cnt以内で生成（${planLabel}プラン）。\n※ AIはテンプレ最適化を優先するため目安通りにならない場合があります`}
+        >
+          <span>本文カウント目安（任意）</span>
+          <span className="text-slate-700">·</span>
+          <span className="text-slate-500">
+            {lengthOptions.find((o) => o.value === input.maxLength)?.label ?? `${input.maxLength}cnt`}
           </span>
-        </div>
-        <div className="flex flex-wrap gap-2">
+          <span className="ml-auto text-slate-700 text-[10px] group-open:rotate-180 transition-transform">▾</span>
+        </summary>
+        <div className="mt-2 flex flex-wrap gap-2">
           {lengthOptions.map(({ value, label, note }) => {
             const active = input.maxLength === value;
             return (
@@ -266,7 +267,7 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
             );
           })}
         </div>
-      </div>
+      </details>
 
       {/* ── CTA ── */}
       <div className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}>
