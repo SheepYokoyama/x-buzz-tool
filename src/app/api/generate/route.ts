@@ -4,6 +4,7 @@ import { SchemaType, type Schema } from '@google/generative-ai';
 import type { GenerateInput, GeneratedPattern } from '@/lib/types';
 import { getAuthUser } from '@/lib/auth';
 import { generateWithGeminiRetry, DEFAULT_GEMINI_MODEL, FALLBACK_GEMINI_MODEL } from '@/lib/gemini';
+import { getUserAIKey } from '@/lib/ai-keys';
 
 export const maxDuration = 60;
 
@@ -41,11 +42,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'テーマを入力してください' }, { status: 400 });
   }
 
+  // ユーザー登録済み API キーを取得（BYOK）
+  const apiKey = await getUserAIKey(user.id, input.provider === 'anthropic' ? 'anthropic' : 'gemini');
+  if (!apiKey) {
+    const providerLabel = input.provider === 'anthropic' ? 'Anthropic' : 'Gemini';
+    return NextResponse.json(
+      {
+        error: `${providerLabel} API キーが未登録です。「AI API キー」ページから登録してください。`,
+        errorCode: 'api_key_missing',
+        provider: input.provider,
+      },
+      { status: 400 },
+    );
+  }
+
   try {
     const patterns =
       input.provider === 'anthropic'
-        ? await generateWithAnthropic(input, effectiveTheme)
-        : await generateWithGemini(input, effectiveTheme);
+        ? await generateWithAnthropic(apiKey, input, effectiveTheme)
+        : await generateWithGemini(apiKey, input, effectiveTheme);
 
     return NextResponse.json({ patterns });
   } catch (err) {
@@ -67,12 +82,7 @@ export async function POST(req: Request) {
 
 // ── Anthropic ──────────────────────────────────────────────────────────────
 
-async function generateWithAnthropic(input: GenerateInput, theme: string): Promise<GeneratedPattern[]> {
-  const apiKey = process.env.MEGA_BUZZ_AI_KEY;
-  if (!apiKey) {
-    throw new Error('MEGA_BUZZ_AI_KEY が設定されていません。.env.local を確認してください。');
-  }
-
+async function generateWithAnthropic(apiKey: string, input: GenerateInput, theme: string): Promise<GeneratedPattern[]> {
   const client = new Anthropic({ apiKey });
   const message = await client.messages.create({
     model: 'claude-haiku-4-5',
@@ -87,12 +97,7 @@ async function generateWithAnthropic(input: GenerateInput, theme: string): Promi
 
 // ── Gemini ─────────────────────────────────────────────────────────────────
 
-async function generateWithGemini(input: GenerateInput, theme: string): Promise<GeneratedPattern[]> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY が設定されていません。.env.local を確認してください。');
-  }
-
+async function generateWithGemini(apiKey: string, input: GenerateInput, theme: string): Promise<GeneratedPattern[]> {
   const rawText = await generateWithGeminiRetry({
     apiKey,
     modelName: DEFAULT_GEMINI_MODEL,

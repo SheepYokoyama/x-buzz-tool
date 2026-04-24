@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, VoiceInput, FieldLabel } from '@/components/ui/Input';
 import { TokenCostHint } from '@/components/ui/TokenCostHint';
+import { MissingKeyBanner } from '@/components/ai-keys/MissingKeyBanner';
 import { Sparkles, RefreshCw, Settings } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import type { GenerateInput, PostPersona } from '@/lib/types';
@@ -292,6 +293,9 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
           />
         </button>
       </div>
+
+      {/* ── キー未登録バナー ── */}
+      <MissingKeyBanner provider={settings.aiProvider === 'anthropic' ? 'anthropic' : 'gemini'} />
 
       {/* ── 生成ボタン ── */}
       <Button
