@@ -1,17 +1,19 @@
 'use client';
 
-import { CheckCircle2, Pencil, Trash2, User } from 'lucide-react';
+import { CheckCircle2, Pencil, Trash2, User, RefreshCw } from 'lucide-react';
 import type { XAccount } from '@/lib/types';
 
 interface Props {
   account: XAccount;
   isActivating: boolean;
+  isRefreshing?: boolean;
   onActivate: (id: string) => void;
   onEdit: (account: XAccount) => void;
   onDelete: (id: string) => void;
+  onRefresh?: (id: string) => void;
 }
 
-export function XAccountCard({ account, isActivating, onActivate, onEdit, onDelete }: Props) {
+export function XAccountCard({ account, isActivating, isRefreshing, onActivate, onEdit, onDelete, onRefresh }: Props) {
   return (
     <div
       className="rounded-[1.375rem] p-5 flex flex-col gap-4 relative"
@@ -37,16 +39,26 @@ export function XAccountCard({ account, isActivating, onActivate, onEdit, onDele
 
       {/* ── ヘッダー ── */}
       <div className="flex items-center gap-3 pr-16">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-sm font-bold"
-          style={{
-            background: account.is_active ? 'rgba(96,165,250,0.15)' : 'rgba(255,255,255,0.05)',
-            border: account.is_active ? '1px solid rgba(96,165,250,0.2)' : '1px solid rgba(255,255,255,0.08)',
-            color: account.is_active ? '#60a5fa' : '#64748b',
-          }}
-        >
-          <User size={18} />
-        </div>
+        {account.profile_image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={account.profile_image_url}
+            alt={account.name}
+            className="w-10 h-10 rounded-full shrink-0"
+            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+          />
+        ) : (
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-sm font-bold"
+            style={{
+              background: account.is_active ? 'rgba(96,165,250,0.15)' : 'rgba(255,255,255,0.05)',
+              border: account.is_active ? '1px solid rgba(96,165,250,0.2)' : '1px solid rgba(255,255,255,0.08)',
+              color: account.is_active ? '#60a5fa' : '#64748b',
+            }}
+          >
+            <User size={18} />
+          </div>
+        )}
         <div className="min-w-0">
           <p className="text-[14px] font-semibold text-slate-200 truncate">{account.name}</p>
           {account.username && (
@@ -89,6 +101,17 @@ export function XAccountCard({ account, isActivating, onActivate, onEdit, onDele
           </button>
         )}
         <div className="ml-auto flex items-center gap-1.5">
+          {onRefresh && (
+            <button
+              onClick={() => onRefresh(account.id)}
+              disabled={isRefreshing}
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-50"
+              style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.15)', color: '#60a5fa' }}
+              title="X の最新情報（表示名・@・アイコン）に更新"
+            >
+              <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
+            </button>
+          )}
           <button
             onClick={() => onEdit(account)}
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"

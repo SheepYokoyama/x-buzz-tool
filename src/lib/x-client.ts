@@ -8,6 +8,7 @@ export interface VerifiedXUser {
   id: string;
   name: string;
   username: string;
+  profileImageUrl: string | null;
 }
 
 export type VerifyErrorCode =
@@ -46,13 +47,18 @@ export async function verifyXTokens(tokens: {
       setTimeout(() => reject(new Error('timeout')), VERIFY_TIMEOUT_MS),
     );
     const { data } = await Promise.race([
-      client.v2.me({ 'user.fields': ['username', 'name'] }),
+      client.v2.me({ 'user.fields': ['username', 'name', 'profile_image_url'] }),
       timeout,
     ]);
 
     return {
       ok: true,
-      user: { id: data.id, name: data.name, username: data.username },
+      user: {
+        id: data.id,
+        name: data.name,
+        username: data.username,
+        profileImageUrl: data.profile_image_url ?? null,
+      },
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

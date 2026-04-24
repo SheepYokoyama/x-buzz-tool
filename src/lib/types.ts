@@ -49,6 +49,7 @@ export interface XAccount {
   id: string;
   name: string;
   username: string | null;
+  profile_image_url: string | null;
   /** マスク表示用（例: "abcd...wxyz"）。実際のトークンはサーバー側のみ */
   api_key_masked: string;
   api_secret_masked: string;
