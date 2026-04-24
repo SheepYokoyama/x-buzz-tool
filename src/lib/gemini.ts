@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, type GenerationConfig } from '@google/generative-ai';
 
 /** Gemini が返す一時的なエラー（503・高負荷・ネットワーク系）を判定 */
 function isTransientGeminiError(err: unknown): boolean {
@@ -39,6 +39,7 @@ export async function generateWithGeminiRetry(params: {
   prompt: string;
   perAttemptTimeoutMs?: number;
   maxAttempts?: number;
+  generationConfig?: GenerationConfig;
 }): Promise<string> {
   const {
     apiKey,
@@ -47,10 +48,11 @@ export async function generateWithGeminiRetry(params: {
     prompt,
     perAttemptTimeoutMs = 20_000,
     maxAttempts = 3,
+    generationConfig,
   } = params;
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: modelName, systemInstruction });
+  const model = genAI.getGenerativeModel({ model: modelName, systemInstruction, generationConfig });
 
   let lastErr: unknown = null;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {

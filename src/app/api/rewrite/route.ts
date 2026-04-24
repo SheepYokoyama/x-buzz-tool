@@ -114,8 +114,12 @@ async function rewriteWithGemini(originalText: string, styleInstruction: string)
   const rawText = await generateWithGeminiRetry({
     apiKey,
     modelName: DEFAULT_GEMINI_MODEL,
-    systemInstruction: 'あなたはXのバズ投稿専門家です。与えられた投稿テキストを指示に従ってリライトします。リライト後のテキストのみを出力してください。前置きや説明は一切不要です。',
-    prompt: `以下の投稿テキストをリライトしてください。\n\n【リライト指示】\n${styleInstruction}\n\n【元の投稿】\n${originalText}`,
+    systemInstruction: 'Xのバズ投稿専門家。指示に従ってリライトし、リライト後のテキストのみ出力。前置き・説明は不要。',
+    prompt: `【指示】${styleInstruction}\n\n【元の投稿】\n${originalText}`,
+    generationConfig: {
+      maxOutputTokens: 512,
+      temperature: 0.8,
+    },
   });
   return rawText.trim();
 }
