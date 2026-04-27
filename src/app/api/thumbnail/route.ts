@@ -8,7 +8,8 @@ type Target = 'x' | 'youtube';
 type ImagenModel = 'imagen-4.0-generate-001' | 'imagen-4.0-fast-generate-001';
 type UploadRole  = 'item' | 'background';
 
-const GEMINI_IMAGE_MODEL = 'gemini-2.5-flash-image-preview';
+const GEMINI_IMAGE_MODEL          = 'gemini-2.5-flash-image';
+const GEMINI_IMAGE_FALLBACK_MODEL = 'gemini-2.5-flash-image-preview';
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_UPLOADS   = 3;
 const MAX_INLINE_BYTES = 5 * 1024 * 1024; // 5MB / image
@@ -17,6 +18,8 @@ interface UploadedImage {
   base64:   string;
   mimeType: string;
   role:     UploadRole;
+  /** クライアント側で計算された表示ラベル（例：「アイテムA」「背景」）。プロンプト内の参照名と一致させる */
+  label?:   string;
 }
 
 interface ThumbnailInput {
@@ -145,40 +148,56 @@ async function generateWithGeminiImage(
   target: Target,
   uploads: UploadedImage[],
 ): Promise<{ base64: string; mimeType: string }> {
-  const items       = uploads.filter((u) => u.role === 'item');
-  const backgrounds = uploads.filter((u) => u.role === 'background');
+  // ロール別のサーバー側フォールバックラベル（クライアントが label を送らない場合に備える）
+  const roleCounters = { item: 0, background: 0 };
+  const roleTotals = {
+    item:       uploads.filter((u) => u.role === 'item').length,
+    background: uploads.filter((u) => u.role === 'background').length,
+  };
+  const labeled = uploads.map((u) => {
+    if (u.label?.trim()) return { ...u, displayLabel: u.label.trim() };
+    const idx    = roleCounters[u.role]++;
+    const base   = u.role === 'item' ? 'アイテム' : '背景';
+    const suffix = roleTotals[u.role] > 1 ? String.fromCharCode(65 + idx) : '';
+    return { ...u, displayLabel: `${base}${suffix}` };
+  });
+
+  const itemList = labeled.filter((u) => u.role === 'item').map((u) => u.displayLabel).join(', ');
+  const bgList   = labeled.filter((u) => u.role === 'background').map((u) => u.displayLabel).join(', ');
 
   const directives: string[] = [];
-  if (items.length > 0) {
-    directives.push(`The image${items.length > 1 ? 's' : ''} labeled [Item] must be incorporated prominently and remain clearly recognizable (do not distort the product/subject).`);
+  if (itemList) {
+    directives.push(`Items (${itemList}): each labeled image must be incorporated prominently and remain clearly recognizable. Do not distort the product/subject. When the user prompt references a label by name (e.g. "${labeled.find((u) => u.role === 'item')?.displayLabel}"), use the corresponding image.`);
   }
-  if (backgrounds.length > 0) {
-    directives.push(`The image${backgrounds.length > 1 ? 's' : ''} labeled [Background] should be used as the backdrop or scene reference.`);
+  if (bgList) {
+    directives.push(`Background (${bgList}): use as the backdrop or scene reference.`);
   }
   directives.push(`Output a single 16:9 landscape thumbnail.`);
   directives.push(`Style: ${TARGET_SUFFIX[target]}.`);
 
   const parts: Array<Record<string, unknown>> = [
-    { text: `User prompt:\n${prompt.trim()}\n\n${directives.join('\n')}\n\nReference images follow:` },
+    { text: `User prompt:\n${prompt.trim()}\n\n${directives.join('\n')}\n\nReference images follow (each image is preceded by its label name):` },
   ];
-  for (const u of uploads) {
-    parts.push({ text: u.role === 'item' ? '[Item]' : '[Background]' });
+  for (const u of labeled) {
+    parts.push({ text: `Label: 「${u.displayLabel}」` });
     parts.push({ inline_data: { mime_type: u.mimeType, data: u.base64 } });
   }
 
-  const endpoint   = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
-  const controller = new AbortController();
-  const timeout    = setTimeout(() => controller.abort(), 50_000);
+  const body = JSON.stringify({
+    contents:         [{ role: 'user', parts }],
+    generationConfig: { responseModalities: ['IMAGE'] },
+  });
 
-  const res = await fetch(endpoint, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents:         [{ role: 'user', parts }],
-      generationConfig: { responseModalities: ['IMAGE'] },
-    }),
-    signal: controller.signal,
-  }).finally(() => clearTimeout(timeout));
+  // primary が見つからない / 未対応の場合は fallback モデル名で再試行
+  const res = await callGeminiImageEndpoint(apiKey, GEMINI_IMAGE_MODEL, body, async (status, message) => {
+    const isModelMissing =
+      status === 404 ||
+      /not\s*found/i.test(message) ||
+      /not\s*supported/i.test(message) ||
+      /unsupported/i.test(message);
+    if (!isModelMissing) return null;
+    return callGeminiImageEndpoint(apiKey, GEMINI_IMAGE_FALLBACK_MODEL, body);
+  });
 
   if (!res.ok) throw await classifyApiError(res, 'Gemini Image');
 
@@ -194,6 +213,36 @@ async function generateWithGeminiImage(
     throw new HttpError(422, reason ? `生成がブロックされました: ${reason}` : '画像が生成されませんでした。プロンプトを変えて再試行してください。');
   }
   return { base64: inline.data, mimeType: inline.mimeType ?? inline.mime_type ?? 'image/png' };
+}
+
+async function callGeminiImageEndpoint(
+  apiKey: string,
+  modelName: string,
+  body: string,
+  onError?: (status: number, message: string) => Promise<Response | null>,
+): Promise<Response> {
+  const endpoint   = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const controller = new AbortController();
+  const timeout    = setTimeout(() => controller.abort(), 50_000);
+
+  const res = await fetch(endpoint, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+    signal:  controller.signal,
+  }).finally(() => clearTimeout(timeout));
+
+  if (!res.ok && onError) {
+    const peek    = await res.clone().text();
+    let message   = peek;
+    try {
+      const errJson = JSON.parse(peek);
+      message = errJson?.error?.message ?? peek;
+    } catch { /* keep raw */ }
+    const fallback = await onError(res.status, message);
+    if (fallback) return fallback;
+  }
+  return res;
 }
 
 async function classifyApiError(res: Response, label: string): Promise<HttpError> {
