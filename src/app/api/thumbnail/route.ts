@@ -7,43 +7,6 @@ export const maxDuration = 60;
 type Target = 'x' | 'youtube';
 type ImagenModel = 'imagen-4.0-generate-001' | 'imagen-4.0-fast-generate-001';
 type UploadRole  = 'item' | 'background' | 'logo';
-type LogoStyle    = 'simple' | 'badge' | 'ribbon' | 'monogram' | 'handwritten' | 'emblem';
-type LogoPosition = 'top-left' | 'top' | 'top-right' | 'left' | 'center' | 'right' | 'bottom-left' | 'bottom' | 'bottom-right';
-type LogoSize     = 'small' | 'medium' | 'large';
-
-interface LogoConfig {
-  text:     string;
-  style:    LogoStyle;
-  position: LogoPosition;
-  size:     LogoSize;
-}
-
-const LOGO_STYLE_DESC: Record<LogoStyle, string> = {
-  simple:      'clean modern sans-serif text logo, minimalist',
-  badge:       'circular or shield-shaped emblem badge with the text inside',
-  ribbon:      'ribbon-banner / tape style with the text on the band',
-  monogram:    'stylized monogram or initial mark, geometric',
-  handwritten: 'natural handwritten / calligraphy script logo',
-  emblem:      'classic heraldic emblem, ornamental crest',
-};
-
-const LOGO_POSITION_DESC: Record<LogoPosition, string> = {
-  'top-left':     'top-left corner',
-  'top':          'top center',
-  'top-right':    'top-right corner',
-  'left':         'middle-left edge',
-  'center':       'center',
-  'right':        'middle-right edge',
-  'bottom-left':  'bottom-left corner',
-  'bottom':       'bottom center',
-  'bottom-right': 'bottom-right corner',
-};
-
-const LOGO_SIZE_DESC: Record<LogoSize, string> = {
-  small:  'small (about 6-8% of the image width)',
-  medium: 'medium (about 12-15% of the image width)',
-  large:  'large (about 22-28% of the image width)',
-};
 
 const GEMINI_IMAGE_MODEL          = 'gemini-2.5-flash-image';
 const GEMINI_IMAGE_FALLBACK_MODEL = 'gemini-2.5-flash-image-preview';
@@ -64,24 +27,6 @@ interface ThumbnailInput {
   target:   Target;
   model:    ImagenModel;
   uploads?: UploadedImage[];
-  logo?:    LogoConfig;
-}
-
-function buildLogoDirective(logo: LogoConfig): string {
-  const styleDesc    = LOGO_STYLE_DESC[logo.style]       ?? LOGO_STYLE_DESC.simple;
-  const positionDesc = LOGO_POSITION_DESC[logo.position] ?? LOGO_POSITION_DESC['top-right'];
-  const sizeDesc     = LOGO_SIZE_DESC[logo.size]         ?? LOGO_SIZE_DESC.small;
-  return `Add a ${styleDesc} that reads exactly "${logo.text}". Place it at the ${positionDesc} of the image, ${sizeDesc}. The logo must be clearly readable, well-rendered, with the exact spelling and casing as given. Keep it visually distinct from the rest of the scene (use contrast or a subtle background plate if needed).`;
-}
-
-function isValidLogo(logo: unknown): logo is LogoConfig {
-  if (!logo || typeof logo !== 'object') return false;
-  const l = logo as Partial<LogoConfig>;
-  if (typeof l.text !== 'string' || !l.text.trim()) return false;
-  if (!['simple', 'badge', 'ribbon', 'monogram', 'handwritten', 'emblem'].includes(l.style as string)) return false;
-  if (!['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right'].includes(l.position as string)) return false;
-  if (!['small', 'medium', 'large'].includes(l.size as string)) return false;
-  return true;
 }
 
 const TARGET_SUFFIX: Record<Target, string> = {
@@ -93,7 +38,7 @@ export async function POST(req: Request) {
   const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
 
-  const { prompt, target, model, uploads, logo } = (await req.json()) as ThumbnailInput;
+  const { prompt, target, model, uploads } = (await req.json()) as ThumbnailInput;
 
   if (!prompt?.trim()) {
     return NextResponse.json({ error: 'プロンプトを入力してください' }, { status: 400 });
@@ -122,8 +67,6 @@ export async function POST(req: Request) {
     }
   }
 
-  const safeLogo: LogoConfig | null = logo && isValidLogo(logo) ? logo : null;
-
   const apiKey = await getUserAIKey(user.id, 'gemini');
   if (!apiKey) {
     return NextResponse.json(
@@ -139,10 +82,10 @@ export async function POST(req: Request) {
   try {
     // アップロードがあれば Gemini Image（Nano Banana）、無ければ Imagen
     if (safeUploads.length > 0) {
-      const result = await generateWithGeminiImage(apiKey, prompt, target, safeUploads, safeLogo);
+      const result = await generateWithGeminiImage(apiKey, prompt, target, safeUploads);
       return NextResponse.json({ image: result, mode: 'gemini-image' });
     }
-    const result = await generateWithImagen(apiKey, prompt, target, model, safeLogo);
+    const result = await generateWithImagen(apiKey, prompt, target, model);
     return NextResponse.json({ image: result, mode: 'imagen' });
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
@@ -168,10 +111,8 @@ async function generateWithImagen(
   prompt: string,
   target: Target,
   model: ImagenModel,
-  logo: LogoConfig | null,
 ): Promise<{ base64: string; mimeType: string }> {
-  const logoLine   = logo ? `\n\n${buildLogoDirective(logo)}` : '';
-  const fullPrompt = `${prompt.trim()}\n\nStyle: ${TARGET_SUFFIX[target]}${logoLine}`;
+  const fullPrompt = `${prompt.trim()}\n\nStyle: ${TARGET_SUFFIX[target]}`;
   const endpoint   = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${encodeURIComponent(apiKey)}`;
 
   const controller = new AbortController();
@@ -206,7 +147,6 @@ async function generateWithGeminiImage(
   prompt: string,
   target: Target,
   uploads: UploadedImage[],
-  logo: LogoConfig | null,
 ): Promise<{ base64: string; mimeType: string }> {
   const ROLE_LABEL_BASE: Record<UploadRole, string> = { item: 'アイテム', background: '背景', logo: 'ロゴ' };
 
@@ -236,10 +176,7 @@ async function generateWithGeminiImage(
     directives.push(`Background (${bgList}): use as the backdrop or scene reference.`);
   }
   if (logoList) {
-    directives.push(`Logo (${logoList}): place as a small overlay (typically a corner). Keep the original logo design crisp and undistorted, preserve transparency if present, do not crop, do not redraw the logo.`);
-  }
-  if (logo) {
-    directives.push(buildLogoDirective(logo));
+    directives.push(`Logo (${logoList}): treat as the FOREGROUND / TOPMOST layer — composite ABOVE all items and background. Keep the original logo design crisp and undistorted, preserve transparency if present, do not crop, do not redraw, do not generate alternative text. Place as a moderate overlay (typically a corner) that remains clearly visible.`);
   }
   directives.push(`Output a single 16:9 landscape thumbnail.`);
   directives.push(`Style: ${TARGET_SUFFIX[target]}.`);
