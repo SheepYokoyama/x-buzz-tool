@@ -73,6 +73,30 @@ export default function ThumbnailPage() {
 
   const isComposeMode = uploads.length > 0;
 
+  // アイテム/背景それぞれの順序に応じて A/B/C のラベルを付与（同じロールが1枚なら無印）
+  const labelsById = (() => {
+    const map = new Map<string, string>();
+    const counts = { item: 0, background: 0 };
+    const totals = {
+      item:       uploads.filter((u) => u.role === 'item').length,
+      background: uploads.filter((u) => u.role === 'background').length,
+    };
+    for (const u of uploads) {
+      const idx     = counts[u.role]++;
+      const base    = u.role === 'item' ? 'アイテム' : '背景';
+      const suffix  = totals[u.role] > 1 ? String.fromCharCode(65 + idx) : '';
+      map.set(u.id, `${base}${suffix}`);
+    }
+    return map;
+  })();
+
+  const itemLabels       = uploads.filter((u) => u.role === 'item').map((u) => labelsById.get(u.id)!).filter(Boolean);
+  const placeholderHint  = uploads.length === 0
+    ? '例：朝焼けのビル群を背景に、エネルギッシュにジャンプしているビジネスパーソンのシルエット。配色は紫とオレンジ。'
+    : itemLabels.length >= 2
+      ? `例：${itemLabels[0]}を左に、${itemLabels[1]}を右に配置。背景は宇宙空間の雰囲気で。配色は紫とオレンジ。`
+      : '例：アップロードしたアイテムを中央に配置。背景は宇宙空間の雰囲気で。配色は紫とオレンジ。';
+
   const handleAddFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setError(null);
@@ -122,7 +146,12 @@ export default function ThumbnailPage() {
           prompt,
           target,
           model,
-          uploads: uploads.map((u) => ({ base64: u.base64, mimeType: u.mimeType, role: u.role })),
+          uploads: uploads.map((u) => ({
+            base64:   u.base64,
+            mimeType: u.mimeType,
+            role:     u.role,
+            label:    labelsById.get(u.id) ?? '',
+          })),
         }),
       });
       const data = await res.json();
@@ -180,7 +209,19 @@ export default function ThumbnailPage() {
                       style={{ objectFit: 'cover', border: '1px solid rgba(255,255,255,0.08)' }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-slate-300 truncate">{u.fileName}</p>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shrink-0"
+                          style={{
+                            background: u.role === 'item' ? 'rgba(167,139,250,0.18)' : 'rgba(34,211,238,0.18)',
+                            color:      u.role === 'item' ? '#c4b5fd' : '#67e8f9',
+                            border:     u.role === 'item' ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(34,211,238,0.4)',
+                          }}
+                        >
+                          {labelsById.get(u.id)}
+                        </span>
+                        <p className="text-[12px] text-slate-400 truncate">{u.fileName}</p>
+                      </div>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <RolePill
                           active={u.role === 'item'}
@@ -246,9 +287,7 @@ export default function ThumbnailPage() {
                 rows={5}
                 value={prompt}
                 onValueChange={setPrompt}
-                placeholder={isComposeMode
-                  ? '例：アップロードした商品を中央に配置して、背景は宇宙空間の雰囲気で。配色は紫とオレンジ。'
-                  : '例：朝焼けのビル群を背景に、エネルギッシュにジャンプしているビジネスパーソンのシルエット。配色は紫とオレンジ。'}
+                placeholder={placeholderHint}
                 appendMode
               />
               <p className="text-[11px] text-slate-600 mt-1.5 text-right">{prompt.length}文字</p>

@@ -18,6 +18,8 @@ interface UploadedImage {
   base64:   string;
   mimeType: string;
   role:     UploadRole;
+  /** クライアント側で計算された表示ラベル（例：「アイテムA」「背景」）。プロンプト内の参照名と一致させる */
+  label?:   string;
 }
 
 interface ThumbnailInput {
@@ -146,24 +148,38 @@ async function generateWithGeminiImage(
   target: Target,
   uploads: UploadedImage[],
 ): Promise<{ base64: string; mimeType: string }> {
-  const items       = uploads.filter((u) => u.role === 'item');
-  const backgrounds = uploads.filter((u) => u.role === 'background');
+  // ロール別のサーバー側フォールバックラベル（クライアントが label を送らない場合に備える）
+  const roleCounters = { item: 0, background: 0 };
+  const roleTotals = {
+    item:       uploads.filter((u) => u.role === 'item').length,
+    background: uploads.filter((u) => u.role === 'background').length,
+  };
+  const labeled = uploads.map((u) => {
+    if (u.label?.trim()) return { ...u, displayLabel: u.label.trim() };
+    const idx    = roleCounters[u.role]++;
+    const base   = u.role === 'item' ? 'アイテム' : '背景';
+    const suffix = roleTotals[u.role] > 1 ? String.fromCharCode(65 + idx) : '';
+    return { ...u, displayLabel: `${base}${suffix}` };
+  });
+
+  const itemList = labeled.filter((u) => u.role === 'item').map((u) => u.displayLabel).join(', ');
+  const bgList   = labeled.filter((u) => u.role === 'background').map((u) => u.displayLabel).join(', ');
 
   const directives: string[] = [];
-  if (items.length > 0) {
-    directives.push(`The image${items.length > 1 ? 's' : ''} labeled [Item] must be incorporated prominently and remain clearly recognizable (do not distort the product/subject).`);
+  if (itemList) {
+    directives.push(`Items (${itemList}): each labeled image must be incorporated prominently and remain clearly recognizable. Do not distort the product/subject. When the user prompt references a label by name (e.g. "${labeled.find((u) => u.role === 'item')?.displayLabel}"), use the corresponding image.`);
   }
-  if (backgrounds.length > 0) {
-    directives.push(`The image${backgrounds.length > 1 ? 's' : ''} labeled [Background] should be used as the backdrop or scene reference.`);
+  if (bgList) {
+    directives.push(`Background (${bgList}): use as the backdrop or scene reference.`);
   }
   directives.push(`Output a single 16:9 landscape thumbnail.`);
   directives.push(`Style: ${TARGET_SUFFIX[target]}.`);
 
   const parts: Array<Record<string, unknown>> = [
-    { text: `User prompt:\n${prompt.trim()}\n\n${directives.join('\n')}\n\nReference images follow:` },
+    { text: `User prompt:\n${prompt.trim()}\n\n${directives.join('\n')}\n\nReference images follow (each image is preceded by its label name):` },
   ];
-  for (const u of uploads) {
-    parts.push({ text: u.role === 'item' ? '[Item]' : '[Background]' });
+  for (const u of labeled) {
+    parts.push({ text: `Label: 「${u.displayLabel}」` });
     parts.push({ inline_data: { mime_type: u.mimeType, data: u.base64 } });
   }
 
