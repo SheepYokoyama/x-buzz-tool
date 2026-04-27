@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, FieldLabel } from '@/components/ui/Input';
@@ -19,6 +19,8 @@ import {
   Package,
   Mountain,
   BadgeCheck,
+  Type,
+  Plus,
 } from 'lucide-react';
 
 type Target = 'x' | 'youtube';
@@ -31,37 +33,50 @@ const ROLE_LABELS: Record<UploadRole, string> = {
   logo:       'ロゴ',
 };
 
-type LogoStyle    = 'simple' | 'badge' | 'ribbon' | 'monogram' | 'handwritten' | 'emblem';
-type LogoPosition = 'top-left' | 'top' | 'top-right' | 'left' | 'center' | 'right' | 'bottom-left' | 'bottom' | 'bottom-right';
-type LogoSize     = 'small' | 'medium' | 'large';
+type GridPosition =
+  | 'top-left' | 'top' | 'top-right'
+  | 'left'    | 'center' | 'right'
+  | 'bottom-left' | 'bottom' | 'bottom-right';
 
-interface LogoConfig {
-  text:     string;
-  style:    LogoStyle;
-  position: LogoPosition;
-  size:     LogoSize;
-}
-
-const LOGO_STYLES: { id: LogoStyle; label: string; emoji: string; desc: string }[] = [
-  { id: 'simple',      label: 'シンプル',     emoji: 'Aa',  desc: 'クリーンなテキスト型' },
-  { id: 'badge',       label: 'バッジ',       emoji: '⬭',   desc: '円・盾型のエンブレム' },
-  { id: 'ribbon',      label: 'リボン',       emoji: '🎀',  desc: '帯・テープ風' },
-  { id: 'monogram',    label: 'モノグラム',   emoji: 'M',   desc: '頭文字・記号型' },
-  { id: 'handwritten', label: '手書き風',     emoji: '✍',   desc: 'ナチュラル・カリグラフィー' },
-  { id: 'emblem',      label: 'エンブレム',   emoji: '🛡',  desc: 'ヘラルディック／クラシカル' },
-];
-
-const LOGO_SIZES: { id: LogoSize; label: string; pct: string }[] = [
-  { id: 'small',  label: '小', pct: '〜8%' },
-  { id: 'medium', label: '中', pct: '〜15%' },
-  { id: 'large',  label: '大', pct: '〜25%' },
-];
-
-const POSITION_LABEL: Record<LogoPosition, string> = {
+const POSITION_LABEL: Record<GridPosition, string> = {
   'top-left':     '左上', 'top':    '上', 'top-right':    '右上',
   'left':         '左',   'center': '中央', 'right':       '右',
   'bottom-left':  '左下', 'bottom': '下', 'bottom-right': '右下',
 };
+
+type TextSize = 'sm' | 'md' | 'lg' | 'xl';
+type ConcreteFont = 'sans-jp' | 'rounded-jp' | 'mincho-jp' | 'handwritten-jp' | 'serif-en' | 'sans-en';
+type TextFont = ConcreteFont | 'auto';
+
+const TEXT_FONTS: { id: TextFont; label: string; family: string; sample: string }[] = [
+  { id: 'auto',           label: 'おまかせ',       family: '"Noto Sans JP", sans-serif',           sample: '✨ AI' },
+  { id: 'sans-jp',        label: 'ゴシック',       family: '"Noto Sans JP", sans-serif',           sample: 'あア亜Ag' },
+  { id: 'rounded-jp',     label: '丸ゴ',           family: '"M PLUS Rounded 1c", sans-serif',       sample: 'あア亜Ag' },
+  { id: 'mincho-jp',      label: '明朝',           family: '"Noto Serif JP", serif',                sample: 'あア亜Ag' },
+  { id: 'handwritten-jp', label: '手書き風',       family: '"Yusei Magic", cursive',                sample: 'あア亜Ag' },
+  { id: 'serif-en',       label: '英字 Serif',     family: '"Playfair Display", serif',             sample: 'Aa Bb' },
+  { id: 'sans-en',        label: '英字 Sans',      family: '"Bebas Neue", sans-serif',              sample: 'AA BB' },
+];
+
+const TEXT_SIZES: { id: TextSize; label: string; pctOfWidth: number }[] = [
+  { id: 'sm', label: '小',   pctOfWidth: 0.045 },
+  { id: 'md', label: '中',   pctOfWidth: 0.072 },
+  { id: 'lg', label: '大',   pctOfWidth: 0.110 },
+  { id: 'xl', label: '特大', pctOfWidth: 0.165 },
+];
+
+interface TextItem {
+  id:           string;
+  text:         string;
+  font:         TextFont;
+  size:         TextSize;
+  color:        string;
+  stroke:       boolean;
+  strokeColor:  string;
+  position:     GridPosition;
+}
+
+const MAX_TEXT_ITEMS = 3;
 
 interface UploadEntry {
   id:        string;
@@ -110,11 +125,39 @@ export default function ThumbnailPage() {
   const [error, setError]         = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ロゴ（テキスト指定型）— 任意
-  const [logoText, setLogoText]         = useState('');
-  const [logoStyle, setLogoStyle]       = useState<LogoStyle>('simple');
-  const [logoPosition, setLogoPosition] = useState<LogoPosition>('top-right');
-  const [logoSize, setLogoSize]         = useState<LogoSize>('small');
+  // 生成後のテキストオーバーレイ
+  const [textItems, setTextItems] = useState<TextItem[]>([]);
+
+  // Google Fonts ロード（テキストオーバーレイ用）
+  useEffect(() => {
+    const href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&family=Noto+Serif+JP:wght@400;700&family=Yusei+Magic&family=Playfair+Display:wght@400;700&family=Bebas+Neue&display=swap';
+    if (document.querySelector(`link[href="${href}"]`)) return;
+    const link = document.createElement('link');
+    link.rel  = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+  }, []);
+
+  const addTextItem = () => {
+    if (textItems.length >= MAX_TEXT_ITEMS) return;
+    setTextItems((prev) => [
+      ...prev,
+      {
+        id:          crypto.randomUUID(),
+        text:        '',
+        font:        'sans-jp',
+        size:        'md',
+        color:       '#ffffff',
+        stroke:      true,
+        strokeColor: '#000000',
+        position:    'bottom',
+      },
+    ]);
+  };
+  const updateTextItem = (id: string, patch: Partial<TextItem>) =>
+    setTextItems((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  const removeTextItem = (id: string) =>
+    setTextItems((prev) => prev.filter((t) => t.id !== id));
 
   const isComposeMode = uploads.length > 0;
 
@@ -185,10 +228,6 @@ export default function ThumbnailPage() {
     setError(null);
     setImageDataUrl(null);
     try {
-      const logoConfig: LogoConfig | null = logoText.trim()
-        ? { text: logoText.trim(), style: logoStyle, position: logoPosition, size: logoSize }
-        : null;
-
       const res = await apiFetch('/api/thumbnail', {
         method: 'POST',
         body: JSON.stringify({
@@ -201,7 +240,6 @@ export default function ThumbnailPage() {
             role:     u.role,
             label:    labelsById.get(u.id) ?? '',
           })),
-          ...(logoConfig ? { logo: logoConfig } : {}),
         }),
       });
       const data = await res.json();
@@ -215,15 +253,54 @@ export default function ThumbnailPage() {
     }
   };
 
-  const handleDownload = () => {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleDownload = async () => {
     if (!imageDataUrl) return;
-    const a = document.createElement('a');
-    a.href = imageDataUrl;
-    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    a.download = `xpresso-thumbnail-${target}-${stamp}.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    try {
+      setIsExporting(true);
+
+      // 「おまかせ」フォントを実フォントに置換（背景画像をAIに見せて推奨を取得）
+      let resolvedItems = textItems;
+      const autoIndices = textItems
+        .map((t, i) => ({ t, i }))
+        .filter(({ t }) => t.font === 'auto' && t.text.trim());
+      if (autoIndices.length > 0) {
+        const [, b64] = imageDataUrl.split(',');
+        const mime = imageDataUrl.match(/^data:(.*?);/)?.[1] ?? 'image/png';
+        const suggestions = await Promise.all(
+          autoIndices.map(({ t }) =>
+            apiFetch('/api/thumbnail/suggest-font', {
+              method: 'POST',
+              body: JSON.stringify({ imageBase64: b64, mimeType: mime, text: t.text }),
+            })
+              .then((r) => r.json())
+              .then((d) => (d.font as ConcreteFont) ?? 'sans-jp')
+              .catch(() => 'sans-jp' as ConcreteFont),
+          ),
+        );
+        resolvedItems = textItems.map((t) => {
+          const idx = autoIndices.findIndex(({ t: tt }) => tt.id === t.id);
+          if (idx === -1) return t;
+          return { ...t, font: suggestions[idx] };
+        });
+      }
+
+      const finalUrl = resolvedItems.length > 0
+        ? await composeImageWithTexts(imageDataUrl, resolvedItems)
+        : imageDataUrl;
+      const a = document.createElement('a');
+      a.href  = finalUrl;
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      a.download = `xpresso-thumbnail-${target}-${stamp}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'ダウンロードに失敗しました');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -326,111 +403,6 @@ export default function ThumbnailPage() {
               <Upload size={13} />
               {uploads.length >= MAX_UPLOADS ? '上限に達しました' : '画像を追加（JPEG/PNG/WebP・5MB以下）'}
             </button>
-          </div>
-
-          {/* ロゴ（テキスト指定） */}
-          <div className="neon-card p-6 space-y-4">
-            <div>
-              <h2 className="text-[15px] font-semibold text-slate-200 leading-none">ロゴ（任意）</h2>
-              <p className="section-label mt-1.5">テキストロゴをサンプルから選んで配置</p>
-            </div>
-
-            <div>
-              <FieldLabel>ロゴテキスト</FieldLabel>
-              <input
-                type="text"
-                value={logoText}
-                onChange={(e) => setLogoText(e.target.value)}
-                placeholder="例：BRAND, Xpresso, ABC.co"
-                maxLength={32}
-                className="w-full px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-[13px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[rgba(251,191,36,0.4)]"
-              />
-              <p className="text-[11px] text-slate-600 mt-1.5 text-right">{logoText.length}/32</p>
-            </div>
-
-            <div className={`space-y-3 transition-opacity ${logoText.trim() ? '' : 'opacity-40 pointer-events-none'}`}>
-              {/* デザイン */}
-              <div>
-                <FieldLabel>デザイン</FieldLabel>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {LOGO_STYLES.map(({ id, label, emoji, desc }) => {
-                    const active = logoStyle === id;
-                    return (
-                      <button
-                        key={id}
-                        onClick={() => setLogoStyle(id)}
-                        className="text-left p-2.5 rounded-xl transition-all"
-                        style={{
-                          background: active ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.025)',
-                          border:     active ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(255,255,255,0.07)',
-                        }}
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[14px]">{emoji}</span>
-                          <p className="text-[12px] font-medium" style={{ color: active ? '#fcd34d' : '#cbd5e1' }}>
-                            {label}
-                          </p>
-                        </div>
-                        <p className="text-[10px] text-slate-600 mt-1 leading-tight">{desc}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* サイズ */}
-              <div>
-                <FieldLabel>サイズ</FieldLabel>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {LOGO_SIZES.map(({ id, label, pct }) => {
-                    const active = logoSize === id;
-                    return (
-                      <button
-                        key={id}
-                        onClick={() => setLogoSize(id)}
-                        className="flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all"
-                        style={{
-                          background: active ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.025)',
-                          border:     active ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(255,255,255,0.07)',
-                          color:      active ? '#fcd34d' : '#cbd5e1',
-                        }}
-                      >
-                        <span className="text-[12px] font-semibold">{label}</span>
-                        <span className="text-[10px] text-slate-600 tabular-nums">{pct}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 配置 */}
-              <div>
-                <FieldLabel>配置</FieldLabel>
-                <div
-                  className="grid grid-cols-3 gap-1.5 p-2 rounded-xl"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
-                >
-                  {(Object.keys(POSITION_LABEL) as LogoPosition[]).map((pos) => {
-                    const active = logoPosition === pos;
-                    return (
-                      <button
-                        key={pos}
-                        onClick={() => setLogoPosition(pos)}
-                        className="aspect-[16/9] rounded-md flex items-center justify-center transition-all text-[10px] font-medium"
-                        style={{
-                          background: active ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.04)',
-                          border:     active ? '1px solid rgba(251,191,36,0.5)' : '1px solid rgba(255,255,255,0.06)',
-                          color:      active ? '#fcd34d' : '#64748b',
-                        }}
-                        title={POSITION_LABEL[pos]}
-                      >
-                        {POSITION_LABEL[pos]}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* プロンプト */}
@@ -564,28 +536,81 @@ export default function ThumbnailPage() {
           {imageDataUrl ? (
             <div className="space-y-4">
               <p className="text-[15px] font-semibold text-slate-200">生成結果</p>
+
+              {/* プレビュー（テキストオーバーレイ表示） */}
               <div
                 className="neon-card p-3"
                 style={{ background: 'rgba(255,255,255,0.02)' }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imageDataUrl}
-                  alt="生成されたサムネイル"
-                  className="w-full h-auto rounded-xl"
-                  style={{ aspectRatio: '16 / 9', objectFit: 'cover' }}
-                />
+                <div
+                  className="relative w-full rounded-xl overflow-hidden"
+                  style={{ aspectRatio: '16 / 9', containerType: 'inline-size' }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageDataUrl}
+                    alt="生成されたサムネイル"
+                    className="absolute inset-0 w-full h-full"
+                    style={{ objectFit: 'cover' }}
+                  />
+                  {textItems.map((t) => (
+                    <TextOverlay key={t.id} item={t} />
+                  ))}
+                </div>
               </div>
+
+              {/* テキスト追加エディタ */}
+              <div className="neon-card p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Type size={14} style={{ color: '#fbbf24' }} />
+                    <h3 className="text-[14px] font-semibold text-slate-200">テキストを追加</h3>
+                  </div>
+                  <span className="text-[10px] tabular-nums text-slate-600">{textItems.length}/{MAX_TEXT_ITEMS}</span>
+                </div>
+
+                {textItems.length > 0 && (
+                  <div className="space-y-3">
+                    {textItems.map((t, idx) => (
+                      <TextEditor
+                        key={t.id}
+                        index={idx}
+                        item={t}
+                        onChange={(patch) => updateTextItem(t.id, patch)}
+                        onRemove={() => removeTextItem(t.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  onClick={addTextItem}
+                  disabled={textItems.length >= MAX_TEXT_ITEMS}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-medium transition-all"
+                  style={{
+                    background: textItems.length >= MAX_TEXT_ITEMS ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)',
+                    border:     '1px dashed rgba(255,255,255,0.15)',
+                    color:      textItems.length >= MAX_TEXT_ITEMS ? '#475569' : '#94a3b8',
+                    cursor:     textItems.length >= MAX_TEXT_ITEMS ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <Plus size={12} />
+                  {textItems.length >= MAX_TEXT_ITEMS ? `上限${MAX_TEXT_ITEMS}個に達しました` : 'テキストを追加'}
+                </button>
+              </div>
+
               <button
                 onClick={handleDownload}
+                disabled={isExporting}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all"
                 style={{
                   background: 'rgba(34,211,238,0.1)',
                   border:     '1px solid rgba(34,211,238,0.3)',
-                  color:      '#67e8f9',
+                  color:      isExporting ? '#475569' : '#67e8f9',
                 }}
               >
-                <Download size={13} />PNG をダウンロード
+                {isExporting ? <RefreshCw size={13} className="animate-spin" /> : <Download size={13} />}
+                {isExporting ? '書き出し中…' : 'PNG をダウンロード'}
               </button>
             </div>
           ) : (
@@ -621,6 +646,299 @@ function roleChipStyle(role: UploadRole) {
     color:      c.fg,
     border:     `1px solid ${c.border}`,
   };
+}
+
+// ── テキストオーバーレイ ─────────────────────────────────────
+
+function fontFamilyOf(font: TextFont): string {
+  return TEXT_FONTS.find((f) => f.id === font)?.family ?? '"Noto Sans JP", sans-serif';
+}
+
+function sizePctOf(size: TextSize): number {
+  return TEXT_SIZES.find((s) => s.id === size)?.pctOfWidth ?? 0.072;
+}
+
+function alignOf(pos: GridPosition): 'left' | 'center' | 'right' {
+  if (pos.endsWith('left')) return 'left';
+  if (pos.endsWith('right')) return 'right';
+  return 'center';
+}
+
+/** プレビュー用：HTMLオーバーレイ（cqwベース） */
+function TextOverlay({ item }: { item: TextItem }) {
+  const family    = fontFamilyOf(item.font);
+  const sizeCqw   = `${sizePctOf(item.size) * 100}cqw`;
+  const align     = alignOf(item.position);
+  const margin    = '4cqw';
+  const isVMid    = item.position === 'left' || item.position === 'center' || item.position === 'right';
+  const isVTop    = item.position.startsWith('top');
+  const isHCenter = align === 'center';
+  const isHLeft   = align === 'left';
+
+  const positionStyle: React.CSSProperties = {
+    position:   'absolute',
+    fontFamily: family,
+    fontWeight: 700,
+    fontSize:   sizeCqw,
+    color:      item.color,
+    lineHeight: 1.15,
+    whiteSpace: 'pre-wrap',
+    textAlign:  align,
+    pointerEvents: 'none',
+    textShadow: item.stroke
+      ? `-2px -2px 0 ${item.strokeColor}, 2px -2px 0 ${item.strokeColor}, -2px 2px 0 ${item.strokeColor}, 2px 2px 0 ${item.strokeColor}, 0 0 4px ${item.strokeColor}`
+      : 'none',
+    maxWidth:   '92%',
+  };
+
+  if (isVTop)  positionStyle.top    = margin;
+  if (!isVTop && !isVMid) positionStyle.bottom = margin;
+  if (isVMid)  positionStyle.top    = '50%';
+  if (isHLeft)   positionStyle.left  = margin;
+  if (align === 'right') positionStyle.right = margin;
+  if (isHCenter) {
+    positionStyle.left      = '50%';
+    positionStyle.transform = isVMid ? 'translate(-50%, -50%)' : 'translateX(-50%)';
+  } else if (isVMid) {
+    positionStyle.transform = 'translateY(-50%)';
+  }
+
+  return <div style={positionStyle}>{item.text || ' '}</div>;
+}
+
+/** Canvas 合成（ダウンロード用） */
+async function composeImageWithTexts(imageDataUrl: string, items: TextItem[]): Promise<string> {
+  await document.fonts.ready;
+
+  const img: HTMLImageElement = await new Promise((resolve, reject) => {
+    const i = new Image();
+    i.onload  = () => resolve(i);
+    i.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
+    i.src = imageDataUrl;
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context が取得できませんでした');
+
+  ctx.drawImage(img, 0, 0);
+
+  for (const item of items) {
+    if (!item.text.trim()) continue;
+    drawTextOnCanvas(ctx, item, canvas.width, canvas.height);
+  }
+
+  return canvas.toDataURL('image/png');
+}
+
+function drawTextOnCanvas(
+  ctx: CanvasRenderingContext2D,
+  item: TextItem,
+  w: number,
+  h: number,
+): void {
+  const fontSizePx = sizePctOf(item.size) * w;
+  const family     = fontFamilyOf(item.font);
+  const margin     = w * 0.04;
+  const lineHeight = fontSizePx * 1.15;
+  const lines      = item.text.split('\n');
+
+  ctx.font         = `bold ${fontSizePx}px ${family}`;
+  ctx.textAlign    = alignOf(item.position);
+  ctx.textBaseline = 'top';
+
+  // X座標（基準点）
+  let x: number;
+  if (ctx.textAlign === 'left')   x = margin;
+  else if (ctx.textAlign === 'right') x = w - margin;
+  else                             x = w / 2;
+
+  // Y座標（最初の行の上端）
+  let y0: number;
+  const blockHeight = lineHeight * lines.length;
+  if (item.position.startsWith('top')) {
+    y0 = margin;
+  } else if (item.position === 'left' || item.position === 'center' || item.position === 'right') {
+    y0 = h / 2 - blockHeight / 2;
+  } else {
+    y0 = h - margin - blockHeight;
+  }
+
+  // 縁取り
+  if (item.stroke) {
+    ctx.strokeStyle = item.strokeColor;
+    ctx.lineWidth   = Math.max(2, fontSizePx * 0.10);
+    ctx.lineJoin    = 'round';
+    ctx.miterLimit  = 2;
+    lines.forEach((line, idx) => ctx.strokeText(line, x, y0 + idx * lineHeight));
+  }
+
+  // 塗り
+  ctx.fillStyle = item.color;
+  lines.forEach((line, idx) => ctx.fillText(line, x, y0 + idx * lineHeight));
+}
+
+// ── テキストエディタ ───────────────────────────────────────
+
+function TextEditor({
+  index,
+  item,
+  onChange,
+  onRemove,
+}: {
+  index:    number;
+  item:     TextItem;
+  onChange: (patch: Partial<TextItem>) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div
+      className="rounded-xl p-3 space-y-2.5"
+      style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">テキスト {index + 1}</span>
+        <button
+          onClick={onRemove}
+          className="p-1 rounded-md transition-colors hover:bg-red-500/10"
+          title="削除"
+        >
+          <XIcon size={12} style={{ color: '#64748b' }} />
+        </button>
+      </div>
+
+      <textarea
+        value={item.text}
+        onChange={(e) => onChange({ text: e.target.value })}
+        rows={2}
+        placeholder="ここに文字を入力（改行可）"
+        className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.08] text-[13px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[rgba(251,191,36,0.4)] resize-none leading-relaxed"
+      />
+
+      {/* フォント */}
+      <div>
+        <p className="text-[10px] text-slate-500 mb-1">フォント</p>
+        <div className="grid grid-cols-3 gap-1">
+          {TEXT_FONTS.map(({ id, label, family, sample }) => {
+            const active = item.font === id;
+            return (
+              <button
+                key={id}
+                onClick={() => onChange({ font: id })}
+                className="text-left p-1.5 rounded-md transition-all"
+                style={{
+                  background: active ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)',
+                  border:     active ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(255,255,255,0.06)',
+                }}
+              >
+                <p
+                  className="text-[13px]"
+                  style={{ fontFamily: family, fontWeight: 700, color: active ? '#fcd34d' : '#cbd5e1' }}
+                >
+                  {sample}
+                </p>
+                <p className="text-[9px] text-slate-600 leading-tight">{label}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* サイズ */}
+      <div>
+        <p className="text-[10px] text-slate-500 mb-1">サイズ</p>
+        <div className="grid grid-cols-4 gap-1">
+          {TEXT_SIZES.map(({ id, label }) => {
+            const active = item.size === id;
+            return (
+              <button
+                key={id}
+                onClick={() => onChange({ size: id })}
+                className="py-1.5 rounded-md text-[11px] font-semibold transition-all"
+                style={{
+                  background: active ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)',
+                  border:     active ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(255,255,255,0.06)',
+                  color:      active ? '#fcd34d' : '#cbd5e1',
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 色 + 縁取り */}
+      <div className="grid grid-cols-2 gap-2">
+        <label className="flex items-center gap-2 px-2.5 py-1.5 rounded-md"
+          style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <span className="text-[10px] text-slate-500 shrink-0">文字色</span>
+          <input
+            type="color"
+            value={item.color}
+            onChange={(e) => onChange({ color: e.target.value })}
+            className="w-6 h-6 rounded cursor-pointer bg-transparent"
+            style={{ border: 'none', padding: 0 }}
+          />
+          <span className="text-[10px] text-slate-400 tabular-nums uppercase">{item.color}</span>
+        </label>
+
+        <label className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md cursor-pointer"
+          style={{
+            background: item.stroke ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.025)',
+            border:     item.stroke ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={item.stroke}
+            onChange={(e) => onChange({ stroke: e.target.checked })}
+            className="w-3.5 h-3.5 rounded accent-amber-400 cursor-pointer"
+          />
+          <span className="text-[10px] text-slate-500 shrink-0">縁取り</span>
+          <input
+            type="color"
+            value={item.strokeColor}
+            onChange={(e) => onChange({ strokeColor: e.target.value })}
+            disabled={!item.stroke}
+            className="w-6 h-6 rounded cursor-pointer bg-transparent disabled:opacity-30"
+            style={{ border: 'none', padding: 0 }}
+          />
+        </label>
+      </div>
+
+      {/* 配置 */}
+      <div>
+        <p className="text-[10px] text-slate-500 mb-1">配置</p>
+        <div
+          className="grid grid-cols-3 gap-1 p-1.5 rounded-lg"
+          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          {(Object.keys(POSITION_LABEL) as GridPosition[]).map((pos) => {
+            const active = item.position === pos;
+            return (
+              <button
+                key={pos}
+                onClick={() => onChange({ position: pos })}
+                className="aspect-[16/9] rounded text-[10px] font-medium transition-all"
+                style={{
+                  background: active ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.04)',
+                  border:     active ? '1px solid rgba(251,191,36,0.5)' : '1px solid rgba(255,255,255,0.06)',
+                  color:      active ? '#fcd34d' : '#64748b',
+                }}
+                title={POSITION_LABEL[pos]}
+              >
+                {POSITION_LABEL[pos]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function readAsDataUrl(file: File): Promise<string> {
