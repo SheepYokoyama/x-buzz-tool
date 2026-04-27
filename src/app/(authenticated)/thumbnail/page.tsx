@@ -18,11 +18,50 @@ import {
   X as XIcon,
   Package,
   Mountain,
+  BadgeCheck,
 } from 'lucide-react';
 
 type Target = 'x' | 'youtube';
 type ImagenModel = 'imagen-4.0-generate-001' | 'imagen-4.0-fast-generate-001';
-type UploadRole = 'item' | 'background';
+type UploadRole = 'item' | 'background' | 'logo';
+
+const ROLE_LABELS: Record<UploadRole, string> = {
+  item:       'アイテム',
+  background: '背景',
+  logo:       'ロゴ',
+};
+
+type LogoStyle    = 'simple' | 'badge' | 'ribbon' | 'monogram' | 'handwritten' | 'emblem';
+type LogoPosition = 'top-left' | 'top' | 'top-right' | 'left' | 'center' | 'right' | 'bottom-left' | 'bottom' | 'bottom-right';
+type LogoSize     = 'small' | 'medium' | 'large';
+
+interface LogoConfig {
+  text:     string;
+  style:    LogoStyle;
+  position: LogoPosition;
+  size:     LogoSize;
+}
+
+const LOGO_STYLES: { id: LogoStyle; label: string; emoji: string; desc: string }[] = [
+  { id: 'simple',      label: 'シンプル',     emoji: 'Aa',  desc: 'クリーンなテキスト型' },
+  { id: 'badge',       label: 'バッジ',       emoji: '⬭',   desc: '円・盾型のエンブレム' },
+  { id: 'ribbon',      label: 'リボン',       emoji: '🎀',  desc: '帯・テープ風' },
+  { id: 'monogram',    label: 'モノグラム',   emoji: 'M',   desc: '頭文字・記号型' },
+  { id: 'handwritten', label: '手書き風',     emoji: '✍',   desc: 'ナチュラル・カリグラフィー' },
+  { id: 'emblem',      label: 'エンブレム',   emoji: '🛡',  desc: 'ヘラルディック／クラシカル' },
+];
+
+const LOGO_SIZES: { id: LogoSize; label: string; pct: string }[] = [
+  { id: 'small',  label: '小', pct: '〜8%' },
+  { id: 'medium', label: '中', pct: '〜15%' },
+  { id: 'large',  label: '大', pct: '〜25%' },
+];
+
+const POSITION_LABEL: Record<LogoPosition, string> = {
+  'top-left':     '左上', 'top':    '上', 'top-right':    '右上',
+  'left':         '左',   'center': '中央', 'right':       '右',
+  'bottom-left':  '左下', 'bottom': '下', 'bottom-right': '右下',
+};
 
 interface UploadEntry {
   id:        string;
@@ -71,21 +110,27 @@ export default function ThumbnailPage() {
   const [error, setError]         = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ロゴ（テキスト指定型）— 任意
+  const [logoText, setLogoText]         = useState('');
+  const [logoStyle, setLogoStyle]       = useState<LogoStyle>('simple');
+  const [logoPosition, setLogoPosition] = useState<LogoPosition>('top-right');
+  const [logoSize, setLogoSize]         = useState<LogoSize>('small');
+
   const isComposeMode = uploads.length > 0;
 
-  // アイテム/背景それぞれの順序に応じて A/B/C のラベルを付与（同じロールが1枚なら無印）
+  // 各ロールの順序に応じて A/B/C のラベルを付与（同じロールが1枚なら無印）
   const labelsById = (() => {
     const map = new Map<string, string>();
-    const counts = { item: 0, background: 0 };
-    const totals = {
+    const counts: Record<UploadRole, number> = { item: 0, background: 0, logo: 0 };
+    const totals: Record<UploadRole, number> = {
       item:       uploads.filter((u) => u.role === 'item').length,
       background: uploads.filter((u) => u.role === 'background').length,
+      logo:       uploads.filter((u) => u.role === 'logo').length,
     };
     for (const u of uploads) {
-      const idx     = counts[u.role]++;
-      const base    = u.role === 'item' ? 'アイテム' : '背景';
-      const suffix  = totals[u.role] > 1 ? String.fromCharCode(65 + idx) : '';
-      map.set(u.id, `${base}${suffix}`);
+      const idx    = counts[u.role]++;
+      const suffix = totals[u.role] > 1 ? String.fromCharCode(65 + idx) : '';
+      map.set(u.id, `${ROLE_LABELS[u.role]}${suffix}`);
     }
     return map;
   })();
@@ -140,6 +185,10 @@ export default function ThumbnailPage() {
     setError(null);
     setImageDataUrl(null);
     try {
+      const logoConfig: LogoConfig | null = logoText.trim()
+        ? { text: logoText.trim(), style: logoStyle, position: logoPosition, size: logoSize }
+        : null;
+
       const res = await apiFetch('/api/thumbnail', {
         method: 'POST',
         body: JSON.stringify({
@@ -152,6 +201,7 @@ export default function ThumbnailPage() {
             role:     u.role,
             label:    labelsById.get(u.id) ?? '',
           })),
+          ...(logoConfig ? { logo: logoConfig } : {}),
         }),
       });
       const data = await res.json();
@@ -212,17 +262,13 @@ export default function ThumbnailPage() {
                       <div className="flex items-center gap-2">
                         <span
                           className="text-[10px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shrink-0"
-                          style={{
-                            background: u.role === 'item' ? 'rgba(167,139,250,0.18)' : 'rgba(34,211,238,0.18)',
-                            color:      u.role === 'item' ? '#c4b5fd' : '#67e8f9',
-                            border:     u.role === 'item' ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(34,211,238,0.4)',
-                          }}
+                          style={roleChipStyle(u.role)}
                         >
                           {labelsById.get(u.id)}
                         </span>
                         <p className="text-[12px] text-slate-400 truncate">{u.fileName}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 mt-1.5">
+                      <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         <RolePill
                           active={u.role === 'item'}
                           onClick={() => updateRole(u.id, 'item')}
@@ -236,6 +282,13 @@ export default function ThumbnailPage() {
                           icon={Mountain}
                           label="背景"
                           color="#22d3ee"
+                        />
+                        <RolePill
+                          active={u.role === 'logo'}
+                          onClick={() => updateRole(u.id, 'logo')}
+                          icon={BadgeCheck}
+                          label="ロゴ"
+                          color="#fbbf24"
                         />
                       </div>
                     </div>
@@ -273,6 +326,111 @@ export default function ThumbnailPage() {
               <Upload size={13} />
               {uploads.length >= MAX_UPLOADS ? '上限に達しました' : '画像を追加（JPEG/PNG/WebP・5MB以下）'}
             </button>
+          </div>
+
+          {/* ロゴ（テキスト指定） */}
+          <div className="neon-card p-6 space-y-4">
+            <div>
+              <h2 className="text-[15px] font-semibold text-slate-200 leading-none">ロゴ（任意）</h2>
+              <p className="section-label mt-1.5">テキストロゴをサンプルから選んで配置</p>
+            </div>
+
+            <div>
+              <FieldLabel>ロゴテキスト</FieldLabel>
+              <input
+                type="text"
+                value={logoText}
+                onChange={(e) => setLogoText(e.target.value)}
+                placeholder="例：BRAND, Xpresso, ABC.co"
+                maxLength={32}
+                className="w-full px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-[13px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[rgba(251,191,36,0.4)]"
+              />
+              <p className="text-[11px] text-slate-600 mt-1.5 text-right">{logoText.length}/32</p>
+            </div>
+
+            <div className={`space-y-3 transition-opacity ${logoText.trim() ? '' : 'opacity-40 pointer-events-none'}`}>
+              {/* デザイン */}
+              <div>
+                <FieldLabel>デザイン</FieldLabel>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {LOGO_STYLES.map(({ id, label, emoji, desc }) => {
+                    const active = logoStyle === id;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => setLogoStyle(id)}
+                        className="text-left p-2.5 rounded-xl transition-all"
+                        style={{
+                          background: active ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.025)',
+                          border:     active ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(255,255,255,0.07)',
+                        }}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[14px]">{emoji}</span>
+                          <p className="text-[12px] font-medium" style={{ color: active ? '#fcd34d' : '#cbd5e1' }}>
+                            {label}
+                          </p>
+                        </div>
+                        <p className="text-[10px] text-slate-600 mt-1 leading-tight">{desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* サイズ */}
+              <div>
+                <FieldLabel>サイズ</FieldLabel>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {LOGO_SIZES.map(({ id, label, pct }) => {
+                    const active = logoSize === id;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => setLogoSize(id)}
+                        className="flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all"
+                        style={{
+                          background: active ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.025)',
+                          border:     active ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(255,255,255,0.07)',
+                          color:      active ? '#fcd34d' : '#cbd5e1',
+                        }}
+                      >
+                        <span className="text-[12px] font-semibold">{label}</span>
+                        <span className="text-[10px] text-slate-600 tabular-nums">{pct}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 配置 */}
+              <div>
+                <FieldLabel>配置</FieldLabel>
+                <div
+                  className="grid grid-cols-3 gap-1.5 p-2 rounded-xl"
+                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+                >
+                  {(Object.keys(POSITION_LABEL) as LogoPosition[]).map((pos) => {
+                    const active = logoPosition === pos;
+                    return (
+                      <button
+                        key={pos}
+                        onClick={() => setLogoPosition(pos)}
+                        className="aspect-[16/9] rounded-md flex items-center justify-center transition-all text-[10px] font-medium"
+                        style={{
+                          background: active ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.04)',
+                          border:     active ? '1px solid rgba(251,191,36,0.5)' : '1px solid rgba(255,255,255,0.06)',
+                          color:      active ? '#fcd34d' : '#64748b',
+                        }}
+                        title={POSITION_LABEL[pos]}
+                      >
+                        {POSITION_LABEL[pos]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* プロンプト */}
@@ -448,6 +606,21 @@ export default function ThumbnailPage() {
       </div>
     </>
   );
+}
+
+const ROLE_CHIP_COLORS: Record<UploadRole, { bg: string; fg: string; border: string }> = {
+  item:       { bg: 'rgba(167,139,250,0.18)', fg: '#c4b5fd', border: 'rgba(167,139,250,0.4)' },
+  background: { bg: 'rgba(34,211,238,0.18)',  fg: '#67e8f9', border: 'rgba(34,211,238,0.4)'  },
+  logo:       { bg: 'rgba(251,191,36,0.18)',  fg: '#fcd34d', border: 'rgba(251,191,36,0.4)'  },
+};
+
+function roleChipStyle(role: UploadRole) {
+  const c = ROLE_CHIP_COLORS[role];
+  return {
+    background: c.bg,
+    color:      c.fg,
+    border:     `1px solid ${c.border}`,
+  };
 }
 
 function readAsDataUrl(file: File): Promise<string> {
