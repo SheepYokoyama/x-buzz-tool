@@ -18,6 +18,7 @@ import {
   UserPlus,
   PenLine,
   KeyRound,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api-fetch';
 
@@ -31,6 +32,7 @@ const mainNav = [
 ];
 
 const subNav = [
+  { href: '/thumbnail',   label: 'サムネ生成',       icon: ImageIcon     },
   { href: '/notebook',    label: 'ノート',           icon: NotebookPen   },
   { href: '/persona',     label: 'ペルソナ',         icon: UserCircle    },
   { href: '/follow-hunt', label: 'フォロー候補',     icon: UserPlus      },
