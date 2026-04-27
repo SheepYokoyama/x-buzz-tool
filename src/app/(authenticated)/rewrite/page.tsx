@@ -11,7 +11,7 @@ import { TokenCostHint } from '@/components/ui/TokenCostHint';
 import { MissingKeyBanner } from '@/components/ai-keys/MissingKeyBanner';
 import { useSettings } from '@/contexts/SettingsContext';
 import { apiFetch } from '@/lib/api-fetch';
-import { Repeat2, RefreshCw, Settings, Copy, Check } from 'lucide-react';
+import { Repeat2, RefreshCw, Settings, Copy, Check, Hash } from 'lucide-react';
 
 const PROVIDER_LABELS: Record<string, { label: string; badge: string; badgeColor: string }> = {
   gemini:    { label: 'Gemini API',    badge: '無料', badgeColor: '#34d399' },
@@ -34,7 +34,40 @@ export default function RewritePage() {
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [copied, setCopied]             = useState(false);
 
+  // ハッシュタグ自動生成
+  const [withHashtags, setWithHashtags] = useState(true);
+  const [hashtags, setHashtags]         = useState<string[]>([]);
+  const [isHashtagging, setIsHashtagging] = useState(false);
+  const [hashtagError, setHashtagError] = useState<string | null>(null);
+  const [tagsCopied, setTagsCopied]     = useState(false);
+
   const providerInfo = PROVIDER_LABELS[settings.aiProvider] ?? PROVIDER_LABELS.gemini;
+
+  const fetchHashtags = async (text: string) => {
+    setIsHashtagging(true);
+    setHashtags([]);
+    setHashtagError(null);
+    try {
+      const res = await apiFetch('/api/hashtags', {
+        method: 'POST',
+        body: JSON.stringify({ text, provider: settings.aiProvider, count: 2 }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error ?? 'ハッシュタグ生成に失敗しました');
+      setHashtags(Array.isArray(data.hashtags) ? data.hashtags : []);
+    } catch (err) {
+      setHashtagError(err instanceof Error ? err.message : 'ハッシュタグ生成に失敗しました');
+    } finally {
+      setIsHashtagging(false);
+    }
+  };
+
+  const handleCopyHashtags = () => {
+    if (!hashtags.length) return;
+    navigator.clipboard.writeText(hashtags.join(' '));
+    setTagsCopied(true);
+    setTimeout(() => setTagsCopied(false), 2000);
+  };
 
   const callRewrite = async (text: string, rewriteStyle: string) => {
     const res = await apiFetch('/api/rewrite', {
@@ -60,9 +93,15 @@ export default function RewritePage() {
     setXSummary('');
     setSummaryError(null);
     setError(null);
+    setHashtags([]);
+    setHashtagError(null);
     try {
       const text = await callRewrite(original, style);
       setResult(text);
+      if (withHashtags) {
+        // リライト本文を待たずにハッシュタグも並行生成（fire-and-forget）
+        void fetchHashtags(text);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'リライトに失敗しました');
     } finally {
@@ -78,6 +117,10 @@ export default function RewritePage() {
     try {
       const text = await callRewrite(result, 'x_summary');
       setXSummary(text);
+      if (withHashtags) {
+        // X要約に合わせてハッシュタグを再生成
+        void fetchHashtags(text);
+      }
     } catch (err) {
       setSummaryError(err instanceof Error ? err.message : '要約に失敗しました');
     } finally {
@@ -133,6 +176,29 @@ export default function RewritePage() {
               personaAvatar={activePersona?.avatar}
             />
 
+            {/* ハッシュタグ自動生成オプション */}
+            <label
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl cursor-pointer select-none transition-all"
+              style={{
+                background: withHashtags ? 'rgba(34,211,238,0.06)' : 'rgba(255,255,255,0.025)',
+                border: withHashtags ? '1px solid rgba(34,211,238,0.25)' : '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={withHashtags}
+                onChange={(e) => setWithHashtags(e.target.checked)}
+                className="w-4 h-4 rounded accent-cyan-400 cursor-pointer"
+              />
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <Hash size={13} style={{ color: withHashtags ? '#22d3ee' : '#64748b' }} />
+                <span className="text-[12px] font-medium" style={{ color: withHashtags ? '#cbd5e1' : '#94a3b8' }}>
+                  ハッシュタグを自動生成
+                </span>
+                <span className="text-[10px] text-slate-600">（X用 #タグ ×2）</span>
+              </div>
+            </label>
+
             {/* AIプロバイダー表示 */}
             <div
               className="flex items-center justify-between px-3.5 py-2.5 rounded-xl"
@@ -180,6 +246,63 @@ export default function RewritePage() {
             <div className="space-y-4">
               <p className="text-[15px] font-semibold text-slate-200">リライト結果</p>
               <RewriteResultCard text={result} label={style} />
+
+              {/* ── ハッシュタグ ── */}
+              {withHashtags && (isHashtagging || hashtags.length > 0 || hashtagError) && (
+                <div
+                  className="rounded-2xl p-4 space-y-2.5"
+                  style={{
+                    background: 'rgba(34,211,238,0.04)',
+                    border: '1px solid rgba(34,211,238,0.18)',
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Hash size={12} style={{ color: '#22d3ee' }} />
+                      <span className="text-[12px] font-semibold text-slate-300">おすすめハッシュタグ</span>
+                    </div>
+                    {hashtags.length > 0 && (
+                      <button
+                        onClick={handleCopyHashtags}
+                        className="flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-lg transition-all"
+                        style={{
+                          background: tagsCopied ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.05)',
+                          border: tagsCopied ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(255,255,255,0.09)',
+                          color: tagsCopied ? '#34d399' : '#94a3b8',
+                        }}
+                      >
+                        {tagsCopied ? <Check size={11} /> : <Copy size={11} />}
+                        {tagsCopied ? '済み' : 'コピー'}
+                      </button>
+                    )}
+                  </div>
+
+                  {isHashtagging ? (
+                    <p className="text-[12px] text-slate-500 flex items-center gap-1.5">
+                      <RefreshCw size={11} className="animate-spin" />
+                      タグを生成中…
+                    </p>
+                  ) : hashtagError ? (
+                    <p className="text-[12px] text-red-400">{hashtagError}</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {hashtags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-[12px] font-medium px-2.5 py-1 rounded-lg"
+                          style={{
+                            background: 'rgba(34,211,238,0.1)',
+                            color: '#67e8f9',
+                            border: '1px solid rgba(34,211,238,0.25)',
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* ── X向け要約ボタン ── */}
               <button
