@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import type { AiProvider } from '@/lib/types';
+import { PROVIDER_META } from '@/lib/ai-providers';
 
 interface Props {
   onClose: () => void;
@@ -12,17 +13,17 @@ interface Props {
 const PROVIDER_OPTIONS: { value: AiProvider; label: string; desc: string; badge: string; badgeColor: string }[] = [
   {
     value: 'gemini',
-    label: 'Gemini API',
-    desc: 'Google製モデル（gemini-2.5-flash）',
-    badge: '無料',
-    badgeColor: '#34d399',
+    label: PROVIDER_META.gemini.label,
+    desc:  PROVIDER_META.gemini.desc,
+    badge: PROVIDER_META.gemini.roleLabel,
+    badgeColor: PROVIDER_META.gemini.roleColor,
   },
   {
     value: 'anthropic',
-    label: 'Anthropic API',
-    desc: 'Claude モデル（claude-haiku-4-5）',
-    badge: '有料',
-    badgeColor: '#f59e0b',
+    label: PROVIDER_META.anthropic.label,
+    desc:  PROVIDER_META.anthropic.desc,
+    badge: PROVIDER_META.anthropic.roleLabel,
+    badgeColor: PROVIDER_META.anthropic.roleColor,
   },
 ];
 

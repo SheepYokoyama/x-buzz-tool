@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, Sparkles, Zap, Plus, Pencil, Trash2, CheckCircle2 } from 'lucide-react';
+import { Loader2, Sparkles, Zap, Plus, Pencil, Trash2, CheckCircle2, Check, Star } from 'lucide-react';
 import { apiFetch } from '@/lib/api-fetch';
 import { AIKeyForm } from '@/components/ai-keys/AIKeyForm';
-
-type Provider = 'gemini' | 'anthropic';
+import { PROVIDER_META, type AIProvider as Provider } from '@/lib/ai-providers';
 
 interface AIKeyRow {
   provider:  Provider;
@@ -14,30 +13,9 @@ interface AIKeyRow {
   updatedAt: string;
 }
 
-const PROVIDER_META: Record<Provider, {
-  label:    string;
-  badge:    string;
-  badgeBg:  string;
-  tint:     string;
-  icon:     React.ComponentType<{ size?: number; className?: string }>;
-  desc:     string;
-}> = {
-  gemini: {
-    label:   'Gemini API',
-    badge:   '無料枠あり',
-    badgeBg: '#34d399',
-    tint:    '#34d399',
-    icon:    Sparkles,
-    desc:    '既定のプロバイダ。Gemini 2.5-flash を使用。無料枠あり。',
-  },
-  anthropic: {
-    label:   'Anthropic API',
-    badge:   '有料',
-    badgeBg: '#f59e0b',
-    tint:    '#f59e0b',
-    icon:    Zap,
-    desc:    'Claude Haiku 4.5 を使用。従量課金。生成品質が高い場面で活用。',
-  },
+const PROVIDER_ICONS: Record<Provider, React.ComponentType<{ size?: number; className?: string }>> = {
+  gemini:    Sparkles,
+  anthropic: Zap,
 };
 
 export function AIKeysClient() {
@@ -90,7 +68,8 @@ export function AIKeysClient() {
         {(['gemini', 'anthropic'] as Provider[]).map((provider) => {
           const meta = PROVIDER_META[provider];
           const existing = keys.find((k) => k.provider === provider);
-          const Icon = meta.icon;
+          const Icon = PROVIDER_ICONS[provider];
+          const exclusiveSet = new Set(meta.exclusive ?? []);
 
           return (
             <div
@@ -104,26 +83,59 @@ export function AIKeysClient() {
               <div className="flex items-start gap-3">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: `${meta.tint}18`, border: `1px solid ${meta.tint}35` }}
+                  style={{ background: `${meta.roleColor}18`, border: `1px solid ${meta.roleColor}35` }}
                 >
                   <Icon size={18} className="text-slate-200" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-[14px] font-semibold text-slate-200">{meta.label}</h3>
                     <span
-                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md whitespace-nowrap"
                       style={{
-                        color: meta.badgeBg,
-                        background: `${meta.badgeBg}18`,
-                        border: `1px solid ${meta.badgeBg}30`,
+                        color: meta.roleColor,
+                        background: `${meta.roleColor}18`,
+                        border: `1px solid ${meta.roleColor}30`,
                       }}
                     >
-                      {meta.badge}
+                      {meta.roleLabel}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{meta.desc}</p>
                 </div>
+              </div>
+
+              {/* 登録すると使える機能 */}
+              <div
+                className="rounded-xl p-3 space-y-1.5"
+                style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}
+              >
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">登録すると使える機能</p>
+                <ul className="space-y-1">
+                  {meta.features.map((feature) => {
+                    const isExclusive = exclusiveSet.has(feature);
+                    return (
+                      <li key={feature} className="flex items-center gap-1.5">
+                        {isExclusive
+                          ? <Star size={10} style={{ color: meta.roleColor }} />
+                          : <Check size={10} style={{ color: meta.roleColor }} />
+                        }
+                        <span className="text-[12px] text-slate-300">{feature}</span>
+                        {isExclusive && (
+                          <span
+                            className="text-[9px] font-semibold px-1 py-px rounded"
+                            style={{ color: meta.roleColor, background: `${meta.roleColor}15`, border: `1px solid ${meta.roleColor}30` }}
+                          >
+                            専用
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="text-[10px] text-slate-600 leading-relaxed mt-1.5 pt-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                  料金: {meta.pricing}
+                </p>
               </div>
 
               {existing ? (
@@ -159,7 +171,7 @@ export function AIKeysClient() {
                 <button
                   onClick={() => setEditingProvider(provider)}
                   className="w-full py-3 rounded-lg text-[13px] font-semibold text-white flex items-center justify-center gap-2 transition-all"
-                  style={{ background: `linear-gradient(135deg, ${meta.tint}, ${meta.tint}aa)` }}
+                  style={{ background: `linear-gradient(135deg, ${meta.roleColor}, ${meta.roleColor}aa)` }}
                 >
                   <Plus size={14} />
                   API キーを登録
