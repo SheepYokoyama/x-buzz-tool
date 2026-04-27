@@ -12,11 +12,7 @@ import { MissingKeyBanner } from '@/components/ai-keys/MissingKeyBanner';
 import { useSettings } from '@/contexts/SettingsContext';
 import { apiFetch } from '@/lib/api-fetch';
 import { Repeat2, RefreshCw, Settings, Copy, Check, Hash } from 'lucide-react';
-
-const PROVIDER_LABELS: Record<string, { label: string; badge: string; badgeColor: string }> = {
-  gemini:    { label: 'Gemini API',    badge: '無料', badgeColor: '#34d399' },
-  anthropic: { label: 'Anthropic API', badge: '有料', badgeColor: '#f59e0b' },
-};
+import { providerBadge, type AIProvider } from '@/lib/ai-providers';
 
 const X_CHAR_LIMIT = 140;
 
@@ -41,7 +37,7 @@ export default function RewritePage() {
   const [hashtagError, setHashtagError] = useState<string | null>(null);
   const [tagsCopied, setTagsCopied]     = useState(false);
 
-  const providerInfo = PROVIDER_LABELS[settings.aiProvider] ?? PROVIDER_LABELS.gemini;
+  const providerInfo = providerBadge(settings.aiProvider as AIProvider);
 
   const fetchHashtags = async (text: string) => {
     setIsHashtagging(true);

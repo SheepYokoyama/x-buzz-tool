@@ -9,6 +9,7 @@ import { Sparkles, RefreshCw, Settings } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import type { GenerateInput, PostPersona } from '@/lib/types';
 import { getXPlan, getXLimit, getLengthOptions, getPlanLabel } from '@/lib/x-char-count';
+import { providerBadge, type AIProvider } from '@/lib/ai-providers';
 
 const QUICK_TOPICS = [
   'AI活用', '生産性', 'X運用', '副業', 'マインドセット',
@@ -39,11 +40,6 @@ interface Props {
   onGenerate: () => void;
 }
 
-const PROVIDER_LABELS: Record<string, { label: string; badge: string; badgeColor: string }> = {
-  gemini:    { label: 'Gemini API',    badge: '無料', badgeColor: '#34d399' },
-  anthropic: { label: 'Anthropic API', badge: '有料', badgeColor: '#f59e0b' },
-};
-
 export function GenerateSettings({ input, personas, isGenerating, onChange, onGenerate }: Props) {
   const { settings, xUser } = useSettings();
   const plan          = getXPlan(xUser?.verifiedType, xUser?.subscriptionType);
@@ -51,7 +47,7 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
   const planLabel     = getPlanLabel(plan);
   const lengthOptions = getLengthOptions(plan);
   const canGenerate = (input.theme.trim() || input.selectedTopic) && !isGenerating;
-  const providerInfo = PROVIDER_LABELS[settings.aiProvider] ?? PROVIDER_LABELS.gemini;
+  const providerInfo = providerBadge(settings.aiProvider as AIProvider);
 
   const activePersona = personas.find((p) => p.is_active);
 
