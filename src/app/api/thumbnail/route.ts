@@ -8,7 +8,8 @@ type Target = 'x' | 'youtube';
 type ImagenModel = 'imagen-4.0-generate-001' | 'imagen-4.0-fast-generate-001';
 type UploadRole  = 'item' | 'background';
 
-const GEMINI_IMAGE_MODEL = 'gemini-2.5-flash-image-preview';
+const GEMINI_IMAGE_MODEL          = 'gemini-2.5-flash-image';
+const GEMINI_IMAGE_FALLBACK_MODEL = 'gemini-2.5-flash-image-preview';
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_UPLOADS   = 3;
 const MAX_INLINE_BYTES = 5 * 1024 * 1024; // 5MB / image
@@ -166,19 +167,21 @@ async function generateWithGeminiImage(
     parts.push({ inline_data: { mime_type: u.mimeType, data: u.base64 } });
   }
 
-  const endpoint   = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
-  const controller = new AbortController();
-  const timeout    = setTimeout(() => controller.abort(), 50_000);
+  const body = JSON.stringify({
+    contents:         [{ role: 'user', parts }],
+    generationConfig: { responseModalities: ['IMAGE'] },
+  });
 
-  const res = await fetch(endpoint, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents:         [{ role: 'user', parts }],
-      generationConfig: { responseModalities: ['IMAGE'] },
-    }),
-    signal: controller.signal,
-  }).finally(() => clearTimeout(timeout));
+  // primary が見つからない / 未対応の場合は fallback モデル名で再試行
+  const res = await callGeminiImageEndpoint(apiKey, GEMINI_IMAGE_MODEL, body, async (status, message) => {
+    const isModelMissing =
+      status === 404 ||
+      /not\s*found/i.test(message) ||
+      /not\s*supported/i.test(message) ||
+      /unsupported/i.test(message);
+    if (!isModelMissing) return null;
+    return callGeminiImageEndpoint(apiKey, GEMINI_IMAGE_FALLBACK_MODEL, body);
+  });
 
   if (!res.ok) throw await classifyApiError(res, 'Gemini Image');
 
@@ -194,6 +197,36 @@ async function generateWithGeminiImage(
     throw new HttpError(422, reason ? `生成がブロックされました: ${reason}` : '画像が生成されませんでした。プロンプトを変えて再試行してください。');
   }
   return { base64: inline.data, mimeType: inline.mimeType ?? inline.mime_type ?? 'image/png' };
+}
+
+async function callGeminiImageEndpoint(
+  apiKey: string,
+  modelName: string,
+  body: string,
+  onError?: (status: number, message: string) => Promise<Response | null>,
+): Promise<Response> {
+  const endpoint   = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const controller = new AbortController();
+  const timeout    = setTimeout(() => controller.abort(), 50_000);
+
+  const res = await fetch(endpoint, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+    signal:  controller.signal,
+  }).finally(() => clearTimeout(timeout));
+
+  if (!res.ok && onError) {
+    const peek    = await res.clone().text();
+    let message   = peek;
+    try {
+      const errJson = JSON.parse(peek);
+      message = errJson?.error?.message ?? peek;
+    } catch { /* keep raw */ }
+    const fallback = await onError(res.status, message);
+    if (fallback) return fallback;
+  }
+  return res;
 }
 
 async function classifyApiError(res: Response, label: string): Promise<HttpError> {
