@@ -33,15 +33,22 @@ async function persistPublishedPosts(userId: string, posted: PostedTweet[]): Pro
  * POST /api/x/thread
  * 複数ポストを X に投稿する。
  *
- * body: {
- *   texts: string[];     // 投稿テキスト配列（1件以上）
- *   mode: 'thread' | 'separate'; // thread: リプライで繋げる / separate: それぞれ独立
- * }
+ * Content-Type:
+ *   - application/json: { texts: string[]; mode: 'thread' | 'separate' }
+ *   - multipart/form-data:
+ *       - texts: JSON 文字列化した string[]
+ *       - mode: 'thread' | 'separate'
+ *       - images: File[] （最大4枚、1件目のツイートにのみ添付）
+ *
  * response: { posts: { tweetId: string; url: string; text: string }[] }
  *
  * thread の場合、2件目以降は直前のツイートに対する reply として投稿する。
  * 途中で失敗した場合は、それまでに投稿できたものを返しエラーを返す。
  */
+const MAX_IMAGES = 4;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
+const ALLOWED_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+
 export async function POST(req: Request) {
   const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
@@ -54,22 +61,81 @@ export async function POST(req: Request) {
     );
   }
 
-  const body = (await req.json()) as { texts?: string[]; mode?: 'thread' | 'separate' };
-  const texts = Array.isArray(body.texts) ? body.texts.map((t) => t?.trim()).filter(Boolean) as string[] : [];
-  const mode = body.mode === 'separate' ? 'separate' : 'thread';
+  let texts: string[] = [];
+  let mode: 'thread' | 'separate' = 'thread';
+  const imageFiles: File[] = [];
+
+  const contentType = req.headers.get('content-type') ?? '';
+  if (contentType.includes('multipart/form-data')) {
+    const form = await req.formData();
+    const rawTexts = form.get('texts');
+    if (typeof rawTexts === 'string') {
+      try {
+        const parsed = JSON.parse(rawTexts);
+        if (Array.isArray(parsed)) {
+          texts = parsed.map((t) => (typeof t === 'string' ? t.trim() : '')).filter(Boolean);
+        }
+      } catch {
+        return NextResponse.json({ error: 'texts のパースに失敗しました' }, { status: 400 });
+      }
+    }
+    const rawMode = form.get('mode');
+    mode = rawMode === 'separate' ? 'separate' : 'thread';
+
+    for (const entry of form.getAll('images')) {
+      if (entry instanceof File) imageFiles.push(entry);
+    }
+    if (imageFiles.length > MAX_IMAGES) {
+      return NextResponse.json({ error: `画像は最大${MAX_IMAGES}枚までです` }, { status: 400 });
+    }
+    for (const f of imageFiles) {
+      if (!ALLOWED_IMAGE_MIMES.has(f.type)) {
+        return NextResponse.json({ error: `非対応の画像形式: ${f.type || 'unknown'}` }, { status: 400 });
+      }
+      if (f.size > MAX_IMAGE_BYTES) {
+        return NextResponse.json({ error: `画像サイズが上限(5MB)を超えています: ${f.name}` }, { status: 400 });
+      }
+    }
+  } else {
+    const body = (await req.json()) as { texts?: string[]; mode?: 'thread' | 'separate' };
+    texts = Array.isArray(body.texts) ? body.texts.map((t) => t?.trim()).filter(Boolean) as string[] : [];
+    mode = body.mode === 'separate' ? 'separate' : 'thread';
+  }
 
   if (texts.length === 0) {
     return NextResponse.json({ error: '投稿テキストが空です' }, { status: 400 });
+  }
+
+  // 1件目に添付する media_ids（画像があれば v1 でアップロード）
+  let firstMediaIds: string[] = [];
+  if (imageFiles.length > 0) {
+    try {
+      firstMediaIds = await Promise.all(
+        imageFiles.map(async (f) => {
+          const buf = Buffer.from(await f.arrayBuffer());
+          return await client.v1.uploadMedia(buf, { mimeType: f.type });
+        })
+      );
+    } catch (err: unknown) {
+      console.error('uploadMedia error:', err);
+      const msg = err instanceof Error ? err.message : '画像アップロードに失敗しました';
+      return NextResponse.json({ error: `画像アップロードに失敗しました: ${msg}` }, { status: 502 });
+    }
   }
 
   const posted: PostedTweet[] = [];
   let lastId: string | undefined;
 
   try {
-    for (const text of texts) {
+    for (let i = 0; i < texts.length; i++) {
+      const text = texts[i];
       const params: Record<string, unknown> = {};
       if (mode === 'thread' && lastId) {
         params.reply = { in_reply_to_tweet_id: lastId };
+      }
+      // 画像は1件目のみに添付
+      if (i === 0 && firstMediaIds.length > 0) {
+        params.media = { media_ids: firstMediaIds };
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await client.v2.tweet(text, params as any);

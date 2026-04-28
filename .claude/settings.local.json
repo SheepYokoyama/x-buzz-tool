@@ -68,7 +68,9 @@
       "Bash(gh pr create --title 'feat: いいね＆フォロー / 手動分割マーカー / Premium デフォルト上限' --body ' *)",
       "Bash(gh pr *)",
       "Bash(git branch *)",
-      "Bash(git worktree *)"
+      "Bash(git worktree *)",
+      "Bash(npx next *)",
+      "Bash(grep -E \"^C:.*\\\\.\\(ts|tsx\\)$\")"
     ]
   },
   "hooks": {

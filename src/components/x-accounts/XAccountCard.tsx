@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Pencil, Trash2, User, RefreshCw } from 'lucide-react';
 import type { XAccount } from '@/lib/types';
+import { PlatformIcon } from '@/components/ui/PlatformIcon';
 
 interface Props {
   account: XAccount;
@@ -39,26 +40,40 @@ export function XAccountCard({ account, isActivating, isRefreshing, onActivate, 
 
       {/* ── ヘッダー ── */}
       <div className="flex items-center gap-3 pr-16">
-        {account.profile_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={account.profile_image_url}
-            alt={account.name}
-            className="w-10 h-10 rounded-full shrink-0"
-            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-          />
-        ) : (
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-sm font-bold"
+        <div className="relative shrink-0">
+          {account.profile_image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={account.profile_image_url}
+              alt={account.name}
+              className="w-10 h-10 rounded-full"
+              style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+            />
+          ) : (
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
+              style={{
+                background: account.is_active ? 'rgba(96,165,250,0.15)' : 'rgba(255,255,255,0.05)',
+                border: account.is_active ? '1px solid rgba(96,165,250,0.2)' : '1px solid rgba(255,255,255,0.08)',
+                color: account.is_active ? '#60a5fa' : '#64748b',
+              }}
+            >
+              <User size={18} />
+            </div>
+          )}
+          {/* プラットフォームバッジ（アバター右下に重ねる） */}
+          <span
+            className="absolute -bottom-1 -right-1 w-[18px] h-[18px] rounded-full flex items-center justify-center"
             style={{
-              background: account.is_active ? 'rgba(96,165,250,0.15)' : 'rgba(255,255,255,0.05)',
-              border: account.is_active ? '1px solid rgba(96,165,250,0.2)' : '1px solid rgba(255,255,255,0.08)',
-              color: account.is_active ? '#60a5fa' : '#64748b',
+              background: '#000',
+              border: '1.5px solid rgba(2,6,23,1)',
+              color: '#fff',
             }}
+            title="X (旧 Twitter)"
           >
-            <User size={18} />
-          </div>
-        )}
+            <PlatformIcon platform="x" size={9} />
+          </span>
+        </div>
         <div className="min-w-0">
           <p className="text-[14px] font-semibold text-slate-200 truncate">{account.name}</p>
           {account.username && (
