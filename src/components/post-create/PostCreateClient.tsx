@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, FieldLabel } from '@/components/ui/Input';
@@ -26,7 +26,13 @@ import {
   AlignLeft,
   AlertTriangle,
   Scissors,
+  ImagePlus,
+  X as XIcon,
 } from 'lucide-react';
+
+const MAX_IMAGES = 4;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 const LIMIT_OPTIONS = [
   { value: 140, label: '140カウント', note: '無料（全角70字 / 半角140字）' },
@@ -44,7 +50,52 @@ export function PostCreateClient() {
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 画像のプレビュー URL を生成し、unmount / 入れ替え時に解放
+  useEffect(() => {
+    const urls = images.map((f) => URL.createObjectURL(f));
+    setImagePreviews(urls);
+    return () => {
+      urls.forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, [images]);
+
+  const handlePickImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const list = e.target.files;
+    if (!list) return;
+    const incoming = Array.from(list);
+    const errs: string[] = [];
+    const accepted: File[] = [];
+    for (const f of incoming) {
+      if (!ALLOWED_IMAGE_MIMES.includes(f.type)) {
+        errs.push(`${f.name}: 非対応の形式（${f.type || '不明'}）`);
+        continue;
+      }
+      if (f.size > MAX_IMAGE_BYTES) {
+        errs.push(`${f.name}: 5MBを超えています`);
+        continue;
+      }
+      accepted.push(f);
+    }
+    setImages((prev) => {
+      const merged = [...prev, ...accepted].slice(0, MAX_IMAGES);
+      if (prev.length + accepted.length > MAX_IMAGES) {
+        errs.push(`画像は最大${MAX_IMAGES}枚までです`);
+      }
+      return merged;
+    });
+    if (errs.length > 0) setError(errs.join(' / '));
+    // 同じファイル名を続けて選べるよう値をリセット
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeImage = (idx: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   // X の有料プラン契約者は長文投稿可能なので 25,000 をデフォルトに。
   // subscriptionType は 'Basic' | 'Premium' | 'PremiumPlus' | null。
@@ -119,14 +170,23 @@ export function PostCreateClient() {
     setError(null);
     setSuccess(null);
     try {
-      const res = await apiFetch('/api/x/thread', {
-        method: 'POST',
-        body: JSON.stringify({
-          texts: chunks.map((c) => c.text),
-          // 'none' は1件なのでサーバー側では 'separate' と等価
-          mode: mode === 'none' ? 'separate' : mode,
-        }),
-      });
+      const texts = chunks.map((c) => c.text);
+      // 'none' は1件なのでサーバー側では 'separate' と等価
+      const sendMode = mode === 'none' ? 'separate' : mode;
+
+      let res: Response;
+      if (images.length > 0) {
+        const fd = new FormData();
+        fd.append('texts', JSON.stringify(texts));
+        fd.append('mode', sendMode);
+        for (const f of images) fd.append('images', f);
+        res = await apiFetch('/api/x/thread', { method: 'POST', body: fd });
+      } else {
+        res = await apiFetch('/api/x/thread', {
+          method: 'POST',
+          body: JSON.stringify({ texts, mode: sendMode }),
+        });
+      }
       const data = await res.json();
       if (!res.ok || data.error) {
         const posted = data.posted?.length ?? 0;
@@ -138,6 +198,7 @@ export function PostCreateClient() {
       }
       setSuccess(`${data.posts.length} 件を投稿しました`);
       setText('');
+      setImages([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : '投稿に失敗しました');
     } finally {
@@ -211,6 +272,59 @@ export function PostCreateClient() {
                   本文中の「{MANUAL_SPLIT_MARKER}」位置で強制分割され、各セグメント内は自動分割されます。
                 </p>
               )}
+            </div>
+
+            {/* 画像添付 */}
+            <div>
+              <FieldLabel>画像（任意・最大{MAX_IMAGES}枚）</FieldLabel>
+              <div className="flex flex-wrap items-start gap-2">
+                {imagePreviews.map((url, idx) => (
+                  <div
+                    key={url}
+                    className="relative w-20 h-20 rounded-lg overflow-hidden"
+                    style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(0,0,0,0.65)', color: '#fff' }}
+                      title="削除"
+                    >
+                      <XIcon size={12} />
+                    </button>
+                  </div>
+                ))}
+                {images.length < MAX_IMAGES && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-20 h-20 rounded-lg flex flex-col items-center justify-center gap-1 transition-all"
+                    style={{
+                      background: 'rgba(96,165,250,0.06)',
+                      border: '1px dashed rgba(96,165,250,0.35)',
+                      color: '#93c5fd',
+                    }}
+                    title="画像を追加"
+                  >
+                    <ImagePlus size={18} />
+                    <span className="text-[10px]">追加</span>
+                  </button>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ALLOWED_IMAGE_MIMES.join(',')}
+                multiple
+                onChange={handlePickImages}
+                className="hidden"
+              />
+              <p className="text-[10px] text-slate-600 mt-1.5 leading-relaxed">
+                JPEG / PNG / GIF / WEBP・1枚あたり5MBまで。複数ポストの場合は1件目にのみ添付されます。
+              </p>
             </div>
           </div>
 
