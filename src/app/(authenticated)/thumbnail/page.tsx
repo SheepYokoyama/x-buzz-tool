@@ -910,11 +910,11 @@ function TextEditor({
         </label>
       </div>
 
-      {/* 配置 */}
-      <div>
-        <p className="text-[10px] text-slate-500 mb-1">配置</p>
+      {/* 配置（ドットで位置を示すコンパクト 3x3 セレクタ） */}
+      <div className="flex items-center gap-2">
+        <p className="text-[10px] text-slate-500 shrink-0">配置</p>
         <div
-          className="grid grid-cols-3 gap-1 p-1.5 rounded-lg"
+          className="inline-grid grid-cols-3 gap-0.5 p-1 rounded-md"
           style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
         >
           {(Object.keys(POSITION_LABEL) as GridPosition[]).map((pos) => {
@@ -923,21 +923,51 @@ function TextEditor({
               <button
                 key={pos}
                 onClick={() => onChange({ position: pos })}
-                className="aspect-[16/9] rounded text-[10px] font-medium transition-all"
+                className="w-6 h-6 rounded relative transition-all"
                 style={{
-                  background: active ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.04)',
-                  border:     active ? '1px solid rgba(251,191,36,0.5)' : '1px solid rgba(255,255,255,0.06)',
-                  color:      active ? '#fcd34d' : '#64748b',
+                  background: active ? 'rgba(251,191,36,0.18)' : 'rgba(255,255,255,0.03)',
+                  border:     active ? '1px solid rgba(251,191,36,0.5)' : '1px solid rgba(255,255,255,0.05)',
                 }}
                 title={POSITION_LABEL[pos]}
+                aria-label={POSITION_LABEL[pos]}
               >
-                {POSITION_LABEL[pos]}
+                <PositionDot position={pos} active={active} />
               </button>
             );
           })}
         </div>
+        <span className="text-[10px] text-slate-500 ml-auto tabular-nums">
+          {POSITION_LABEL[item.position]}
+        </span>
       </div>
     </div>
+  );
+}
+
+/** 各セルの中で position に応じた位置に小さな点を描画 */
+function PositionDot({ position, active }: { position: GridPosition; active: boolean }) {
+  const map: Record<GridPosition, { top?: string; bottom?: string; left?: string; right?: string; transform?: string }> = {
+    'top-left':     { top: '15%',  left: '15%' },
+    'top':          { top: '15%',  left: '50%', transform: 'translateX(-50%)' },
+    'top-right':    { top: '15%',  right: '15%' },
+    'left':         { top: '50%',  left: '15%', transform: 'translateY(-50%)' },
+    'center':       { top: '50%',  left: '50%', transform: 'translate(-50%, -50%)' },
+    'right':        { top: '50%',  right: '15%', transform: 'translateY(-50%)' },
+    'bottom-left':  { bottom: '15%', left: '15%' },
+    'bottom':       { bottom: '15%', left: '50%', transform: 'translateX(-50%)' },
+    'bottom-right': { bottom: '15%', right: '15%' },
+  };
+  const p = map[position];
+  return (
+    <span
+      className="absolute block rounded-full"
+      style={{
+        width:  6,
+        height: 6,
+        background: active ? '#fcd34d' : '#64748b',
+        ...p,
+      }}
+    />
   );
 }
 
