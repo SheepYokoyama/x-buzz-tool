@@ -3,13 +3,13 @@
 import { Button } from '@/components/ui/Button';
 import { PersonaKeywords } from './PersonaKeywords';
 import { Check, Edit2, Trash2 } from 'lucide-react';
-import type { Character } from '@/lib/types';
+import type { PostPersona } from '@/lib/types';
 
 interface Props {
-  persona: Character;
+  persona: PostPersona;
   isActivating?: boolean;
   onActivate: (id: string) => void;
-  onEdit: (persona: Character) => void;
+  onEdit: (persona: PostPersona) => void;
   onDelete: (id: string) => void;
 }
 

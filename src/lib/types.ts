@@ -37,9 +37,6 @@ export interface GenerateResponse {
 export type GeneratedPostStatus = 'draft' | 'approved' | 'rejected' | 'published';
 export type ScheduledPostStatus = 'scheduled' | 'published' | 'failed' | 'cancelled';
 
-// 後方互換のため残す（既存UIコンポーネントが参照）
-export type PostStatus = GeneratedPostStatus | ScheduledPostStatus;
-
 // =============================================
 // DB行型（Supabase から返ってくる生データ）
 // =============================================
@@ -209,13 +206,6 @@ export interface DashboardStats {
   };
 }
 
-// =============================================
-// 後方互換エイリアス（既存UIコンポーネント向け）
-// =============================================
-
-/** @deprecated DB型 PostPersona を使ってください */
-export type Character = PostPersona;
-
 export interface Note {
   id: string;
   user_id: string;
@@ -225,19 +215,4 @@ export interface Note {
   is_important: boolean;
   created_at: string;
   updated_at: string;
-}
-
-/** @deprecated DB型 GeneratedPost / ScheduledPost を使ってください */
-export interface Post {
-  id: string;
-  content: string;
-  status: PostStatus;
-  scheduledAt?: string;
-  publishedAt?: string;
-  likes: number;
-  retweets: number;
-  impressions: number;
-  replies: number;
-  tags: string[];
-  characterId: string;
 }
