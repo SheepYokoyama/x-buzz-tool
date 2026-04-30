@@ -50,24 +50,24 @@ export function PostCreateClient() {
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [images, setImages] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  // chunkImages[i] = i 件目のツイートに添付する画像
+  const [chunkImages, setChunkImages] = useState<File[][]>([]);
+  // 各画像に対応する object URL（プレビュー用）。chunkImages と同じ shape。
+  const [chunkPreviews, setChunkPreviews] = useState<string[][]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 画像のプレビュー URL を生成し、unmount / 入れ替え時に解放
   useEffect(() => {
-    const urls = images.map((f) => URL.createObjectURL(f));
-    setImagePreviews(urls);
+    const urls = chunkImages.map((files) => files.map((f) => URL.createObjectURL(f)));
+    setChunkPreviews(urls);
     return () => {
-      urls.forEach((u) => URL.revokeObjectURL(u));
+      urls.forEach((arr) => arr.forEach((u) => URL.revokeObjectURL(u)));
     };
-  }, [images]);
+  }, [chunkImages]);
 
-  const handlePickImages = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const list = e.target.files;
-    if (!list) return;
-    const incoming = Array.from(list);
+  const addImagesToChunk = (chunkIndex: number, files: FileList | null) => {
+    if (!files) return;
+    const incoming = Array.from(files);
     const errs: string[] = [];
     const accepted: File[] = [];
     for (const f of incoming) {
@@ -81,20 +81,26 @@ export function PostCreateClient() {
       }
       accepted.push(f);
     }
-    setImages((prev) => {
-      const merged = [...prev, ...accepted].slice(0, MAX_IMAGES);
-      if (prev.length + accepted.length > MAX_IMAGES) {
-        errs.push(`画像は最大${MAX_IMAGES}枚までです`);
+    setChunkImages((prev) => {
+      const next = prev.slice();
+      const current = next[chunkIndex] ?? [];
+      const merged = [...current, ...accepted].slice(0, MAX_IMAGES);
+      if (current.length + accepted.length > MAX_IMAGES) {
+        errs.push(`1ポストあたり最大${MAX_IMAGES}枚までです`);
       }
-      return merged;
+      next[chunkIndex] = merged;
+      return next;
     });
     if (errs.length > 0) setError(errs.join(' / '));
-    // 同じファイル名を続けて選べるよう値をリセット
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const removeImage = (idx: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== idx));
+  const removeImage = (chunkIndex: number, imgIndex: number) => {
+    setChunkImages((prev) => {
+      const next = prev.slice();
+      const current = next[chunkIndex] ?? [];
+      next[chunkIndex] = current.filter((_, i) => i !== imgIndex);
+      return next;
+    });
   };
 
   // X の有料プラン契約者は長文投稿可能なので 25,000 をデフォルトに。
@@ -164,6 +170,12 @@ export function PostCreateClient() {
       ? `X ${maxCount}カウント上限を超えています（現在 ${totalXCount}）。契約プランによっては投稿が拒否されます。`
       : null;
 
+  // chunks.length 内に収まる画像のみ集計（チャンク数が減ったら超過分は送らない）
+  const totalAttachedImages = useMemo(
+    () => chunkImages.slice(0, chunks.length).reduce((sum, arr) => sum + arr.length, 0),
+    [chunkImages, chunks.length],
+  );
+
   const handlePost = async () => {
     if (chunks.length === 0) return;
     setIsPosting(true);
@@ -175,11 +187,13 @@ export function PostCreateClient() {
       const sendMode = mode === 'none' ? 'separate' : mode;
 
       let res: Response;
-      if (images.length > 0) {
+      if (totalAttachedImages > 0) {
         const fd = new FormData();
         fd.append('texts', JSON.stringify(texts));
         fd.append('mode', sendMode);
-        for (const f of images) fd.append('images', f);
+        for (let i = 0; i < texts.length; i++) {
+          for (const f of chunkImages[i] ?? []) fd.append(`images_${i}`, f);
+        }
         res = await apiFetch('/api/x/thread', { method: 'POST', body: fd });
       } else {
         res = await apiFetch('/api/x/thread', {
@@ -198,7 +212,7 @@ export function PostCreateClient() {
       }
       setSuccess(`${data.posts.length} 件を投稿しました`);
       setText('');
-      setImages([]);
+      setChunkImages([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : '投稿に失敗しました');
     } finally {
@@ -274,57 +288,33 @@ export function PostCreateClient() {
               )}
             </div>
 
-            {/* 画像添付 */}
+            {/* 画像添付（ポストごと） */}
             <div>
-              <FieldLabel>画像（任意・最大{MAX_IMAGES}枚）</FieldLabel>
-              <div className="flex flex-wrap items-start gap-2">
-                {imagePreviews.map((url, idx) => (
-                  <div
-                    key={url}
-                    className="relative w-20 h-20 rounded-lg overflow-hidden"
-                    style={{ border: '1px solid rgba(255,255,255,0.08)' }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt="" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(idx)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
-                      style={{ background: 'rgba(0,0,0,0.65)', color: '#fff' }}
-                      title="削除"
-                    >
-                      <XIcon size={12} />
-                    </button>
-                  </div>
-                ))}
-                {images.length < MAX_IMAGES && (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-20 h-20 rounded-lg flex flex-col items-center justify-center gap-1 transition-all"
-                    style={{
-                      background: 'rgba(96,165,250,0.06)',
-                      border: '1px dashed rgba(96,165,250,0.35)',
-                      color: '#93c5fd',
-                    }}
-                    title="画像を追加"
-                  >
-                    <ImagePlus size={18} />
-                    <span className="text-[10px]">追加</span>
-                  </button>
-                )}
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={ALLOWED_IMAGE_MIMES.join(',')}
-                multiple
-                onChange={handlePickImages}
-                className="hidden"
-              />
-              <p className="text-[10px] text-slate-600 mt-1.5 leading-relaxed">
-                JPEG / PNG / GIF / WEBP・1枚あたり5MBまで。複数ポストの場合は1件目にのみ添付されます。
-              </p>
+              <FieldLabel>
+                画像（任意・各ポスト最大{MAX_IMAGES}枚）
+              </FieldLabel>
+              {chunks.length === 0 ? (
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  本文を入力すると、ポストごとに画像を添付できます。
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {chunks.map((_, i) => (
+                    <ChunkImagePicker
+                      key={i}
+                      index={i}
+                      total={chunks.length}
+                      files={chunkImages[i] ?? []}
+                      previews={chunkPreviews[i] ?? []}
+                      onAdd={(list) => addImagesToChunk(i, list)}
+                      onRemove={(imgIdx) => removeImage(i, imgIdx)}
+                    />
+                  ))}
+                  <p className="text-[10px] text-slate-600 leading-relaxed">
+                    JPEG / PNG / GIF / WEBP・1枚あたり5MBまで。
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -505,10 +495,93 @@ export function PostCreateClient() {
 
         {/* ── Right: プレビュー ────────────────────────── */}
         <div className="lg:sticky lg:top-6 lg:self-start">
-          <PostPreview chunks={chunks} mode={mode} />
+          <PostPreview chunks={chunks} mode={mode} chunkPreviews={chunkPreviews} />
         </div>
       </div>
     </>
+  );
+}
+
+function ChunkImagePicker({
+  index,
+  total,
+  files,
+  previews,
+  onAdd,
+  onRemove,
+}: {
+  index: number;
+  total: number;
+  files: File[];
+  previews: string[];
+  onAdd: (list: FileList | null) => void;
+  onRemove: (imgIndex: number) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div
+      className="rounded-lg p-2 flex items-center gap-2"
+      style={{
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(255,255,255,0.05)',
+      }}
+    >
+      <span className="text-[10px] font-semibold text-slate-500 shrink-0 w-10 text-center">
+        {index + 1}/{total}
+      </span>
+      <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+        {previews.map((url, idx) => (
+          <div
+            key={url}
+            className="relative w-12 h-12 rounded-md overflow-hidden shrink-0"
+            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt="" className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={() => onRemove(idx)}
+              className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(0,0,0,0.7)', color: '#fff' }}
+              title="削除"
+            >
+              <XIcon size={9} />
+            </button>
+          </div>
+        ))}
+        {files.length < MAX_IMAGES && (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="w-12 h-12 rounded-md flex items-center justify-center shrink-0 transition-all"
+            style={{
+              background: 'rgba(96,165,250,0.06)',
+              border: '1px dashed rgba(96,165,250,0.3)',
+              color: '#93c5fd',
+            }}
+            title={`${index + 1}件目に画像を追加`}
+          >
+            <ImagePlus size={14} />
+          </button>
+        )}
+        {files.length > 0 && (
+          <span className="text-[10px] text-slate-600 ml-auto pr-1">
+            {files.length}/{MAX_IMAGES}
+          </span>
+        )}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ALLOWED_IMAGE_MIMES.join(',')}
+        multiple
+        onChange={(e) => {
+          onAdd(e.target.files);
+          if (inputRef.current) inputRef.current.value = '';
+        }}
+        className="hidden"
+      />
+    </div>
   );
 }
 
