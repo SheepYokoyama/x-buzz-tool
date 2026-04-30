@@ -15,6 +15,7 @@ import { getRecentPublishedPosts, getUpcomingScheduledPosts } from '@/lib/api/sc
 import { getTodayDraftSummary } from '@/lib/api/generated-posts';
 import { getCurrentUserId } from '@/lib/auth';
 import { getActiveXAccountId } from '@/lib/x-client';
+import { getLastSyncedAt } from '@/lib/metrics-sync';
 import { FileText, Heart, Eye, TrendingUp, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -26,12 +27,13 @@ function fmt(n: number): string {
 
 export default async function DashboardPage() {
   const userId = await getCurrentUserId();
-  const [stats, recentPosts, upcomingPosts, todayDrafts, activeXAccountId] = await Promise.all([
+  const [stats, recentPosts, upcomingPosts, todayDrafts, activeXAccountId, lastSyncedAt] = await Promise.all([
     getDashboardStats(),
     getRecentPublishedPosts(4),
     getUpcomingScheduledPosts(3),
     getTodayDraftSummary(),
     userId ? getActiveXAccountId(userId) : Promise.resolve(null),
+    userId ? getLastSyncedAt(userId)    : Promise.resolve(null),
   ]);
 
   const hasDrafts = todayDrafts.count > 0;
@@ -99,7 +101,7 @@ export default async function DashboardPage() {
       {/* ── KPI 4枚 ──────────────────────────────── */}
       <div className="mb-2 flex items-center justify-between">
         <p className="section-label">今月の成果</p>
-        <SyncMetricsButton />
+        <SyncMetricsButton lastSyncedAt={lastSyncedAt} />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
         <StatsCard

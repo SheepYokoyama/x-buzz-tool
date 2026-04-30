@@ -70,7 +70,9 @@
       "Bash(git branch *)",
       "Bash(git worktree *)",
       "Bash(npx next *)",
-      "Bash(grep -E \"^C:.*\\\\.\\(ts|tsx\\)$\")"
+      "Bash(grep -E \"^C:.*\\\\.\\(ts|tsx\\)$\")",
+      "Bash(gh issue *)",
+      "Bash(gh repo *)"
     ]
   },
   "hooks": {

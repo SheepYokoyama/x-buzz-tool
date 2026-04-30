@@ -38,14 +38,14 @@ async function persistPublishedPosts(userId: string, posted: PostedTweet[]): Pro
  *   - multipart/form-data:
  *       - texts: JSON 文字列化した string[]
  *       - mode: 'thread' | 'separate'
- *       - images: File[] （最大4枚、1件目のツイートにのみ添付）
+ *       - images_${i}: File[] （i 件目のツイートに添付。各ツイート最大4枚）
  *
  * response: { posts: { tweetId: string; url: string; text: string }[] }
  *
  * thread の場合、2件目以降は直前のツイートに対する reply として投稿する。
  * 途中で失敗した場合は、それまでに投稿できたものを返しエラーを返す。
  */
-const MAX_IMAGES = 4;
+const MAX_IMAGES_PER_TWEET = 4;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 const ALLOWED_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
@@ -63,7 +63,8 @@ export async function POST(req: Request) {
 
   let texts: string[] = [];
   let mode: 'thread' | 'separate' = 'thread';
-  const imageFiles: File[] = [];
+  // chunkImages[i] は i 件目のツイートに添付する画像
+  const chunkImages: File[][] = [];
 
   const contentType = req.headers.get('content-type') ?? '';
   if (contentType.includes('multipart/form-data')) {
@@ -82,19 +83,32 @@ export async function POST(req: Request) {
     const rawMode = form.get('mode');
     mode = rawMode === 'separate' ? 'separate' : 'thread';
 
-    for (const entry of form.getAll('images')) {
-      if (entry instanceof File) imageFiles.push(entry);
-    }
-    if (imageFiles.length > MAX_IMAGES) {
-      return NextResponse.json({ error: `画像は最大${MAX_IMAGES}枚までです` }, { status: 400 });
-    }
-    for (const f of imageFiles) {
-      if (!ALLOWED_IMAGE_MIMES.has(f.type)) {
-        return NextResponse.json({ error: `非対応の画像形式: ${f.type || 'unknown'}` }, { status: 400 });
+    for (let i = 0; i < texts.length; i++) {
+      const files: File[] = [];
+      for (const entry of form.getAll(`images_${i}`)) {
+        if (entry instanceof File) files.push(entry);
       }
-      if (f.size > MAX_IMAGE_BYTES) {
-        return NextResponse.json({ error: `画像サイズが上限(5MB)を超えています: ${f.name}` }, { status: 400 });
+      if (files.length > MAX_IMAGES_PER_TWEET) {
+        return NextResponse.json(
+          { error: `${i + 1}件目の画像が上限（${MAX_IMAGES_PER_TWEET}枚）を超えています` },
+          { status: 400 }
+        );
       }
+      for (const f of files) {
+        if (!ALLOWED_IMAGE_MIMES.has(f.type)) {
+          return NextResponse.json(
+            { error: `${i + 1}件目に非対応の画像形式が含まれています: ${f.type || 'unknown'}` },
+            { status: 400 }
+          );
+        }
+        if (f.size > MAX_IMAGE_BYTES) {
+          return NextResponse.json(
+            { error: `${i + 1}件目の画像サイズが上限(5MB)を超えています: ${f.name}` },
+            { status: 400 }
+          );
+        }
+      }
+      chunkImages.push(files);
     }
   } else {
     const body = (await req.json()) as { texts?: string[]; mode?: 'thread' | 'separate' };
@@ -106,12 +120,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: '投稿テキストが空です' }, { status: 400 });
   }
 
-  // 1件目に添付する media_ids（画像があれば v1 でアップロード）
-  let firstMediaIds: string[] = [];
-  if (imageFiles.length > 0) {
+  // 各ツイートに添付する media_ids を事前にアップロード
+  const chunkMediaIds: string[][] = texts.map(() => []);
+  for (let i = 0; i < chunkImages.length; i++) {
+    const files = chunkImages[i];
+    if (files.length === 0) continue;
     try {
-      firstMediaIds = await Promise.all(
-        imageFiles.map(async (f) => {
+      chunkMediaIds[i] = await Promise.all(
+        files.map(async (f) => {
           const buf = Buffer.from(await f.arrayBuffer());
           return await client.v1.uploadMedia(buf, { mimeType: f.type });
         })
@@ -119,7 +135,10 @@ export async function POST(req: Request) {
     } catch (err: unknown) {
       console.error('uploadMedia error:', err);
       const msg = err instanceof Error ? err.message : '画像アップロードに失敗しました';
-      return NextResponse.json({ error: `画像アップロードに失敗しました: ${msg}` }, { status: 502 });
+      return NextResponse.json(
+        { error: `${i + 1}件目の画像アップロードに失敗しました: ${msg}` },
+        { status: 502 }
+      );
     }
   }
 
@@ -133,9 +152,9 @@ export async function POST(req: Request) {
       if (mode === 'thread' && lastId) {
         params.reply = { in_reply_to_tweet_id: lastId };
       }
-      // 画像は1件目のみに添付
-      if (i === 0 && firstMediaIds.length > 0) {
-        params.media = { media_ids: firstMediaIds };
+      const mediaIds = chunkMediaIds[i] ?? [];
+      if (mediaIds.length > 0) {
+        params.media = { media_ids: mediaIds };
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await client.v2.tweet(text, params as any);

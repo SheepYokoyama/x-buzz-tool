@@ -7,6 +7,8 @@ import type { PostChunk, SplitMode } from '@/lib/post-splitter';
 interface PostPreviewProps {
   chunks: PostChunk[];
   mode: SplitMode;
+  /** chunkPreviews[i] = i 件目のツイートに添付する画像の object URL */
+  chunkPreviews?: string[][];
 }
 
 /**
@@ -14,7 +16,7 @@ interface PostPreviewProps {
  * thread モード: 連結インジケーター線で繋がったリプライ風
  * separate モード: 独立したカード
  */
-export function PostPreview({ chunks, mode }: PostPreviewProps) {
+export function PostPreview({ chunks, mode, chunkPreviews }: PostPreviewProps) {
   const { xUser, authUser } = useSettings();
 
   const displayName = xUser?.name ?? authUser?.name ?? 'あなた';
@@ -93,6 +95,7 @@ export function PostPreview({ chunks, mode }: PostPreviewProps) {
             avatarUrl={avatarUrl}
             connected={mode === 'thread' && i < chunks.length - 1}
             isReply={mode === 'thread' && i > 0}
+            imagePreviews={chunkPreviews?.[i] ?? []}
           />
         ))}
       </div>
@@ -109,6 +112,7 @@ function PostCard({
   avatarUrl,
   connected,
   isReply,
+  imagePreviews,
 }: {
   chunk: PostChunk;
   index: number;
@@ -118,6 +122,7 @@ function PostCard({
   avatarUrl: string | null;
   connected: boolean;
   isReply: boolean;
+  imagePreviews: string[];
 }) {
   return (
     <article
@@ -187,6 +192,32 @@ function PostCard({
           >
             {chunk.text}
           </p>
+
+          {/* 添付画像 */}
+          {imagePreviews.length > 0 && (
+            <div
+              className={`mt-2 grid gap-1 rounded-2xl overflow-hidden ${
+                imagePreviews.length === 1
+                  ? 'grid-cols-1'
+                  : imagePreviews.length === 2
+                  ? 'grid-cols-2'
+                  : 'grid-cols-2'
+              }`}
+              style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+            >
+              {imagePreviews.map((url, idx) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={url}
+                  src={url}
+                  alt=""
+                  className={`w-full object-cover ${
+                    imagePreviews.length === 3 && idx === 0 ? 'row-span-2 h-full' : 'h-32'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
 
           {/* メタ行 */}
           <div className="flex items-center justify-between mt-2">
