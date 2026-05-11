@@ -12,9 +12,10 @@ export async function GET(req: Request) {
   const supabase = getSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
-    .from('x_accounts')
+    .from('social_accounts')
     .select('*')
     .eq('user_id', user.id)
+    .eq('platform', 'x')
     .order('created_at', { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -65,9 +66,10 @@ export async function POST(req: Request) {
   // 既存チェック（1ユーザー1件のみ）
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: existing } = await (supabase as any)
-    .from('x_accounts')
+    .from('social_accounts')
     .select('id')
     .eq('user_id', user.id)
+    .eq('platform', 'x')
     .limit(1);
 
   if (existing && existing.length > 0) {
@@ -96,9 +98,10 @@ export async function POST(req: Request) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
-    .from('x_accounts')
+    .from('social_accounts')
     .insert({
       user_id:           user.id,
+      platform:          'x',
       name:              effectiveName,
       username:          effectiveUsername,
       profile_image_url: profileImageUrl,

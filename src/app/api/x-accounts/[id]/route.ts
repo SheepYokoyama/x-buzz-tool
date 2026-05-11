@@ -33,10 +33,11 @@ export async function PATCH(req: Request, { params }: Params) {
   if (hasTokenChange) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (supabase as any)
-      .from('x_accounts')
+      .from('social_accounts')
       .select('api_key, api_secret, access_token, access_secret')
       .eq('id', id)
       .eq('user_id', user.id)
+      .eq('platform', 'x')
       .maybeSingle();
 
     if (!existing) {
@@ -80,10 +81,11 @@ export async function PATCH(req: Request, { params }: Params) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
-    .from('x_accounts')
+    .from('social_accounts')
     .update(updates)
     .eq('id', id)
     .eq('user_id', user.id)
+    .eq('platform', 'x')
     .select('id, name, username, profile_image_url, is_active, created_at, updated_at')
     .single();
 
@@ -113,7 +115,7 @@ export async function DELETE(req: Request, { params }: Params) {
   const { id } = await params;
   const supabase = getSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any).from('x_accounts').delete().eq('id', id).eq('user_id', user.id);
+  const { error } = await (supabase as any).from('social_accounts').delete().eq('id', id).eq('user_id', user.id).eq('platform', 'x');
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

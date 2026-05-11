@@ -113,7 +113,7 @@ function envTokensAvailable(): boolean {
 }
 
 /**
- * 環境変数のトークンを暗号化して x_accounts に "しおづけ" として 1 度だけ挿入する。
+ * 環境変数のトークンを暗号化して social_accounts(platform='x') に "しおづけ" として 1 度だけ挿入する。
  * すでにレコードが存在する場合は何もしない。
  */
 export async function seedXAccountFromEnv(): Promise<void> {
@@ -124,8 +124,9 @@ export async function seedXAccountFromEnv(): Promise<void> {
 
   // レコードが 1 件でもあればスキップ
   const { count } = await sb
-    .from('x_accounts')
-    .select('*', { count: 'exact', head: true });
+    .from('social_accounts')
+    .select('*', { count: 'exact', head: true })
+    .eq('platform', 'x');
   if ((count ?? 0) > 0) return;
 
   const {
@@ -137,7 +138,8 @@ export async function seedXAccountFromEnv(): Promise<void> {
     X_USERNAME,
   } = process.env;
 
-  await sb.from('x_accounts').insert({
+  await sb.from('social_accounts').insert({
+    platform:      'x',
     name:          'しおづけ',
     username:      X_USERNAME ?? 'trade_cw',
     api_key:       encrypt(X_API_KEY!),
@@ -163,9 +165,10 @@ export async function getActiveXClient(userId?: string): Promise<TwitterApi | nu
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const query = (getSupabaseAdmin() as any)
-    .from('x_accounts')
+    .from('social_accounts')
     .select('api_key, api_secret, access_token, access_secret')
     .eq('is_active', true)
+    .eq('platform', 'x')
     .eq('user_id', userId);
 
   const { data } = await query.maybeSingle();
@@ -200,9 +203,10 @@ export async function getActiveXClient(userId?: string): Promise<TwitterApi | nu
 export async function getActiveXAccountId(userId: string): Promise<string | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (getSupabaseAdmin() as any)
-    .from('x_accounts')
+    .from('social_accounts')
     .select('id')
     .eq('is_active', true)
+    .eq('platform', 'x')
     .eq('user_id', userId)
     .maybeSingle();
   return data?.id ?? null;

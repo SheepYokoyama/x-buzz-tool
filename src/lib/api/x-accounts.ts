@@ -10,9 +10,10 @@ export async function getXAccounts(): Promise<XAccount[]> {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (getSupabaseAdmin() as any)
-    .from('x_accounts')
+    .from('social_accounts')
     .select('*')
     .eq('user_id', userId)
+    .eq('platform', 'x')
     .order('created_at', { ascending: true });
 
   if (error) throw new Error(error.message);

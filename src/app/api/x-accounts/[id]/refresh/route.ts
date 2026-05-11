@@ -20,10 +20,11 @@ export async function POST(req: Request, { params }: Params) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: existing } = await (supabase as any)
-    .from('x_accounts')
+    .from('social_accounts')
     .select('api_key, api_secret, access_token, access_secret, name')
     .eq('id', id)
     .eq('user_id', user.id)
+    .eq('platform', 'x')
     .maybeSingle();
 
   if (!existing) {
@@ -59,7 +60,7 @@ export async function POST(req: Request, { params }: Params) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
-    .from('x_accounts')
+    .from('social_accounts')
     .update({
       name:              newName,
       username:          newUsername,
@@ -68,6 +69,7 @@ export async function POST(req: Request, { params }: Params) {
     })
     .eq('id', id)
     .eq('user_id', user.id)
+    .eq('platform', 'x')
     .select('id, name, username, profile_image_url, is_active, created_at, updated_at')
     .single();
 
