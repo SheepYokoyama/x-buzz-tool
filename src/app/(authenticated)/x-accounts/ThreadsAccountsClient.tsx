@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { ThreadsAccountCard } from '@/components/threads-accounts/ThreadsAccountCard';
 import { ThreadsAccountForm } from '@/components/threads-accounts/ThreadsAccountForm';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, BookOpen } from 'lucide-react';
 import type { SocialAccount } from '@/lib/types';
 import { apiFetch } from '@/lib/api-fetch';
 import { PlatformIcon } from '@/components/ui/PlatformIcon';
@@ -67,15 +68,24 @@ export function ThreadsAccountsClient() {
 
   return (
     <div className="mb-8">
-      <h3 className="text-[14px] font-semibold text-slate-300 mb-4 flex items-center gap-2">
-        <span
-          className="w-5 h-5 rounded-md flex items-center justify-center text-[12px] text-slate-200"
-          style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}
+      <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+        <h3 className="text-[14px] font-semibold text-slate-300 flex items-center gap-2">
+          <span
+            className="w-5 h-5 rounded-md flex items-center justify-center text-[12px] text-slate-200"
+            style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}
+          >
+            <PlatformIcon platform="threads" size={11} />
+          </span>
+          Threads アカウント
+        </h3>
+        <Link
+          href="/guide/threads-account"
+          className="inline-flex items-center gap-1.5 text-[11px] text-purple-300 hover:underline shrink-0"
         >
-          <PlatformIcon platform="threads" size={11} />
-        </span>
-        Threads アカウント
-      </h3>
+          <BookOpen size={11} />
+          登録マニュアル
+        </Link>
+      </div>
 
       {loading ? (
         <div className="flex items-center py-6 text-slate-600">
