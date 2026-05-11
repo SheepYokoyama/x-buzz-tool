@@ -175,17 +175,62 @@ export interface ThreadsPostResult {
 }
 
 /**
- * 単一テキスト/画像 Threads 投稿を行う（Phase 3 で実装）。
+ * 単一テキスト Threads 投稿を行う。
  *
  * Meta Threads 投稿は 2 段階:
- *   1. POST /me/threads             — メディアコンテナ作成（media_type: TEXT/IMAGE/...）
+ *   1. POST /me/threads             — メディアコンテナ作成（media_type: TEXT）
  *   2. POST /me/threads_publish     — コンテナを公開
+ *
+ * スレッド連結時は replyToId で前ポストの id を渡す。
+ * 画像投稿は Phase 5 で対応予定（公開URLが必要なため Supabase Storage 連携が要る）。
  */
-export async function postThreadsSingle(_params: {
+export async function postThreadsSingle(params: {
   accessToken: string;
   text: string;
-  imageUrl?: string;
   replyToId?: string;
 }): Promise<ThreadsPostResult> {
-  throw new Error('postThreadsSingle is not yet implemented (Phase 3)');
+  // ── 1) コンテナ作成 ──
+  const containerUrl = new URL(`${THREADS_API_BASE}/me/threads`);
+  containerUrl.searchParams.set('media_type', 'TEXT');
+  containerUrl.searchParams.set('text', params.text);
+  if (params.replyToId) {
+    containerUrl.searchParams.set('reply_to_id', params.replyToId);
+  }
+  containerUrl.searchParams.set('access_token', params.accessToken);
+
+  const containerRes = await fetch(containerUrl.toString(), { method: 'POST' });
+  if (!containerRes.ok) {
+    const body = await containerRes.text().catch(() => '');
+    throw new Error(`Threads コンテナ作成に失敗: HTTP ${containerRes.status} ${body}`);
+  }
+  const container = (await containerRes.json()) as { id: string };
+
+  // ── 2) 公開 ──
+  const publishUrl = new URL(`${THREADS_API_BASE}/me/threads_publish`);
+  publishUrl.searchParams.set('creation_id', container.id);
+  publishUrl.searchParams.set('access_token', params.accessToken);
+
+  const publishRes = await fetch(publishUrl.toString(), { method: 'POST' });
+  if (!publishRes.ok) {
+    const body = await publishRes.text().catch(() => '');
+    throw new Error(`Threads 公開に失敗: HTTP ${publishRes.status} ${body}`);
+  }
+  const published = (await publishRes.json()) as { id: string };
+
+  // ── 3) permalink 取得（失敗しても投稿自体は成立しているので無視）──
+  let permalink: string | null = null;
+  try {
+    const detailUrl = new URL(`${THREADS_API_BASE}/${published.id}`);
+    detailUrl.searchParams.set('fields', 'permalink');
+    detailUrl.searchParams.set('access_token', params.accessToken);
+    const detailRes = await fetch(detailUrl.toString());
+    if (detailRes.ok) {
+      const detail = (await detailRes.json()) as { permalink?: string };
+      permalink = detail.permalink ?? null;
+    }
+  } catch {
+    /* permalink 取得失敗は致命的ではない */
+  }
+
+  return { id: published.id, permalink };
 }
