@@ -15,6 +15,7 @@ import {
 import { countXChars } from '@/lib/x-char-count';
 import { apiFetch } from '@/lib/api-fetch';
 import { useSettings } from '@/contexts/SettingsContext';
+import { PlatformIcon } from '@/components/ui/PlatformIcon';
 import {
   PenLine,
   Send,
@@ -27,6 +28,7 @@ import {
   AlertTriangle,
   Scissors,
   ImagePlus,
+  Share2,
   X as XIcon,
 } from 'lucide-react';
 
@@ -34,11 +36,17 @@ const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
-const LIMIT_OPTIONS = [
+const LIMIT_OPTIONS_X = [
   { value: 140, label: '140カウント', note: '無料（全角70字 / 半角140字）' },
   { value: 280, label: '280カウント', note: 'X 標準（全角140字 / 半角280字）' },
   { value: 25000, label: '25,000カウント', note: 'Premium / Basic（長文投稿）' },
 ];
+
+const LIMIT_OPTIONS_THREADS = [
+  { value: 500, label: '500カウント', note: 'Threads 標準（500文字）' },
+];
+
+const THREADS_MAX_COUNT = 500;
 
 export function PostCreateClient() {
   const { xUser } = useSettings();
@@ -50,11 +58,42 @@ export function PostCreateClient() {
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  // 投稿先プラットフォーム選択
+  const [targetX, setTargetX] = useState(false);
+  const [targetThreads, setTargetThreads] = useState(false);
+  // 連携アカウントの登録状況。null は取得中。
+  const [xAccountConfigured, setXAccountConfigured] = useState<boolean | null>(null);
+  const [threadsAccountConfigured, setThreadsAccountConfigured] = useState<boolean | null>(null);
   // chunkImages[i] = i 件目のツイートに添付する画像
   const [chunkImages, setChunkImages] = useState<File[][]>([]);
   // 各画像に対応する object URL（プレビュー用）。chunkImages と同じ shape。
   const [chunkPreviews, setChunkPreviews] = useState<string[][]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // ── 連携アカウントの登録状況を取得し、登録済みプラットフォームをデフォルトON ──
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [xRes, tRes] = await Promise.all([
+          apiFetch('/api/x-accounts').then((r) => r.json()).catch(() => ({ accounts: [] })),
+          apiFetch('/api/threads-accounts').then((r) => r.json()).catch(() => ({ accounts: [] })),
+        ]);
+        if (cancelled) return;
+        const xConf = Array.isArray(xRes?.accounts) && xRes.accounts.length > 0;
+        const tConf = Array.isArray(tRes?.accounts) && tRes.accounts.length > 0;
+        setXAccountConfigured(xConf);
+        setThreadsAccountConfigured(tConf);
+        setTargetX(xConf);
+        setTargetThreads(tConf);
+      } catch {
+        if (cancelled) return;
+        setXAccountConfigured(false);
+        setThreadsAccountConfigured(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // 画像のプレビュー URL を生成し、unmount / 入れ替え時に解放
   useEffect(() => {
@@ -106,9 +145,15 @@ export function PostCreateClient() {
   // X の有料プラン契約者は長文投稿可能なので 25,000 をデフォルトに。
   // subscriptionType は 'Basic' | 'Premium' | 'PremiumPlus' | null。
   const isPaidPlan = xUser?.subscriptionType != null;
+
+  // 投稿先プラットフォームに応じて文字数上限を動的に決める。
+  //   - Threads 単独: 500（Threads 標準・固定）
+  //   - X 含む（単独 or 両方）: X 基準（無料280 / Premium25000）。両方投稿は短い X 側に合わせる
+  const isThreadsOnly = !targetX && targetThreads;
   const defaultMaxCount = isPaidPlan ? 25000 : 280;
-  const maxCount = maxCountOverride ?? defaultMaxCount;
+  const maxCount = isThreadsOnly ? THREADS_MAX_COUNT : (maxCountOverride ?? defaultMaxCount);
   const setMaxCount = (n: number) => setMaxCountOverride(n);
+  const limitOptions = isThreadsOnly ? LIMIT_OPTIONS_THREADS : LIMIT_OPTIONS_X;
 
   // 分割結果（リアルタイム）
   // mode === 'none' の場合は分割せず原文を単一ポストとして扱う
@@ -178,43 +223,85 @@ export function PostCreateClient() {
 
   const handlePost = async () => {
     if (chunks.length === 0) return;
+    if (!targetX && !targetThreads) {
+      setError('投稿先プラットフォームを選択してください');
+      return;
+    }
     setIsPosting(true);
     setError(null);
     setSuccess(null);
-    try {
-      const texts = chunks.map((c) => c.text);
-      // 'none' は1件なのでサーバー側では 'separate' と等価
-      const sendMode = mode === 'none' ? 'separate' : mode;
 
-      let res: Response;
-      if (totalAttachedImages > 0) {
-        const fd = new FormData();
-        fd.append('texts', JSON.stringify(texts));
-        fd.append('mode', sendMode);
-        for (let i = 0; i < texts.length; i++) {
-          for (const f of chunkImages[i] ?? []) fd.append(`images_${i}`, f);
+    const texts = chunks.map((c) => c.text);
+    // 'none' は1件なのでサーバー側では 'separate' と等価
+    const sendMode = mode === 'none' ? 'separate' : mode;
+
+    type PostOutcome = { platform: 'X' | 'Threads'; ok: boolean; count: number; error?: string };
+
+    const postToX = async (): Promise<PostOutcome> => {
+      try {
+        let res: Response;
+        if (totalAttachedImages > 0) {
+          const fd = new FormData();
+          fd.append('texts', JSON.stringify(texts));
+          fd.append('mode', sendMode);
+          for (let i = 0; i < texts.length; i++) {
+            for (const f of chunkImages[i] ?? []) fd.append(`images_${i}`, f);
+          }
+          res = await apiFetch('/api/x/thread', { method: 'POST', body: fd });
+        } else {
+          res = await apiFetch('/api/x/thread', {
+            method: 'POST',
+            body: JSON.stringify({ texts, mode: sendMode }),
+          });
         }
-        res = await apiFetch('/api/x/thread', { method: 'POST', body: fd });
-      } else {
-        res = await apiFetch('/api/x/thread', {
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          const posted = data.posted?.length ?? 0;
+          return { platform: 'X', ok: false, count: posted, error: data.error ?? '投稿に失敗しました' };
+        }
+        return { platform: 'X', ok: true, count: data.posts?.length ?? 0 };
+      } catch (err) {
+        return { platform: 'X', ok: false, count: 0, error: err instanceof Error ? err.message : '投稿に失敗しました' };
+      }
+    };
+
+    const postToThreads = async (): Promise<PostOutcome> => {
+      try {
+        const res = await apiFetch('/api/threads/thread', {
           method: 'POST',
           body: JSON.stringify({ texts, mode: sendMode }),
         });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          const posted = data.posted?.length ?? 0;
+          return { platform: 'Threads', ok: false, count: posted, error: data.error ?? '投稿に失敗しました' };
+        }
+        return { platform: 'Threads', ok: true, count: data.posts?.length ?? 0 };
+      } catch (err) {
+        return { platform: 'Threads', ok: false, count: 0, error: err instanceof Error ? err.message : '投稿に失敗しました' };
       }
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        const posted = data.posted?.length ?? 0;
-        throw new Error(
-          posted > 0
-            ? `${posted} 件投稿後に失敗: ${data.error}`
-            : data.error ?? '投稿に失敗しました',
-        );
+    };
+
+    try {
+      const tasks: Promise<PostOutcome>[] = [];
+      if (targetX) tasks.push(postToX());
+      if (targetThreads) tasks.push(postToThreads());
+      const outcomes = await Promise.all(tasks);
+
+      const successes = outcomes.filter((o) => o.ok);
+      const failures  = outcomes.filter((o) => !o.ok);
+
+      if (successes.length > 0) {
+        setSuccess(successes.map((o) => `${o.platform}: ${o.count}件`).join(' / ') + ' を投稿しました');
       }
-      setSuccess(`${data.posts.length} 件を投稿しました`);
-      setText('');
-      setChunkImages([]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '投稿に失敗しました');
+      if (failures.length > 0) {
+        setError(failures.map((o) => `${o.platform}: ${o.error}`).join(' / '));
+      }
+      // 全成功時のみフォームをクリアする
+      if (failures.length === 0) {
+        setText('');
+        setChunkImages([]);
+      }
     } finally {
       setIsPosting(false);
     }
@@ -318,6 +405,56 @@ export function PostCreateClient() {
             </div>
           </div>
 
+          {/* 投稿先プラットフォーム */}
+          <div className="neon-card p-6 space-y-4">
+            <div>
+              <h2 className="text-[15px] font-semibold text-slate-200 leading-none flex items-center gap-2">
+                <Share2 size={15} className="text-neon-blue" />
+                投稿先
+              </h2>
+              <p className="section-label mt-1.5">どのSNSに投稿しますか？（未登録は選択不可）</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <PlatformToggle
+                active={targetX}
+                disabled={xAccountConfigured === false}
+                loading={xAccountConfigured === null}
+                onClick={() => setTargetX((v) => !v)}
+                platform="x"
+                label="X（旧 Twitter）"
+                disabledNote="アカウント未登録"
+              />
+              <PlatformToggle
+                active={targetThreads}
+                disabled={threadsAccountConfigured === false}
+                loading={threadsAccountConfigured === null}
+                onClick={() => setTargetThreads((v) => !v)}
+                platform="threads"
+                label="Threads"
+                disabledNote="アカウント未登録"
+              />
+            </div>
+
+            {targetThreads && totalAttachedImages > 0 && (
+              <p
+                className="text-[11px] text-amber-300 px-3 py-2 rounded-lg flex items-start gap-2"
+                style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.22)' }}
+              >
+                <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+                <span>
+                  Threads には現時点で画像が投稿されません（テキストのみ）。X 側のみ画像が添付されます。
+                </span>
+              </p>
+            )}
+
+            {targetX && targetThreads && (
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                両方に投稿時は文字数上限を X 基準（短い方）に合わせています。
+              </p>
+            )}
+          </div>
+
           {/* 分割モード */}
           <div className="neon-card p-6 space-y-4">
             <div>
@@ -376,7 +513,7 @@ export function PostCreateClient() {
                 {mode === 'none' ? '警告を出す上限（カウント）' : '1ポストあたりの上限（カウント）'}
               </FieldLabel>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {LIMIT_OPTIONS.map((opt) => (
+                {limitOptions.map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => setMaxCount(opt.value)}
@@ -474,7 +611,7 @@ export function PostCreateClient() {
               className="w-full justify-center"
               size="lg"
               onClick={handlePost}
-              disabled={chunks.length === 0 || isPosting || !!splitError}
+              disabled={chunks.length === 0 || isPosting || !!splitError || (!targetX && !targetThreads)}
             >
               {isPosting ? (
                 <>
@@ -484,9 +621,15 @@ export function PostCreateClient() {
               ) : (
                 <>
                   <Send size={14} />
-                  {chunks.length > 0
-                    ? `Xに投稿（${chunks.length}ポスト・${mode === 'thread' ? 'スレッド' : mode === 'separate' ? '独立' : '分割無し'}）`
-                    : 'Xに投稿'}
+                  {(() => {
+                    const targetLabel =
+                      targetX && targetThreads ? 'X + Threads' :
+                      targetX                  ? 'X'           :
+                      targetThreads            ? 'Threads'     : '投稿先未選択';
+                    if (chunks.length === 0 || !targetX && !targetThreads) return `${targetLabel}に投稿`;
+                    const modeLabel = mode === 'thread' ? 'スレッド' : mode === 'separate' ? '独立' : '分割無し';
+                    return `${targetLabel}に投稿（${chunks.length}ポスト・${modeLabel}）`;
+                  })()}
                 </>
               )}
             </Button>
@@ -582,6 +725,67 @@ function ChunkImagePicker({
         className="hidden"
       />
     </div>
+  );
+}
+
+function PlatformToggle({
+  active,
+  disabled,
+  loading,
+  onClick,
+  platform,
+  label,
+  disabledNote,
+}: {
+  active: boolean;
+  disabled: boolean;
+  loading: boolean;
+  onClick: () => void;
+  platform: 'x' | 'threads';
+  label: string;
+  disabledNote: string;
+}) {
+  const accent = platform === 'x' ? '#60a5fa' : '#c084fc';
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || loading}
+      className="text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3 disabled:cursor-not-allowed"
+      style={{
+        background: active && !disabled ? `${accent}14` : 'rgba(255,255,255,0.025)',
+        border: active && !disabled ? `1px solid ${accent}55` : '1px solid rgba(255,255,255,0.06)',
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <span
+        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+        style={{
+          background: active && !disabled ? `${accent}22` : 'rgba(255,255,255,0.04)',
+          color: active && !disabled ? accent : '#64748b',
+        }}
+      >
+        <PlatformIcon platform={platform} size={14} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p
+          className="text-[12px] font-semibold"
+          style={{ color: active && !disabled ? '#e2e8f0' : '#94a3b8' }}
+        >
+          {label}
+        </p>
+        <p className="text-[10px] text-slate-600 mt-0.5">
+          {loading ? '読み込み中…' : disabled ? disabledNote : active ? '投稿する' : '投稿しない'}
+        </p>
+      </div>
+      <span
+        className="w-4 h-4 rounded-full shrink-0"
+        style={{
+          background: active && !disabled ? accent : 'transparent',
+          border: active && !disabled ? `1px solid ${accent}` : '1px solid rgba(255,255,255,0.15)',
+        }}
+      />
+    </button>
   );
 }
 
