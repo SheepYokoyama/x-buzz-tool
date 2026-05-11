@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, FieldLabel } from '@/components/ui/Input';
 import { PostPreview } from './PostPreview';
+import { ThreadsPreview } from './ThreadsPreview';
 import {
   splitPosts,
   stripManualSplitMarkers,
@@ -64,6 +65,12 @@ export function PostCreateClient() {
   // 連携アカウントの登録状況。null は取得中。
   const [xAccountConfigured, setXAccountConfigured] = useState<boolean | null>(null);
   const [threadsAccountConfigured, setThreadsAccountConfigured] = useState<boolean | null>(null);
+  // Threads プレビュー用のアカウント情報（@ユーザー名・アイコンのみ）
+  const [threadsAccount, setThreadsAccount] = useState<{
+    name: string | null;
+    username: string | null;
+    profile_image_url: string | null;
+  } | null>(null);
   // chunkImages[i] = i 件目のツイートに添付する画像
   const [chunkImages, setChunkImages] = useState<File[][]>([]);
   // 各画像に対応する object URL（プレビュー用）。chunkImages と同じ shape。
@@ -86,6 +93,14 @@ export function PostCreateClient() {
         setThreadsAccountConfigured(tConf);
         setTargetX(xConf);
         setTargetThreads(tConf);
+        if (tConf) {
+          const ta = tRes.accounts[0];
+          setThreadsAccount({
+            name:              ta?.name              ?? null,
+            username:          ta?.username          ?? null,
+            profile_image_url: ta?.profile_image_url ?? null,
+          });
+        }
       } catch {
         if (cancelled) return;
         setXAccountConfigured(false);
@@ -636,9 +651,50 @@ export function PostCreateClient() {
           </div>
         </div>
 
-        {/* ── Right: プレビュー ────────────────────────── */}
-        <div className="lg:sticky lg:top-6 lg:self-start">
-          <PostPreview chunks={chunks} mode={mode} chunkPreviews={chunkPreviews} />
+        {/* ── Right: プレビュー（Buffer風 — 投稿先別に並列表示）─────────── */}
+        <div className="lg:sticky lg:top-6 lg:self-start space-y-5">
+          <div className="flex items-center gap-2">
+            <h3 className="text-[13px] font-semibold text-slate-300">Post Previews</h3>
+            <span className="text-[11px] text-slate-600">
+              {targetX && targetThreads
+                ? '（X / Threads）'
+                : targetX
+                ? '（X）'
+                : targetThreads
+                ? '（Threads）'
+                : '（投稿先未選択）'}
+            </span>
+          </div>
+
+          {!targetX && !targetThreads ? (
+            <div
+              className="flex flex-col items-center justify-center rounded-2xl p-10 text-center"
+              style={{
+                minHeight: 320,
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px dashed rgba(255,255,255,0.08)',
+              }}
+            >
+              <p className="text-[13px] text-slate-400">投稿先を選択してください</p>
+              <p className="text-[11px] text-slate-600 mt-1">
+                左の「投稿先」セクションで X / Threads をONにすると、対応するプレビューが表示されます。
+              </p>
+            </div>
+          ) : (
+            <>
+              {targetX && (
+                <PostPreview chunks={chunks} mode={mode} chunkPreviews={chunkPreviews} />
+              )}
+              {targetThreads && (
+                <ThreadsPreview
+                  chunks={chunks}
+                  mode={mode}
+                  chunkPreviews={chunkPreviews}
+                  threadsAccount={threadsAccount}
+                />
+              )}
+            </>
+          )}
         </div>
       </div>
     </>
