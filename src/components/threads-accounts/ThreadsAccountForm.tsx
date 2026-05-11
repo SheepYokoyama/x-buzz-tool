@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
+import { X, Eye, EyeOff, Loader2, BookOpen, CheckCircle2 } from 'lucide-react';
 import type { SocialAccount } from '@/lib/types';
 import { apiFetch } from '@/lib/api-fetch';
 
@@ -124,6 +125,16 @@ export function ThreadsAccountForm({ account, onClose, onSave }: Props) {
                 ? 'トークンを変更する場合のみ入力してください（空欄は変更しません）'
                 : 'Meta Developer Portal で取得した Threads の Long-lived アクセストークンを入力してください'}
             </p>
+            {!isEdit && (
+              <Link
+                href="/guide/threads-account"
+                target="_blank"
+                className="inline-flex items-center gap-1.5 text-[11px] text-purple-300 hover:underline"
+              >
+                <BookOpen size={11} />
+                トークンの取得方法（登録マニュアル）を見る
+              </Link>
+            )}
             <div>
               <label className="block text-[11px] font-medium text-slate-500 mb-1">
                 Access Token{!isEdit && <span className="text-red-400 ml-1">*</span>}
