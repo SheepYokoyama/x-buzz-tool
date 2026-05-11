@@ -41,22 +41,33 @@ export type ScheduledPostStatus = 'scheduled' | 'published' | 'failed' | 'cancel
 // DB行型（Supabase から返ってくる生データ）
 // =============================================
 
-/** X アカウント（DBから取得・トークンはマスク済み） */
-export interface XAccount {
+/** SNS プラットフォーム種別 */
+export type SocialPlatform = 'x' | 'threads';
+
+/**
+ * SNS アカウント（DBから取得・トークンはマスク済み）
+ * platform で X / Threads を区別する。トークンカラムは X(OAuth1.0a) と Threads(OAuth2) で
+ * 利用カラムが異なる（X: api_key/api_secret/access_token/access_secret, Threads: access_token のみ）。
+ */
+export interface SocialAccount {
   id: string;
+  platform: SocialPlatform;
   name: string;
   username: string | null;
   profile_image_url: string | null;
   /** マスク表示用（例: "abcd...wxyz"）。実際のトークンはサーバー側のみ */
-  api_key_masked: string;
-  api_secret_masked: string;
-  access_token_masked: string;
-  access_secret_masked: string;
+  api_key_masked: string | null;
+  api_secret_masked: string | null;
+  access_token_masked: string | null;
+  access_secret_masked: string | null;
   bearer_token_masked: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
+
+/** @deprecated SocialAccount を使うこと（Phase 2 で完全置換予定） */
+export type XAccount = SocialAccount;
 
 export interface PostPersona {
   id: string;

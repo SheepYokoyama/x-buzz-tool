@@ -50,7 +50,7 @@ export async function getSupabaseServer() {
 
 // =============================================
 // 管理者用クライアント（RLS をバイパス・サーバー専用）
-// x_accounts など認証不要なサーバー側操作に使用
+// social_accounts など認証不要なサーバー側操作に使用
 // SUPABASE_SERVICE_ROLE_KEY は絶対にクライアントに渡さないこと
 // =============================================
 export function getSupabaseAdmin() {

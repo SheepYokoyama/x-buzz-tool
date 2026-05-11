@@ -1,8 +1,10 @@
+import type { SocialPlatform } from '@/lib/types';
+
 /**
  * SNS プラットフォームのロゴアイコン。
  * 今後 Threads などを追加する際は platform を増やしてここで分岐する。
  */
-export type SocialPlatform = 'x' | 'threads';
+export type { SocialPlatform };
 
 interface Props {
   platform: SocialPlatform;

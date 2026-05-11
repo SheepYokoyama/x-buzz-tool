@@ -2,14 +2,13 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAuthUser } from '@/lib/auth';
 import { decrypt } from '@/lib/encryption';
-import { verifyXTokens } from '@/lib/x-client';
+import { verifyThreadsTokens } from '@/lib/threads-client';
 
 type Params = { params: Promise<{ id: string }> };
 
 /**
- * POST /api/x-accounts/[id]/refresh
- * 保存済みトークンで X API を叩き、username / display name / profile_image_url を最新に上書きする。
- * トークン自体は変更しない。
+ * POST /api/threads-accounts/[id]/refresh
+ * 保存済みトークンで Threads API を叩き、username / display name / profile_image_url を最新化する。
  */
 export async function POST(req: Request, { params }: Params) {
   const user = await getAuthUser(req);
@@ -21,24 +20,19 @@ export async function POST(req: Request, { params }: Params) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: existing } = await (supabase as any)
     .from('social_accounts')
-    .select('api_key, api_secret, access_token, access_secret, name')
+    .select('access_token, name')
     .eq('id', id)
     .eq('user_id', user.id)
-    .eq('platform', 'x')
+    .eq('platform', 'threads')
     .maybeSingle();
 
   if (!existing) {
     return NextResponse.json({ error: 'アカウントが見つかりません' }, { status: 404 });
   }
 
-  let tokens: { api_key: string; api_secret: string; access_token: string; access_secret: string };
+  let token: string;
   try {
-    tokens = {
-      api_key:       decrypt(existing.api_key),
-      api_secret:    decrypt(existing.api_secret),
-      access_token:  decrypt(existing.access_token),
-      access_secret: decrypt(existing.access_secret),
-    };
+    token = decrypt(existing.access_token);
   } catch {
     return NextResponse.json(
       { error: '保存済みトークンの復号に失敗しました。再登録してください。' },
@@ -46,11 +40,11 @@ export async function POST(req: Request, { params }: Params) {
     );
   }
 
-  const verified = await verifyXTokens(tokens);
+  const verified = await verifyThreadsTokens({ access_token: token });
   if (!verified.ok) {
     return NextResponse.json(
       { error: verified.error, errorCode: verified.errorCode },
-      { status: verified.errorCode === 'invalid_tokens' ? 401 : 400 },
+      { status: verified.errorCode === 'invalid_token' ? 401 : 400 },
     );
   }
 
@@ -69,8 +63,8 @@ export async function POST(req: Request, { params }: Params) {
     })
     .eq('id', id)
     .eq('user_id', user.id)
-    .eq('platform', 'x')
-    .select('id, name, username, profile_image_url, is_active, created_at, updated_at')
+    .eq('platform', 'threads')
+    .select('id, platform, name, username, profile_image_url, is_active, created_at, updated_at')
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

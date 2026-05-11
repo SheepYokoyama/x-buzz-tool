@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { XAccountCard } from '@/components/x-accounts/XAccountCard';
 import { XAccountForm } from '@/components/x-accounts/XAccountForm';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, BookOpen } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import type { XAccount } from '@/lib/types';
 import { apiFetch } from '@/lib/api-fetch';
@@ -97,13 +98,22 @@ export function XAccountsClient() {
     <>
       {/* ── X アカウント セクション ── */}
       <div className="mb-8">
-        <h3 className="text-[14px] font-semibold text-slate-300 mb-4 flex items-center gap-2">
-          <span className="w-5 h-5 rounded-md flex items-center justify-center text-[12px]"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            𝕏
-          </span>
-          X（Twitter）アカウント
-        </h3>
+        <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+          <h3 className="text-[14px] font-semibold text-slate-300 flex items-center gap-2">
+            <span className="w-5 h-5 rounded-md flex items-center justify-center text-[12px]"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              𝕏
+            </span>
+            X（Twitter）アカウント
+          </h3>
+          <Link
+            href="/guide/x-account"
+            className="inline-flex items-center gap-1.5 text-[11px] text-sky-300 hover:underline shrink-0"
+          >
+            <BookOpen size={11} />
+            登録マニュアル
+          </Link>
+        </div>
 
         {account ? (
           <div className="max-w-xl">
