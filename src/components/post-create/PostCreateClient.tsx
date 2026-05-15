@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, FieldLabel } from '@/components/ui/Input';
@@ -30,6 +31,7 @@ import {
   Scissors,
   ImagePlus,
   Share2,
+  Gauge,
   X as XIcon,
 } from 'lucide-react';
 
@@ -75,6 +77,12 @@ export function PostCreateClient() {
   const [chunkImages, setChunkImages] = useState<File[][]>([]);
   // 各画像に対応する object URL（プレビュー用）。chunkImages と同じ shape。
   const [chunkPreviews, setChunkPreviews] = useState<string[][]>([]);
+  // 過去 24 時間の投稿数（X / Threads 別）— BAN 回避ソフトリミット判定用
+  const [todayCount, setTodayCount] = useState<{
+    x: number;
+    threads: number;
+    limits: { x: number; threads: number };
+  } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // ── 連携アカウントの登録状況を取得し、登録済みプラットフォームをデフォルトON ──
@@ -109,6 +117,18 @@ export function PostCreateClient() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // 過去 24h の投稿数を取得（投稿後にも更新）
+  const refreshTodayCount = async () => {
+    try {
+      const res = await apiFetch('/api/posts/today-count');
+      const data = await res.json();
+      if (res.ok && typeof data.x === 'number' && typeof data.threads === 'number') {
+        setTodayCount({ x: data.x, threads: data.threads, limits: data.limits });
+      }
+    } catch { /* 表示用情報なので失敗しても無視 */ }
+  };
+  useEffect(() => { refreshTodayCount(); }, []);
 
   // 画像のプレビュー URL を生成し、unmount / 入れ替え時に解放
   useEffect(() => {
@@ -317,6 +337,8 @@ export function PostCreateClient() {
         setText('');
         setChunkImages([]);
       }
+      // 投稿後はカウンタを更新（失敗時も部分成功分を反映するため呼ぶ）
+      refreshTodayCount();
     } finally {
       setIsPosting(false);
     }
@@ -467,6 +489,18 @@ export function PostCreateClient() {
               <p className="text-[11px] text-slate-500 leading-relaxed">
                 両方に投稿時は文字数上限を X 基準（短い方）に合わせています。
               </p>
+            )}
+
+            {/* ── 過去24h投稿数（BAN回避ソフトリミット）── */}
+            {todayCount && (xAccountConfigured || threadsAccountConfigured) && (
+              <DailyCountStrip
+                showX={!!xAccountConfigured}
+                showThreads={!!threadsAccountConfigured}
+                xCount={todayCount.x}
+                threadsCount={todayCount.threads}
+                xLimit={todayCount.limits.x}
+                threadsLimit={todayCount.limits.threads}
+              />
             )}
           </div>
 
@@ -842,6 +876,65 @@ function PlatformToggle({
         }}
       />
     </button>
+  );
+}
+
+/**
+ * 過去 24 時間の投稿数をプラットフォーム別に表示。
+ * 80% 以上で amber、100% 以上で rose の警告色に切り替わる。
+ * BAN 回避ガイド準拠のソフトリミット可視化（強制ブロックはしない）。
+ */
+function DailyCountStrip({
+  showX, showThreads, xCount, threadsCount, xLimit, threadsLimit,
+}: {
+  showX: boolean;
+  showThreads: boolean;
+  xCount: number;
+  threadsCount: number;
+  xLimit: number;
+  threadsLimit: number;
+}) {
+  return (
+    <div
+      className="rounded-lg px-3 py-2 flex items-center gap-3 flex-wrap"
+      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+    >
+      <span className="inline-flex items-center gap-1.5 text-[10px] text-slate-500 shrink-0">
+        <Gauge size={11} />
+        過去 24h の投稿数
+      </span>
+      <div className="flex items-center gap-2 flex-wrap">
+        {showX && (
+          <CountChip platform="X" count={xCount} limit={xLimit} />
+        )}
+        {showThreads && (
+          <CountChip platform="Threads" count={threadsCount} limit={threadsLimit} />
+        )}
+      </div>
+      <Link
+        href="/guide/posting-guidelines"
+        className="text-[10px] text-slate-600 hover:text-slate-400 transition-colors ml-auto"
+      >
+        ソフトリミットとは？
+      </Link>
+    </div>
+  );
+}
+
+function CountChip({ platform, count, limit }: { platform: string; count: number; limit: number }) {
+  const ratio = limit > 0 ? count / limit : 0;
+  const color =
+    ratio >= 1   ? { bg: 'rgba(239,68,68,0.10)',  border: 'rgba(239,68,68,0.30)',  text: '#fda4af' } :
+    ratio >= 0.8 ? { bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.30)', text: '#fbbf24' } :
+                   { bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)', text: '#94a3b8' };
+  return (
+    <span
+      className="text-[11px] px-2 py-0.5 rounded-md font-mono inline-flex items-center gap-1"
+      style={{ background: color.bg, border: `1px solid ${color.border}`, color: color.text }}
+      title={ratio >= 1 ? `${platform} 推奨上限を超過しています` : ratio >= 0.8 ? `${platform} 推奨上限に近づいています` : undefined}
+    >
+      {platform}: {count}/{limit}
+    </span>
   );
 }
 
