@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import {
-  ArrowLeft, ExternalLink, Settings, Key, UserPlus, CheckCircle2, AlertTriangle, ShieldCheck, ShieldAlert, Send,
+  ArrowLeft, ExternalLink, Settings, Key, UserPlus, CheckCircle2, AlertTriangle, ShieldCheck, Send,
 } from 'lucide-react';
 
 const XPRESSO_ORIGIN = 'https://xpresso-chi.vercel.app';
@@ -259,19 +259,6 @@ export default function ThreadsAccountGuidePage() {
         <Note>
           ※ 現時点では Threads へはテキストのみ投稿されます。画像添付は今後のフェーズで対応予定です。
         </Note>
-      </GuideSection>
-
-      {/* 安全ガイド：BAN歴あるアカウントの分離 */}
-      <GuideSection icon={ShieldAlert} iconColor="#ef4444" title="重要：BAN 歴のあるアカウントは関連付けない">
-        <p className="text-[13px] text-slate-400 leading-relaxed">
-          過去に Meta から開発者機能の制限を受けたことがある Facebook アカウントを、新規に作成したアプリの
-          <span className="text-slate-200 font-medium">「Threads テスター」として招待しない</span> でください。
-        </p>
-        <ul className="list-disc list-inside text-[12px] text-slate-400 space-y-1 pl-1">
-          <li>Meta は IP・デバイス・電話番号・メール・招待関係などから「関連アカウント」を検出します</li>
-          <li>制限アカウントをテスター招待すると、新アプリ側にも制限が伝染する可能性があります</li>
-          <li>テスト用 Threads は、アプリ作成に使用した Facebook アカウントに紐付くものを使うのが安全です</li>
-        </ul>
       </GuideSection>
 
       {/* よくあるエラー */}

@@ -72,7 +72,8 @@
       "Bash(npx next *)",
       "Bash(grep -E \"^C:.*\\\\.\\(ts|tsx\\)$\")",
       "Bash(gh issue *)",
-      "Bash(gh repo *)"
+      "Bash(gh repo *)",
+      "Bash(\"/c/Program Files/Git/mingw64/bin/pdftotext.exe\" -enc UTF-8 -nopgbrk \"C:/work/2026-05-15_SNS自動投稿ツール開発調査.pdf\" \"C:/work/sns-research2.txt\")"
     ]
   },
   "hooks": {

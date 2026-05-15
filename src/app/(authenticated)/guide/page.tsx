@@ -1,7 +1,8 @@
+import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { GuideStepCard } from '@/components/guide/GuideStepCard';
 import { GuideTipCard } from '@/components/guide/GuideTipCard';
-import { UserCircle, Sparkles, CalendarClock, TrendingUp } from 'lucide-react';
+import { UserCircle, Sparkles, CalendarClock, TrendingUp, ShieldAlert, ArrowRight } from 'lucide-react';
 
 const STEPS = [
   {
@@ -57,6 +58,30 @@ export default function GuidePage() {
           フォロワーを継続的に増やすことができます。
         </p>
       </div>
+
+      {/* BAN 回避ガイドへの導線 */}
+      <Link
+        href="/guide/posting-guidelines"
+        className="group rounded-2xl p-5 mb-8 flex items-center gap-4 transition-colors"
+        style={{
+          background: 'linear-gradient(135deg, rgba(239,68,68,0.06), rgba(245,158,11,0.06))',
+          border: '1px solid rgba(239,68,68,0.18)',
+        }}
+      >
+        <span
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.22)' }}
+        >
+          <ShieldAlert size={18} className="text-rose-300" />
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className="text-[14px] font-semibold text-slate-100">投稿ガイドライン / BAN 回避（必読）</p>
+          <p className="text-[12px] text-slate-400 mt-1 leading-relaxed">
+            自動投稿で凍結されないための運用ルール集。1 日上限、外部リンク戦略、EU AI Act 対応、よくある失敗まで網羅
+          </p>
+        </div>
+        <ArrowRight size={16} className="text-slate-500 transition-transform group-hover:translate-x-0.5 shrink-0" />
+      </Link>
 
       {/* Steps */}
       <div className="mb-3">
