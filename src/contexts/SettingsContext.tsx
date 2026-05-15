@@ -33,6 +33,14 @@ export interface XUserInfo {
   subscriptionType: string | null;
 }
 
+// メモリのみ（起動時に1回取得）
+export interface ThreadsUserInfo {
+  id: string;
+  name: string;
+  username: string;
+  profileImageUrl: string | null;
+}
+
 // Google 認証ユーザー情報
 export interface AuthUser {
   id: string;
@@ -48,6 +56,8 @@ interface SettingsContextValue {
   setActivePersona: (persona: ActivePersonaInfo | null) => void;
   xUser: XUserInfo | null;
   setXUser: (user: XUserInfo | null) => void;
+  threadsUser: ThreadsUserInfo | null;
+  setThreadsUser: (user: ThreadsUserInfo | null) => void;
   authUser: AuthUser | null;
   signOut: () => Promise<void>;
 }
@@ -65,6 +75,8 @@ const SettingsContext = createContext<SettingsContextValue>({
   setActivePersona: () => {},
   xUser: null,
   setXUser: () => {},
+  threadsUser: null,
+  setThreadsUser: () => {},
   authUser: null,
   signOut: async () => {},
 });
@@ -74,6 +86,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings]       = useState<PersistedSettings>(defaultSettings);
   const [activePersona, setActivePersona] = useState<ActivePersonaInfo | null>(null);
   const [xUser, setXUser]             = useState<XUserInfo | null>(null);
+  const [threadsUser, setThreadsUser] = useState<ThreadsUserInfo | null>(null);
   const [authUser, setAuthUser]       = useState<AuthUser | null>(null);
 
   // localStorageから初期値を読み込む
@@ -120,7 +133,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   return (
-    <SettingsContext.Provider value={{ settings, updateSettings, activePersona, setActivePersona, xUser, setXUser, authUser, signOut }}>
+    <SettingsContext.Provider value={{ settings, updateSettings, activePersona, setActivePersona, xUser, setXUser, threadsUser, setThreadsUser, authUser, signOut }}>
       {children}
     </SettingsContext.Provider>
   );
