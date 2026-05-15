@@ -43,9 +43,9 @@ const subNav = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { setActivePersona, setXUser, authUser, signOut } = useSettings();
+  const { setActivePersona, setXUser, setThreadsUser, authUser, signOut } = useSettings();
 
-  // ページ遷移のたびにX情報・ペルソナを再取得
+  // ページ遷移のたびにX情報・Threads情報・ペルソナを再取得
   useEffect(() => {
     apiFetch('/api/personas/active')
       .then((r) => r.json())
@@ -55,6 +55,11 @@ export function Sidebar() {
     apiFetch('/api/x/me')
       .then((r) => r.json())
       .then((d) => { setXUser(d.user ?? null); })
+      .catch(() => {});
+
+    apiFetch('/api/threads/me')
+      .then((r) => r.json())
+      .then((d) => { setThreadsUser(d.user ?? null); })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);

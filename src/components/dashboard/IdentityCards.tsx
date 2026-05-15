@@ -3,165 +3,233 @@
 import Link from 'next/link';
 import { UserCircle, Settings as SettingsIcon, ArrowRight } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
-import { X_COUNT_RULE, getXPlan, getXLimit, getPlanLabel } from '@/lib/x-char-count';
+import { getXPlan, getPlanLabel } from '@/lib/x-char-count';
 import { PlatformIcon } from '@/components/ui/PlatformIcon';
 
 /**
- * ダッシュボード上部に表示する「アクティブな X アカウント」と「使用中ペルソナ」の 2 枚カード。
- * どちらも SettingsContext 由来（サイドバーの useEffect で fetch 済み）。
+ * ダッシュボード上部に表示する識別カード3枚。
+ * - X アカウント / Threads アカウント / 使用中ペルソナ
+ * いずれも SettingsContext 由来（Sidebar の useEffect で fetch 済み）。
+ * 3カラム表示でも幅が破綻しないようコンパクトサイズに統一。
  */
 export function IdentityCards() {
-  const { xUser, activePersona } = useSettings();
+  const { xUser, threadsUser, activePersona } = useSettings();
 
-  const plan     = getXPlan(xUser?.verifiedType, xUser?.subscriptionType);
-  const planText = getPlanLabel(plan);
-  const planLimit = getXLimit(plan);
+  const xPlan      = getXPlan(xUser?.verifiedType, xUser?.subscriptionType);
+  const xPlanText  = getPlanLabel(xPlan);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
       {/* ── X アカウントカード ── */}
-      <div
-        className="rounded-2xl p-4 flex items-center gap-3"
-        style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.07)',
-        }}
-      >
-        {xUser ? (
-          <>
-            <div className="relative shrink-0">
-              {xUser.profileImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={xUser.profileImageUrl}
-                  alt={xUser.name}
-                  className="w-10 h-10 rounded-full"
-                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-                />
-              ) : (
-                <span
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold"
-                  style={{ background: 'rgba(255,255,255,0.08)', color: '#94a3b8' }}
-                >
-                  {xUser.name.charAt(0).toUpperCase()}
-                </span>
-              )}
-              <span
-                className="absolute -bottom-1 -right-1 w-[18px] h-[18px] rounded-full flex items-center justify-center"
-                style={{
-                  background: '#000',
-                  border: '1.5px solid rgba(2,6,23,1)',
-                  color: '#fff',
-                }}
-                title="X (旧 Twitter)"
-              >
-                <PlatformIcon platform="x" size={9} />
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-[13px] font-semibold text-slate-200 truncate">{xUser.name}</p>
-                <span
-                  className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ background: '#34d399', boxShadow: '0 0 5px #34d399' }}
-                />
-              </div>
-              <p className="text-[11px] text-slate-500 truncate">@{xUser.username}</p>
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <span
-                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
-                  style={plan !== 'free'
-                    ? { background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }
-                    : { background: 'rgba(255,255,255,0.06)', color: '#64748b', border: '1px solid rgba(255,255,255,0.08)' }}
-                >
-                  {planText}
-                </span>
-                <span className="text-[10px] cursor-help" style={{ color: '#475569' }} title={X_COUNT_RULE}>
-                  {planLimit.toLocaleString()} cnt
-                </span>
-              </div>
-            </div>
-            <Link
-              href="/x-accounts"
-              className="p-1.5 rounded-lg transition-colors hover:bg-white/[0.06]"
-              title="X アカウント管理"
-            >
-              <SettingsIcon size={14} style={{ color: '#64748b' }} />
-            </Link>
-          </>
-        ) : (
-          <Link
-            href="/x-accounts"
-            className="group flex items-center gap-3 w-full"
-          >
-            <span
-              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)', color: '#475569' }}
-            >
-              <PlatformIcon platform="x" size={16} />
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] text-slate-400 font-medium">X アカウント未連携</p>
-              <p className="text-[11px] text-slate-600 mt-0.5">登録すると投稿機能が有効化されます</p>
-            </div>
-            <ArrowRight size={14} className="text-slate-600 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-        )}
-      </div>
+      {xUser ? (
+        <ConnectedCard
+          avatar={xUser.profileImageUrl}
+          fallbackInitial={xUser.name.charAt(0).toUpperCase()}
+          platformBadge="x"
+          platformTitle="X (旧 Twitter)"
+          name={xUser.name}
+          username={xUser.username}
+          tagText={xPlan !== 'free' ? xPlanText : undefined}
+          settingsHref="/x-accounts"
+          settingsTitle="X アカウント管理"
+        />
+      ) : (
+        <EmptyCard
+          icon={<PlatformIcon platform="x" size={14} />}
+          label="X 未連携"
+          hint="登録すると投稿可能に"
+          href="/x-accounts"
+        />
+      )}
+
+      {/* ── Threads アカウントカード ── */}
+      {threadsUser ? (
+        <ConnectedCard
+          avatar={threadsUser.profileImageUrl}
+          fallbackInitial={threadsUser.name.charAt(0).toUpperCase()}
+          platformBadge="threads"
+          platformTitle="Threads"
+          name={threadsUser.name}
+          username={threadsUser.username}
+          accent="purple"
+          settingsHref="/x-accounts"
+          settingsTitle="Threads アカウント管理"
+        />
+      ) : (
+        <EmptyCard
+          icon={<PlatformIcon platform="threads" size={14} />}
+          label="Threads 未連携"
+          hint="登録すると投稿可能に"
+          href="/x-accounts"
+        />
+      )}
 
       {/* ── ペルソナカード ── */}
-      <div
-        className="rounded-2xl p-4 flex items-center gap-3"
-        style={{
-          background: activePersona ? 'rgba(96,165,250,0.05)' : 'rgba(255,255,255,0.03)',
-          border: activePersona ? '1px solid rgba(96,165,250,0.12)' : '1px solid rgba(255,255,255,0.07)',
-        }}
-      >
-        {activePersona ? (
-          <>
-            <span
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-[20px] shrink-0"
-              style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.2)' }}
-            >
-              {activePersona.avatar}
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-slate-200 truncate">{activePersona.name}</p>
-              <p className="text-[11px] text-neon-green flex items-center gap-1.5 mt-0.5">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-neon-green inline-block"
-                  style={{ boxShadow: '0 0 5px #34d399' }}
-                />
-                使用中のペルソナ
-              </p>
+      {activePersona ? (
+        <div
+          className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
+          style={{
+            background: 'rgba(96,165,250,0.05)',
+            border: '1px solid rgba(96,165,250,0.12)',
+          }}
+        >
+          <span
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] shrink-0"
+            style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.2)' }}
+          >
+            {activePersona.avatar}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <p className="text-[12px] font-semibold text-slate-200 truncate">{activePersona.name}</p>
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: '#34d399', boxShadow: '0 0 5px #34d399' }}
+              />
             </div>
-            <Link
-              href="/persona"
-              className="p-1.5 rounded-lg transition-colors hover:bg-white/[0.06]"
-              title="ペルソナ設定"
-            >
-              <SettingsIcon size={14} style={{ color: '#64748b' }} />
-            </Link>
-          </>
-        ) : (
+            <p className="text-[10px] text-slate-500 truncate mt-0.5">使用中のペルソナ</p>
+          </div>
           <Link
             href="/persona"
-            className="group flex items-center gap-3 w-full"
+            className="p-1 rounded-md transition-colors hover:bg-white/[0.06]"
+            title="ペルソナ設定"
           >
-            <span
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)' }}
-            >
-              <UserCircle size={18} className="text-slate-600" />
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] text-slate-400 font-medium">ペルソナ未設定</p>
-              <p className="text-[11px] text-slate-600 mt-0.5">設定すると投稿のトーンが統一されます</p>
-            </div>
-            <ArrowRight size={14} className="text-slate-600 transition-transform group-hover:translate-x-0.5" />
+            <SettingsIcon size={13} style={{ color: '#64748b' }} />
           </Link>
-        )}
-      </div>
+        </div>
+      ) : (
+        <EmptyCard
+          icon={<UserCircle size={16} className="text-slate-600" />}
+          label="ペルソナ未設定"
+          hint="設定するとトーンが統一されます"
+          href="/persona"
+        />
+      )}
     </div>
+  );
+}
+
+/* ── 連携済みカード ────────────────────────────── */
+function ConnectedCard({
+  avatar,
+  fallbackInitial,
+  platformBadge,
+  platformTitle,
+  name,
+  username,
+  tagText,
+  accent,
+  settingsHref,
+  settingsTitle,
+}: {
+  avatar: string | null;
+  fallbackInitial: string;
+  platformBadge: 'x' | 'threads';
+  platformTitle: string;
+  name: string;
+  username: string;
+  tagText?: string;
+  accent?: 'purple';
+  settingsHref: string;
+  settingsTitle: string;
+}) {
+  const accentBg     = accent === 'purple' ? 'rgba(168,85,247,0.05)'   : 'rgba(255,255,255,0.03)';
+  const accentBorder = accent === 'purple' ? 'rgba(168,85,247,0.15)'   : 'rgba(255,255,255,0.07)';
+
+  return (
+    <div
+      className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
+      style={{ background: accentBg, border: `1px solid ${accentBorder}` }}
+    >
+      <div className="relative shrink-0">
+        {avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatar}
+            alt={name}
+            className="w-9 h-9 rounded-full"
+            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+          />
+        ) : (
+          <span
+            className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold"
+            style={{ background: 'rgba(255,255,255,0.08)', color: '#94a3b8' }}
+          >
+            {fallbackInitial}
+          </span>
+        )}
+        <span
+          className="absolute -bottom-0.5 -right-0.5 w-[16px] h-[16px] rounded-full flex items-center justify-center"
+          style={{
+            background: '#000',
+            border: '1.5px solid rgba(2,6,23,1)',
+            color: '#fff',
+          }}
+          title={platformTitle}
+        >
+          <PlatformIcon platform={platformBadge} size={8} />
+        </span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <p className="text-[12px] font-semibold text-slate-200 truncate">{name}</p>
+          <span
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ background: '#34d399', boxShadow: '0 0 5px #34d399' }}
+          />
+        </div>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <p className="text-[10px] text-slate-500 truncate">@{username}</p>
+          {tagText && (
+            <span
+              className="text-[9px] font-semibold px-1 py-px rounded shrink-0"
+              style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }}
+            >
+              {tagText}
+            </span>
+          )}
+        </div>
+      </div>
+      <Link
+        href={settingsHref}
+        className="p-1 rounded-md transition-colors hover:bg-white/[0.06]"
+        title={settingsTitle}
+      >
+        <SettingsIcon size={13} style={{ color: '#64748b' }} />
+      </Link>
+    </div>
+  );
+}
+
+/* ── 未連携カード ──────────────────────────────── */
+function EmptyCard({
+  icon,
+  label,
+  hint,
+  href,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  hint: string;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-xl px-3 py-2.5 flex items-center gap-2.5"
+      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+    >
+      <span
+        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)', color: '#475569' }}
+      >
+        {icon}
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[12px] text-slate-400 font-medium truncate">{label}</p>
+        <p className="text-[10px] text-slate-600 mt-0.5 truncate">{hint}</p>
+      </div>
+      <ArrowRight size={13} className="text-slate-600 transition-transform group-hover:translate-x-0.5 shrink-0" />
+    </Link>
   );
 }
