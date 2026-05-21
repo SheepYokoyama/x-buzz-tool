@@ -164,6 +164,9 @@ export interface ScheduledPost {
   status: ScheduledPostStatus;
   x_post_id: string | null;
   x_post_url: string | null;
+  /** ポスト作成画面から投入された予約の詳細（mode/platforms/chunks/images など）。
+   *  旧仕様で content のみの行は null。型は scheduled-post-payload.ts の ScheduledPostPayload を参照 */
+  payload: unknown;
   created_at: string;
   updated_at: string;
 }

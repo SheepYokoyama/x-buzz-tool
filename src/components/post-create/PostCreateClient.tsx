@@ -32,6 +32,7 @@ import {
   ImagePlus,
   Share2,
   Gauge,
+  CalendarClock,
   X as XIcon,
 } from 'lucide-react';
 
@@ -61,6 +62,10 @@ export function PostCreateClient() {
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  // 予約投稿: パネル開閉 / 日時 / 送信中フラグ
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduledAt, setScheduledAt]   = useState<string>('');
+  const [isScheduling, setIsScheduling] = useState(false);
   // 投稿先プラットフォーム選択
   const [targetX, setTargetX] = useState(false);
   const [targetThreads, setTargetThreads] = useState(false);
@@ -352,6 +357,80 @@ export function PostCreateClient() {
       refreshTodayCount();
     } finally {
       setIsPosting(false);
+    }
+  };
+
+  // 予約パネルを開くときに既定値（30分後）をセット
+  const openSchedulePanel = () => {
+    if (!scheduledAt) {
+      const d = new Date(Date.now() + 30 * 60 * 1000);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const local = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      setScheduledAt(local);
+    }
+    setScheduleOpen(true);
+    setError(null);
+    setSuccess(null);
+  };
+
+  // ── 予約投稿 ──
+  const handleSchedule = async () => {
+    if (chunks.length === 0) return;
+    if (!targetX && !targetThreads) {
+      setError('投稿先プラットフォームを選択してください');
+      return;
+    }
+    if (!scheduledAt) {
+      setError('予約日時を選択してください');
+      return;
+    }
+    const scheduledIso = new Date(scheduledAt).toISOString();
+    if (new Date(scheduledIso).getTime() <= Date.now()) {
+      setError('予約日時は現在より未来を指定してください');
+      return;
+    }
+
+    setIsScheduling(true);
+    setError(null);
+    setSuccess(null);
+
+    const texts = chunks.map((c) => c.text);
+    const sendMode = mode === 'none' ? 'separate' : mode;
+    const platforms: ('x' | 'threads')[] = [];
+    if (targetX)       platforms.push('x');
+    if (targetThreads) platforms.push('threads');
+
+    try {
+      const fd = new FormData();
+      fd.append('texts',        JSON.stringify(texts));
+      fd.append('mode',         sendMode);
+      fd.append('platforms',    JSON.stringify(platforms));
+      fd.append('numbering',    numbering ? 'true' : 'false');
+      fd.append('scheduled_at', scheduledIso);
+      for (let i = 0; i < texts.length; i++) {
+        for (const f of chunkImages[i] ?? []) fd.append(`images_${i}`, f);
+      }
+      const res = await apiFetch('/api/scheduled-posts', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setError(data.error ?? '予約に失敗しました');
+        return;
+      }
+      const when = new Date(scheduledIso).toLocaleString('ja-JP', {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      });
+      const targetLabel =
+        targetX && targetThreads ? 'X + Threads' :
+        targetX                  ? 'X'           : 'Threads';
+      setSuccess(`${when} に ${targetLabel} へ ${chunks.length} ポスト予約しました`);
+      // 投稿フォームをクリア（送信成功と同等の挙動）
+      setText('');
+      setChunkImages([]);
+      setScheduleOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '予約に失敗しました');
+    } finally {
+      setIsScheduling(false);
     }
   };
 
@@ -655,32 +734,111 @@ export function PostCreateClient() {
               </p>
             )}
 
-            <Button
-              className="w-full justify-center"
-              size="lg"
-              onClick={handlePost}
-              disabled={chunks.length === 0 || isPosting || !!splitError || (!targetX && !targetThreads)}
-            >
-              {isPosting ? (
-                <>
-                  <RefreshCw size={14} className="animate-spin" />
-                  投稿中…
-                </>
-              ) : (
-                <>
-                  <Send size={14} />
-                  {(() => {
-                    const targetLabel =
-                      targetX && targetThreads ? 'X + Threads' :
-                      targetX                  ? 'X'           :
-                      targetThreads            ? 'Threads'     : '投稿先未選択';
-                    if (chunks.length === 0 || !targetX && !targetThreads) return `${targetLabel}に投稿`;
-                    const modeLabel = mode === 'thread' ? 'スレッド' : mode === 'separate' ? '独立' : '分割無し';
-                    return `${targetLabel}に投稿（${chunks.length}ポスト・${modeLabel}）`;
-                  })()}
-                </>
-              )}
-            </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+              <Button
+                className="justify-center"
+                size="lg"
+                onClick={handlePost}
+                disabled={chunks.length === 0 || isPosting || isScheduling || !!splitError || (!targetX && !targetThreads)}
+              >
+                {isPosting ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    投稿中…
+                  </>
+                ) : (
+                  <>
+                    <Send size={14} />
+                    {(() => {
+                      const targetLabel =
+                        targetX && targetThreads ? 'X + Threads' :
+                        targetX                  ? 'X'           :
+                        targetThreads            ? 'Threads'     : '投稿先未選択';
+                      if (chunks.length === 0 || !targetX && !targetThreads) return `${targetLabel}に投稿`;
+                      const modeLabel = mode === 'thread' ? 'スレッド' : mode === 'separate' ? '独立' : '分割無し';
+                      return `${targetLabel}に投稿（${chunks.length}ポスト・${modeLabel}）`;
+                    })()}
+                  </>
+                )}
+              </Button>
+              <button
+                type="button"
+                onClick={() => (scheduleOpen ? setScheduleOpen(false) : openSchedulePanel())}
+                disabled={chunks.length === 0 || isPosting || isScheduling || !!splitError || (!targetX && !targetThreads)}
+                className="inline-flex items-center justify-center gap-1.5 px-4 rounded-xl text-[13px] font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: scheduleOpen ? 'rgba(34,211,238,0.18)' : 'rgba(34,211,238,0.08)',
+                  border: '1px solid rgba(34,211,238,0.35)',
+                  color: '#22d3ee',
+                  minHeight: 44,
+                }}
+                title="日時を指定して予約する"
+              >
+                <CalendarClock size={14} />
+                予約
+              </button>
+            </div>
+
+            {/* 予約日時パネル */}
+            {scheduleOpen && (
+              <div
+                className="rounded-xl p-4 space-y-3"
+                style={{ background: 'rgba(34,211,238,0.05)', border: '1px solid rgba(34,211,238,0.2)' }}
+              >
+                <div className="flex items-center gap-2">
+                  <CalendarClock size={13} className="text-neon-cyan" />
+                  <p className="text-[12px] font-semibold text-slate-200">予約日時</p>
+                </div>
+                <input
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg text-[13px] text-slate-200"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    colorScheme: 'dark',
+                  }}
+                />
+                <p className="text-[10px] text-slate-500 leading-relaxed">
+                  予約は cron で順次配信されます。BAN 回避のため即時投稿との合計レートには注意してください。
+                </p>
+                <div className="flex gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setScheduleOpen(false)}
+                    disabled={isScheduling}
+                    className="text-[12px] px-3 py-1.5 rounded-lg text-slate-400 disabled:opacity-50"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                  >
+                    閉じる
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSchedule}
+                    disabled={isScheduling || !scheduledAt}
+                    className="inline-flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg font-semibold disabled:opacity-50"
+                    style={{
+                      background: 'rgba(34,211,238,0.15)',
+                      border: '1px solid rgba(34,211,238,0.4)',
+                      color: '#22d3ee',
+                    }}
+                  >
+                    {isScheduling ? (
+                      <>
+                        <RefreshCw size={12} className="animate-spin" />
+                        予約中…
+                      </>
+                    ) : (
+                      <>
+                        <CalendarClock size={12} />
+                        この日時で予約する
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
