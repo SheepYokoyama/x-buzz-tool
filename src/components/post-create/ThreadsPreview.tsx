@@ -7,7 +7,7 @@ import type { PostChunk, SplitMode } from '@/lib/post-splitter';
 interface ThreadsPreviewProps {
   chunks: PostChunk[];
   mode: SplitMode;
-  /** chunkPreviews[i] = i 件目に添付する画像の object URL（表示プレビューのみ。投稿APIには現状未送信）*/
+  /** chunkPreviews[i] = i 件目に添付する画像の object URL（投稿APIにも同じファイルが送られる）*/
   chunkPreviews?: string[][];
   /** ログイン中の Threads アカウント。未登録時は null */
   threadsAccount: {
@@ -203,7 +203,7 @@ function ThreadsCard({
             {chunk.text}
           </p>
 
-          {/* 添付画像（Threadsには投稿されない旨をうっすら表示） */}
+          {/* 添付画像 */}
           {imagePreviews.length > 0 && (
             <div className="mt-2">
               <div
@@ -212,7 +212,7 @@ function ThreadsCard({
                     ? 'grid-cols-1'
                     : 'grid-cols-2'
                 }`}
-                style={{ border: '1px solid rgba(255,255,255,0.08)', opacity: 0.55 }}
+                style={{ border: '1px solid rgba(255,255,255,0.08)' }}
               >
                 {imagePreviews.map((url, idx) => (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -226,9 +226,6 @@ function ThreadsCard({
                   />
                 ))}
               </div>
-              <p className="text-[10px] text-amber-400/70 mt-1">
-                ※ Threads には画像は投稿されません（テキストのみ）
-              </p>
             </div>
           )}
 
