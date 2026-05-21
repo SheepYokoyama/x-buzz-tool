@@ -1,19 +1,17 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { ScheduledPostItem } from '@/components/schedule/ScheduledPostItem';
-import { NewScheduleForm } from '@/components/schedule/NewScheduleForm';
 import { ScheduleStatusTabs, type TabValue } from '@/components/schedule/ScheduleStatusTabs';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { CalendarClock } from 'lucide-react';
-import type { ScheduledPost, ScheduledPostStatus } from '@/lib/types';
+import { CalendarClock, PenLine } from 'lucide-react';
+import type { ScheduledPost } from '@/lib/types';
 
 interface Props {
   initialPosts: ScheduledPost[];
 }
-
-const ALL_STATUSES: ScheduledPostStatus[] = ['scheduled', 'published', 'failed', 'cancelled'];
 
 export function ScheduleClient({ initialPosts }: Props) {
   const [posts, setPosts] = useState<ScheduledPost[]>(initialPosts);
@@ -32,13 +30,6 @@ export function ScheduleClient({ initialPosts }: Props) {
     [posts, activeTab],
   );
 
-  const handleAdd = (post: ScheduledPost) =>
-    setPosts((prev) =>
-      [...prev, post].sort(
-        (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime(),
-      ),
-    );
-
   const handleDelete = (id: string) =>
     setPosts((prev) => prev.filter((p) => p.id !== id));
 
@@ -54,6 +45,25 @@ export function ScheduleClient({ initialPosts }: Props) {
         subtitle={`${scheduledCount}件が予約中 / 合計${posts.length}件`}
       />
       <div className="max-w-2xl space-y-4">
+        {/* ── ポスト作成への導線（新規予約はポスト作成画面で作る） ── */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <p className="text-[12px] text-slate-500 leading-relaxed">
+            新しい予約は「ポスト作成」で日時を指定して作成します。
+          </p>
+          <Link
+            href="/post-create"
+            className="inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-all"
+            style={{
+              background: 'rgba(167,139,250,0.10)',
+              border: '1px solid rgba(167,139,250,0.30)',
+              color: '#a78bfa',
+            }}
+          >
+            <PenLine size={12} />
+            ポスト作成へ
+          </Link>
+        </div>
+
         {/* ステータスタブ */}
         <ScheduleStatusTabs
           active={activeTab}
@@ -69,12 +79,28 @@ export function ScheduleClient({ initialPosts }: Props) {
                 icon={CalendarClock}
                 title={activeTab === 'all' ? '投稿がありません' : `「${getTabLabel(activeTab)}」の投稿はありません`}
                 description={
-                  activeTab === 'scheduled'
-                    ? '下の「追加」ボタンから予約投稿を作成してください'
+                  activeTab === 'scheduled' || activeTab === 'all'
+                    ? 'ポスト作成画面で本文を入力し「予約」ボタンから日時を指定してください'
                     : 'このステータスの投稿はまだありません'
                 }
                 iconColor="#22d3ee"
               />
+              {(activeTab === 'scheduled' || activeTab === 'all') && (
+                <div className="px-6 pb-6 flex justify-center">
+                  <Link
+                    href="/post-create"
+                    className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl transition-all"
+                    style={{
+                      background: 'rgba(167,139,250,0.12)',
+                      border: '1px solid rgba(167,139,250,0.35)',
+                      color: '#a78bfa',
+                    }}
+                  >
+                    <PenLine size={13} />
+                    ポスト作成画面を開く
+                  </Link>
+                </div>
+              )}
             </div>
           ) : (
             visiblePosts.map((post) => (
@@ -87,11 +113,6 @@ export function ScheduleClient({ initialPosts }: Props) {
             ))
           )}
         </div>
-
-        {/* 新規追加フォーム（全てタブ or 予約中タブのみ表示） */}
-        {(activeTab === 'all' || activeTab === 'scheduled') && (
-          <NewScheduleForm onAdd={handleAdd} />
-        )}
       </div>
     </>
   );
