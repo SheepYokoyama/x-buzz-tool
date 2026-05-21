@@ -302,10 +302,21 @@ export function PostCreateClient() {
 
     const postToThreads = async (): Promise<PostOutcome> => {
       try {
-        const res = await apiFetch('/api/threads/thread', {
-          method: 'POST',
-          body: JSON.stringify({ texts, mode: sendMode }),
-        });
+        let res: Response;
+        if (totalAttachedImages > 0) {
+          const fd = new FormData();
+          fd.append('texts', JSON.stringify(texts));
+          fd.append('mode', sendMode);
+          for (let i = 0; i < texts.length; i++) {
+            for (const f of chunkImages[i] ?? []) fd.append(`images_${i}`, f);
+          }
+          res = await apiFetch('/api/threads/thread', { method: 'POST', body: fd });
+        } else {
+          res = await apiFetch('/api/threads/thread', {
+            method: 'POST',
+            body: JSON.stringify({ texts, mode: sendMode }),
+          });
+        }
         const data = await res.json();
         if (!res.ok || data.error) {
           const posted = data.posted?.length ?? 0;
@@ -472,18 +483,6 @@ export function PostCreateClient() {
                 disabledNote="アカウント未登録"
               />
             </div>
-
-            {targetThreads && totalAttachedImages > 0 && (
-              <p
-                className="text-[11px] text-amber-300 px-3 py-2 rounded-lg flex items-start gap-2"
-                style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.22)' }}
-              >
-                <AlertTriangle size={13} className="shrink-0 mt-0.5" />
-                <span>
-                  Threads には現時点で画像が投稿されません（テキストのみ）。X 側のみ画像が添付されます。
-                </span>
-              </p>
-            )}
 
             {targetX && targetThreads && (
               <p className="text-[11px] text-slate-500 leading-relaxed">

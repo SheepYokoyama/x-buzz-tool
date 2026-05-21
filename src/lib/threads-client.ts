@@ -166,7 +166,7 @@ export async function isThreadsConfiguredAsync(userId: string): Promise<boolean>
 }
 
 // ─────────────────────────────────────────────────────────────
-// 以下は Phase 3 で実装する投稿関連のスタブ
+// 投稿系
 // ─────────────────────────────────────────────────────────────
 
 export interface ThreadsPostResult {
@@ -174,41 +174,149 @@ export interface ThreadsPostResult {
   permalink: string | null;
 }
 
+/** カルーセル上限（Meta の仕様で 2〜20 件、X 側と合わせるため当面 4 件まで） */
+const CAROUSEL_MAX = 10;
+/** メディアコンテナの処理完了待ちポーリング設定 */
+const CONTAINER_POLL_INTERVAL_MS = 1_500;
+const CONTAINER_POLL_TIMEOUT_MS  = 30_000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 /**
- * 単一テキスト Threads 投稿を行う。
+ * メディアコンテナ（IMAGE / CAROUSEL）の status が FINISHED になるまでポーリング。
+ * 画像をクローラが取りに行く処理が非同期のため、即 publish するとエラーになる。
+ *
+ * 戻り値:
+ *   - 'FINISHED': 公開可能
+ *   - 'ERROR'  : 失敗（error_message を例外メッセージに含める）
+ *   - 'TIMEOUT': タイムアウト（呼び出し側でハンドリング）
+ */
+async function waitForContainerReady(
+  containerId: string,
+  accessToken: string,
+): Promise<{ status: 'FINISHED' } | { status: 'ERROR'; message: string } | { status: 'TIMEOUT' }> {
+  const deadline = Date.now() + CONTAINER_POLL_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const url = new URL(`${THREADS_API_BASE}/${containerId}`);
+    url.searchParams.set('fields', 'status,error_message');
+    url.searchParams.set('access_token', accessToken);
+    try {
+      const res = await fetch(url.toString());
+      if (res.ok) {
+        const data = (await res.json()) as { status?: string; error_message?: string };
+        if (data.status === 'FINISHED') return { status: 'FINISHED' };
+        if (data.status === 'ERROR' || data.status === 'EXPIRED') {
+          return { status: 'ERROR', message: data.error_message ?? `container status=${data.status}` };
+        }
+        // IN_PROGRESS / PUBLISHED 以外は継続待機
+      }
+    } catch {
+      /* 一時的ネットワーク失敗は次の poll で吸収 */
+    }
+    await sleep(CONTAINER_POLL_INTERVAL_MS);
+  }
+  return { status: 'TIMEOUT' };
+}
+
+/** POST /me/threads でコンテナを作成し、id を返す共通処理 */
+async function createThreadsContainer(
+  accessToken: string,
+  params: Record<string, string>,
+): Promise<string> {
+  const url = new URL(`${THREADS_API_BASE}/me/threads`);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  url.searchParams.set('access_token', accessToken);
+
+  const res = await fetch(url.toString(), { method: 'POST' });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Threads コンテナ作成に失敗: HTTP ${res.status} ${body}`);
+  }
+  const data = (await res.json()) as { id: string };
+  if (!data?.id) throw new Error('Threads コンテナ作成: id が返りませんでした');
+  return data.id;
+}
+
+/**
+ * 単一 Threads 投稿を行う。
  *
  * Meta Threads 投稿は 2 段階:
- *   1. POST /me/threads             — メディアコンテナ作成（media_type: TEXT）
+ *   1. POST /me/threads             — メディアコンテナ作成
+ *      - 画像なし: media_type=TEXT
+ *      - 画像 1 枚: media_type=IMAGE, image_url=...
+ *      - 画像 2 枚以上: 子コンテナ × n (is_carousel_item=true) → 親コンテナ (media_type=CAROUSEL, children=...)
  *   2. POST /me/threads_publish     — コンテナを公開
  *
+ * 画像付きの場合はクローラが画像を取得する非同期処理があるため、
+ * コンテナの status が FINISHED になるまでポーリングしてから publish する。
+ *
  * スレッド連結時は replyToId で前ポストの id を渡す。
- * 画像投稿は Phase 5 で対応予定（公開URLが必要なため Supabase Storage 連携が要る）。
  */
 export async function postThreadsSingle(params: {
   accessToken: string;
   text: string;
   replyToId?: string;
+  /** Meta Graph API に渡す公開 image URL（Supabase Storage 等にアップロード済みのもの）*/
+  imageUrls?: string[];
 }): Promise<ThreadsPostResult> {
-  // ── 1) コンテナ作成 ──
-  const containerUrl = new URL(`${THREADS_API_BASE}/me/threads`);
-  containerUrl.searchParams.set('media_type', 'TEXT');
-  containerUrl.searchParams.set('text', params.text);
-  if (params.replyToId) {
-    containerUrl.searchParams.set('reply_to_id', params.replyToId);
-  }
-  containerUrl.searchParams.set('access_token', params.accessToken);
+  const { accessToken, text, replyToId } = params;
+  const imageUrls = (params.imageUrls ?? []).filter(Boolean).slice(0, CAROUSEL_MAX);
 
-  const containerRes = await fetch(containerUrl.toString(), { method: 'POST' });
-  if (!containerRes.ok) {
-    const body = await containerRes.text().catch(() => '');
-    throw new Error(`Threads コンテナ作成に失敗: HTTP ${containerRes.status} ${body}`);
-  }
-  const container = (await containerRes.json()) as { id: string };
+  // ── 1) コンテナ作成 ──────────────────────────────
+  let containerId: string;
+  let needsPolling = false;
 
-  // ── 2) 公開 ──
+  if (imageUrls.length === 0) {
+    containerId = await createThreadsContainer(accessToken, {
+      media_type: 'TEXT',
+      text,
+      ...(replyToId ? { reply_to_id: replyToId } : {}),
+    });
+  } else if (imageUrls.length === 1) {
+    containerId = await createThreadsContainer(accessToken, {
+      media_type: 'IMAGE',
+      image_url: imageUrls[0],
+      text,
+      ...(replyToId ? { reply_to_id: replyToId } : {}),
+    });
+    needsPolling = true;
+  } else {
+    // カルーセル: 子コンテナを並列で作成 → 親コンテナを生成
+    const childIds = await Promise.all(
+      imageUrls.map((url) =>
+        createThreadsContainer(accessToken, {
+          media_type: 'IMAGE',
+          image_url: url,
+          is_carousel_item: 'true',
+        }),
+      ),
+    );
+    // 子コンテナそれぞれの処理完了を待ってから親を作る（Meta 公式手順）
+    for (const cid of childIds) {
+      const r = await waitForContainerReady(cid, accessToken);
+      if (r.status === 'ERROR')   throw new Error(`Threads 画像処理に失敗: ${r.message}`);
+      if (r.status === 'TIMEOUT') throw new Error('Threads 画像処理がタイムアウトしました（30秒）');
+    }
+    containerId = await createThreadsContainer(accessToken, {
+      media_type: 'CAROUSEL',
+      children: childIds.join(','),
+      text,
+      ...(replyToId ? { reply_to_id: replyToId } : {}),
+    });
+    needsPolling = true;
+  }
+
+  // ── 2) 公開前にコンテナ完了を待つ（画像系のみ）──────────
+  if (needsPolling) {
+    const r = await waitForContainerReady(containerId, accessToken);
+    if (r.status === 'ERROR')   throw new Error(`Threads コンテナ処理に失敗: ${r.message}`);
+    if (r.status === 'TIMEOUT') throw new Error('Threads コンテナ処理がタイムアウトしました（30秒）');
+  }
+
+  // ── 3) 公開 ───────────────────────────────────
   const publishUrl = new URL(`${THREADS_API_BASE}/me/threads_publish`);
-  publishUrl.searchParams.set('creation_id', container.id);
-  publishUrl.searchParams.set('access_token', params.accessToken);
+  publishUrl.searchParams.set('creation_id', containerId);
+  publishUrl.searchParams.set('access_token', accessToken);
 
   const publishRes = await fetch(publishUrl.toString(), { method: 'POST' });
   if (!publishRes.ok) {
@@ -217,12 +325,12 @@ export async function postThreadsSingle(params: {
   }
   const published = (await publishRes.json()) as { id: string };
 
-  // ── 3) permalink 取得（失敗しても投稿自体は成立しているので無視）──
+  // ── 4) permalink 取得（失敗しても投稿自体は成立しているので無視）──
   let permalink: string | null = null;
   try {
     const detailUrl = new URL(`${THREADS_API_BASE}/${published.id}`);
     detailUrl.searchParams.set('fields', 'permalink');
-    detailUrl.searchParams.set('access_token', params.accessToken);
+    detailUrl.searchParams.set('access_token', accessToken);
     const detailRes = await fetch(detailUrl.toString());
     if (detailRes.ok) {
       const detail = (await detailRes.json()) as { permalink?: string };

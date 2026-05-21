@@ -257,7 +257,8 @@ export default function ThreadsAccountGuidePage() {
           <li>テスト投稿を実行し、Threads 側に反映されれば完了</li>
         </OrderedList>
         <Note>
-          ※ 現時点では Threads へはテキストのみ投稿されます。画像添付は今後のフェーズで対応予定です。
+          ※ 画像添付にも対応しています（1枚は単独投稿、2〜4枚はカルーセル投稿）。
+          画像は投稿時に Xpresso 側で一時的に公開ストレージへアップロードし、Threads への反映後に自動削除されます。
         </Note>
       </GuideSection>
 

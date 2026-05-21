@@ -6,6 +6,11 @@ import {
 } from '@/lib/threads-client';
 import { getAuthUser } from '@/lib/auth';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import {
+  uploadThreadsImage,
+  deleteThreadsImages,
+  type UploadedThreadsImage,
+} from '@/lib/threads-storage';
 
 type PostedThread = { threadId: string; url: string; text: string };
 
@@ -37,14 +42,24 @@ async function persistPublishedPosts(userId: string, posted: PostedThread[]): Pr
  * POST /api/threads/thread
  * 複数ポストを Threads に投稿する。
  *
- * Content-Type: application/json
- *   body: { texts: string[]; mode: 'thread' | 'separate' }
+ * Content-Type:
+ *   - application/json: { texts: string[]; mode: 'thread' | 'separate' }
+ *   - multipart/form-data:
+ *       - texts: JSON 文字列化した string[]
+ *       - mode: 'thread' | 'separate'
+ *       - images_${i}: File[] （i 件目に添付。各ポスト最大4枚）
  *
- * 画像添付は現時点では未対応（Phase 5 で公開URL方式で実装予定）。
+ * Meta Threads API は画像を直接アップロードできない（公開URL方式のみ）。
+ * このルートでは各画像を Supabase Storage の `threads-uploads` バケットに一時アップロードし、
+ * 公開URLを Meta Graph API に渡して投稿、投稿成立後に Storage から削除する。
  *
  * thread モードの場合、2件目以降は直前ポストの reply として連結する。
  * 途中で失敗した場合は、それまでに投稿できたものを返す。
  */
+const MAX_IMAGES_PER_POST = 4;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
+const ALLOWED_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+
 export async function POST(req: Request) {
   const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
@@ -57,14 +72,93 @@ export async function POST(req: Request) {
     );
   }
 
-  const body = (await req.json()) as { texts?: string[]; mode?: 'thread' | 'separate' };
-  const texts: string[] = Array.isArray(body.texts)
-    ? (body.texts.map((t) => (typeof t === 'string' ? t.trim() : '')).filter(Boolean) as string[])
-    : [];
-  const mode: 'thread' | 'separate' = body.mode === 'separate' ? 'separate' : 'thread';
+  let texts: string[] = [];
+  let mode: 'thread' | 'separate' = 'thread';
+  // chunkImages[i] = i 件目のポストに添付する画像
+  const chunkImages: File[][] = [];
+
+  const contentType = req.headers.get('content-type') ?? '';
+  if (contentType.includes('multipart/form-data')) {
+    const form = await req.formData();
+    const rawTexts = form.get('texts');
+    if (typeof rawTexts === 'string') {
+      try {
+        const parsed = JSON.parse(rawTexts);
+        if (Array.isArray(parsed)) {
+          texts = parsed.map((t) => (typeof t === 'string' ? t.trim() : '')).filter(Boolean);
+        }
+      } catch {
+        return NextResponse.json({ error: 'texts のパースに失敗しました' }, { status: 400 });
+      }
+    }
+    const rawMode = form.get('mode');
+    mode = rawMode === 'separate' ? 'separate' : 'thread';
+
+    for (let i = 0; i < texts.length; i++) {
+      const files: File[] = [];
+      for (const entry of form.getAll(`images_${i}`)) {
+        if (entry instanceof File) files.push(entry);
+      }
+      if (files.length > MAX_IMAGES_PER_POST) {
+        return NextResponse.json(
+          { error: `${i + 1}件目の画像が上限（${MAX_IMAGES_PER_POST}枚）を超えています` },
+          { status: 400 },
+        );
+      }
+      for (const f of files) {
+        if (!ALLOWED_IMAGE_MIMES.has(f.type)) {
+          return NextResponse.json(
+            { error: `${i + 1}件目に非対応の画像形式が含まれています: ${f.type || 'unknown'}` },
+            { status: 400 },
+          );
+        }
+        if (f.size > MAX_IMAGE_BYTES) {
+          return NextResponse.json(
+            { error: `${i + 1}件目の画像サイズが上限(5MB)を超えています: ${f.name}` },
+            { status: 400 },
+          );
+        }
+      }
+      chunkImages.push(files);
+    }
+  } else {
+    const body = (await req.json()) as { texts?: string[]; mode?: 'thread' | 'separate' };
+    texts = Array.isArray(body.texts)
+      ? (body.texts.map((t) => (typeof t === 'string' ? t.trim() : '')).filter(Boolean) as string[])
+      : [];
+    mode = body.mode === 'separate' ? 'separate' : 'thread';
+  }
 
   if (texts.length === 0) {
     return NextResponse.json({ error: '投稿テキストが空です' }, { status: 400 });
+  }
+
+  // ── 画像を Supabase Storage にアップロードして公開URL化 ────────────
+  //   chunkUploaded[i] には i 件目のポストに使う UploadedThreadsImage[] が入る。
+  //   失敗した場合は既にアップロード済みのものを全て掃除してエラー応答。
+  const chunkUploaded: UploadedThreadsImage[][] = texts.map(() => []);
+  const allUploadedPaths: string[] = [];
+  try {
+    for (let i = 0; i < chunkImages.length; i++) {
+      const files = chunkImages[i];
+      if (files.length === 0) continue;
+      const uploaded = await Promise.all(
+        files.map((file) => uploadThreadsImage({ userId: user.id, file })),
+      );
+      chunkUploaded[i] = uploaded;
+      for (const u of uploaded) allUploadedPaths.push(u.path);
+    }
+  } catch (err: unknown) {
+    console.error('[threads/thread] storage upload error:', err);
+    // 既にアップロードされたものを掃除
+    if (allUploadedPaths.length > 0) {
+      await deleteThreadsImages(allUploadedPaths);
+    }
+    const msg = err instanceof Error ? err.message : '画像アップロードに失敗しました';
+    return NextResponse.json(
+      { error: `Threads 用画像アップロードに失敗しました: ${msg}` },
+      { status: 502 },
+    );
   }
 
   const posted: PostedThread[] = [];
@@ -74,7 +168,8 @@ export async function POST(req: Request) {
     for (let i = 0; i < texts.length; i++) {
       const text = texts[i];
       const replyToId = mode === 'thread' ? lastId : undefined;
-      const result = await postThreadsSingle({ accessToken, text, replyToId });
+      const imageUrls = (chunkUploaded[i] ?? []).map((u) => u.publicUrl);
+      const result = await postThreadsSingle({ accessToken, text, replyToId, imageUrls });
       const url = result.permalink ?? `https://www.threads.net/`;
       posted.push({ threadId: result.id, url, text });
       lastId = result.id;
@@ -89,5 +184,11 @@ export async function POST(req: Request) {
       { error: message, posted, failedAt: posted.length },
       { status: 500 },
     );
+  } finally {
+    // 投稿フロー終了後（成功/失敗にかかわらず）Storage の一時画像をクリーンアップ。
+    // Threads 側は permalink 表示時に再フェッチしないため即削除して問題ない。
+    if (allUploadedPaths.length > 0) {
+      await deleteThreadsImages(allUploadedPaths);
+    }
   }
 }
