@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  CalendarClock, Trash2, Edit2, Check, X, Send, Zap, AlertCircle,
+  CalendarClock, Trash2, Edit2, Check, X, Send, Zap, AlertCircle, Image as ImageIcon, MessageSquare,
 } from 'lucide-react';
 import { getSupabaseBrowser } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api-fetch';
 import { Textarea, Input } from '@/components/ui/Input';
+import { PlatformIcon } from '@/components/ui/PlatformIcon';
+import { isPayloadV1 } from '@/lib/scheduled-post-payload';
 import type { ScheduledPost, ScheduledPostStatus } from '@/lib/types';
 
 interface Props {
@@ -48,6 +50,16 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
   const [editError, setEditError]       = useState<string | null>(null);
 
   const style = STATUS_STYLES[post.status];
+
+  // payload V1（ポスト作成画面から作られた予約）の追加情報
+  //   - プラットフォームバッジ
+  //   - チャンク数 / 画像数
+  //   - 編集はテキスト不整合を避けるため日時のみ変更可（旧仕様レコードはこれまで通り）
+  const payloadV1 = isPayloadV1(post.payload) ? post.payload : null;
+  const totalImages = useMemo(
+    () => payloadV1?.chunks.reduce((sum, c) => sum + c.images.length, 0) ?? 0,
+    [payloadV1],
+  );
 
   // ── 編集保存 ──────────────────────────────────
   const handleSave = async () => {
@@ -158,19 +170,13 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
   };
 
   // ── 削除 ──
+  // 画像クリーンアップ（post-uploads 上のファイル削除）を確実に行うため
+  // ブラウザの supabase 直接 delete ではなくサーバー API 経由にする。
   const handleDelete = async () => {
-    const supabase = getSupabaseBrowser();
-    const { data, error } = await supabase
-      .from('scheduled_posts')
-      .delete()
-      .eq('id', post.id)
-      .select();
-    if (error) {
-      alert(`削除に失敗しました: ${error.message}`);
-      return;
-    }
-    if (!data || data.length === 0) {
-      alert('削除権限がありません');
+    const res = await apiFetch(`/api/scheduled-posts/${post.id}`, { method: 'DELETE' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) {
+      alert(`削除に失敗しました: ${data.error ?? res.statusText}`);
       return;
     }
     onDelete(post.id);
@@ -199,23 +205,25 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
           <div className="flex items-center gap-1.5 shrink-0">
             {post.status === 'scheduled' && (
               <>
-                {/* 即時投稿 */}
-                <button
-                  onClick={handlePostNow}
-                  disabled={postingNow}
-                  title="今すぐXに投稿する"
-                  className="flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg transition-all"
-                  style={{
-                    background: 'rgba(96,165,250,0.1)',
-                    border: '1px solid rgba(96,165,250,0.25)',
-                    color: postingNow ? '#475569' : '#60a5fa',
-                    cursor: postingNow ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  <Zap size={11} />
-                  {postingNow ? '投稿中…' : '即時投稿'}
-                </button>
-                {/* テスト公開 */}
+                {/* 即時投稿（テキスト1本のX投稿前提のため、旧仕様レコードのみ） */}
+                {!payloadV1 && (
+                  <button
+                    onClick={handlePostNow}
+                    disabled={postingNow}
+                    title="今すぐXに投稿する"
+                    className="flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg transition-all"
+                    style={{
+                      background: 'rgba(96,165,250,0.1)',
+                      border: '1px solid rgba(96,165,250,0.25)',
+                      color: postingNow ? '#475569' : '#60a5fa',
+                      cursor: postingNow ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    <Zap size={11} />
+                    {postingNow ? '投稿中…' : '即時投稿'}
+                  </button>
+                )}
+                {/* テスト公開（ステータス変更のみなので両仕様で有効） */}
                 <button
                   onClick={handleTestPublish}
                   disabled={publishing}
@@ -230,14 +238,16 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
                   <Send size={11} />
                   {publishing ? '…' : 'テスト公開'}
                 </button>
-                {/* 編集 */}
-                <button
-                  onClick={() => setEditing(true)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all text-slate-500 hover:text-neon-blue"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                >
-                  <Edit2 size={12} />
-                </button>
+                {/* 編集（payload V1 はテキスト整合性のため非表示・キャンセル＆作り直しで対応） */}
+                {!payloadV1 && (
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-all text-slate-500 hover:text-neon-blue"
+                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                  >
+                    <Edit2 size={12} />
+                  </button>
+                )}
                 {/* キャンセル */}
                 <button
                   onClick={handleCancel}
@@ -331,9 +341,43 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
         </div>
       ) : (
         <>
+          {payloadV1 && (
+            <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400">
+              {payloadV1.platforms.map((p) => (
+                <span
+                  key={p}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md"
+                  style={{
+                    background: p === 'x' ? 'rgba(96,165,250,0.10)' : 'rgba(168,85,247,0.10)',
+                    border: p === 'x' ? '1px solid rgba(96,165,250,0.30)' : '1px solid rgba(168,85,247,0.30)',
+                    color: p === 'x' ? '#60a5fa' : '#c084fc',
+                  }}
+                >
+                  <PlatformIcon platform={p} size={10} />
+                  {p === 'x' ? 'X' : 'Threads'}
+                </span>
+              ))}
+              <span className="inline-flex items-center gap-1 text-slate-500">
+                <MessageSquare size={11} />
+                {payloadV1.chunks.length}ポスト
+                {payloadV1.mode === 'thread' ? '（スレッド）' : payloadV1.mode === 'separate' ? '（独立）' : ''}
+              </span>
+              {totalImages > 0 && (
+                <span className="inline-flex items-center gap-1 text-slate-500">
+                  <ImageIcon size={11} />
+                  画像 {totalImages} 枚
+                </span>
+              )}
+            </div>
+          )}
           <p className="text-[13px] text-slate-300 leading-relaxed whitespace-pre-wrap">
-            {post.content}
+            {payloadV1 ? payloadV1.chunks[0]?.text ?? post.content : post.content}
           </p>
+          {payloadV1 && payloadV1.chunks.length > 1 && (
+            <p className="text-[11px] text-slate-600">
+              … 他 {payloadV1.chunks.length - 1} ポスト
+            </p>
+          )}
           {post.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {post.tags.map((tag) => (
