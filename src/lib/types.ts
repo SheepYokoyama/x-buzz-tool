@@ -42,7 +42,7 @@ export type ScheduledPostStatus = 'scheduled' | 'published' | 'failed' | 'cancel
 // =============================================
 
 /** SNS プラットフォーム種別 */
-export type SocialPlatform = 'x' | 'threads';
+export type SocialPlatform = 'x' | 'threads' | 'instagram';
 
 /**
  * SNS アカウント（DBから取得・トークンはマスク済み）
