@@ -143,7 +143,7 @@ async function processPayload(
       : 'unknown error';
     return { id: post.id, status: 'failed', mode: 'payload', error: err };
   }
-  const publishedCount = (results.x?.length ?? 0) + (results.threads?.length ?? 0);
+  const publishedCount = (results.x?.length ?? 0) + (results.threads?.length ?? 0) + (results.instagram?.length ?? 0);
   return { id: post.id, status: 'published', mode: 'payload', published: publishedCount };
 }
 

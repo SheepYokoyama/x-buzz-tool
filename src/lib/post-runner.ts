@@ -14,6 +14,11 @@ import {
   getActiveThreadsAccessToken,
   postThreadsSingle,
 } from '@/lib/threads-client';
+import {
+  getActiveInstagramAccessToken,
+  getActiveInstagramAccountId,
+  postInstagramSingle,
+} from '@/lib/instagram-client';
 import type {
   ScheduledPostPayload,
   ScheduledPostResultItem,
@@ -109,6 +114,41 @@ async function runThreads(
 }
 
 /**
+ * Instagram 側の処理（単一投稿）。
+ * Instagram はリプライ連結が無いため、全 chunk のテキストを連結して1キャプションにし、
+ * 全 chunk の画像を最大10枚まで集約して1投稿（カルーセル）として公開する。
+ * 画像が1枚も無い場合は投稿不可（Instagram は画像必須）。
+ */
+async function runInstagram(
+  userId: string,
+  payload: ScheduledPostPayload,
+): Promise<{ items: ScheduledPostResultItem[]; error?: string; accountId: string | null }> {
+  const accessToken = await getActiveInstagramAccessToken(userId);
+  if (!accessToken) {
+    return { items: [], error: 'Instagram API の認証情報が見つかりません', accountId: null };
+  }
+  const accountId = await getActiveInstagramAccountId(userId);
+
+  const caption = payload.chunks.map((c) => c.text).join('\n\n').trim();
+  const imageUrls = payload.chunks
+    .flatMap((c) => c.images.map((img) => img.publicUrl))
+    .slice(0, 10);
+
+  if (imageUrls.length === 0) {
+    return { items: [], error: 'Instagram は画像が1枚以上必要です', accountId };
+  }
+
+  try {
+    const result = await postInstagramSingle({ accessToken, caption, imageUrls });
+    const url = result.permalink ?? 'https://www.instagram.com/';
+    return { items: [{ postId: result.id, url }], accountId };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'unknown error';
+    return { items: [], error: msg, accountId };
+  }
+}
+
+/**
  * 予約投稿を実行する。プラットフォームごとに独立して処理し、
  * 一方が失敗してももう一方には反映する。
  *
@@ -126,21 +166,25 @@ export async function runScheduledPost(params: {
   xAccountId: string | null;
 }> {
   const { userId, payload } = params;
-  const wantsX       = payload.platforms.includes('x');
-  const wantsThreads = payload.platforms.includes('threads');
+  const wantsX         = payload.platforms.includes('x');
+  const wantsThreads   = payload.platforms.includes('threads');
+  const wantsInstagram = payload.platforms.includes('instagram');
 
-  const [x, t] = await Promise.all([
-    wantsX       ? runX(userId, payload)       : Promise.resolve(null),
-    wantsThreads ? runThreads(userId, payload) : Promise.resolve(null),
+  const [x, t, ig] = await Promise.all([
+    wantsX         ? runX(userId, payload)         : Promise.resolve(null),
+    wantsThreads   ? runThreads(userId, payload)   : Promise.resolve(null),
+    wantsInstagram ? runInstagram(userId, payload) : Promise.resolve(null),
   ]);
 
-  const errors: Partial<Record<'x' | 'threads', string>> = {};
-  if (x?.error) errors.x = x.error;
-  if (t?.error) errors.threads = t.error;
+  const errors: Partial<Record<'x' | 'threads' | 'instagram', string>> = {};
+  if (x?.error)  errors.x = x.error;
+  if (t?.error)  errors.threads = t.error;
+  if (ig?.error) errors.instagram = ig.error;
 
   const results: ScheduledPostResults = {
-    x:       x ? x.items : null,
-    threads: t ? t.items : null,
+    x:         x  ? x.items  : null,
+    threads:   t  ? t.items  : null,
+    instagram: ig ? ig.items : null,
     errors:  Object.keys(errors).length > 0 ? errors : undefined,
     executedAt: new Date().toISOString(),
   };
@@ -149,11 +193,13 @@ export async function runScheduledPost(params: {
   //   - 期待した全プラットフォームで少なくとも1件成功 → published
   //   - どのプラットフォームでも0件成功 → failed
   //   - 一方は成功・一方は失敗 or 部分成功 → partial
-  const totalExpected = (wantsX ? 1 : 0) + (wantsThreads ? 1 : 0);
+  // Instagram は単一投稿のため期待件数は常に1件。
+  const totalExpected = (wantsX ? 1 : 0) + (wantsThreads ? 1 : 0) + (wantsInstagram ? 1 : 0);
   const fullSuccess =
-    (!wantsX       || (x?.items.length === payload.chunks.length && !x.error)) &&
-    (!wantsThreads || (t?.items.length === payload.chunks.length && !t.error));
-  const anySuccess  = (x?.items.length ?? 0) > 0 || (t?.items.length ?? 0) > 0;
+    (!wantsX         || (x?.items.length === payload.chunks.length && !x.error)) &&
+    (!wantsThreads   || (t?.items.length === payload.chunks.length && !t.error)) &&
+    (!wantsInstagram || ((ig?.items.length ?? 0) === 1 && !ig?.error));
+  const anySuccess  = (x?.items.length ?? 0) > 0 || (t?.items.length ?? 0) > 0 || (ig?.items.length ?? 0) > 0;
 
   let status: 'published' | 'failed' | 'partial';
   if (fullSuccess)        status = 'published';
