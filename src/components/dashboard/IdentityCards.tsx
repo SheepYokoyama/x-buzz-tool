@@ -13,13 +13,13 @@ import { PlatformIcon } from '@/components/ui/PlatformIcon';
  * 3カラム表示でも幅が破綻しないようコンパクトサイズに統一。
  */
 export function IdentityCards() {
-  const { xUser, threadsUser, activePersona } = useSettings();
+  const { xUser, threadsUser, instagramUser, activePersona } = useSettings();
 
   const xPlan      = getXPlan(xUser?.verifiedType, xUser?.subscriptionType);
   const xPlanText  = getPlanLabel(xPlan);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
       {/* ── X アカウントカード ── */}
       {xUser ? (
         <ConnectedCard
@@ -59,6 +59,28 @@ export function IdentityCards() {
         <EmptyCard
           icon={<PlatformIcon platform="threads" size={14} />}
           label="Threads 未連携"
+          hint="登録すると投稿可能に"
+          href="/x-accounts"
+        />
+      )}
+
+      {/* ── Instagram アカウントカード ── */}
+      {instagramUser ? (
+        <ConnectedCard
+          avatar={instagramUser.profileImageUrl}
+          fallbackInitial={instagramUser.name.charAt(0).toUpperCase()}
+          platformBadge="instagram"
+          platformTitle="Instagram"
+          name={instagramUser.name}
+          username={instagramUser.username}
+          accent="pink"
+          settingsHref="/x-accounts"
+          settingsTitle="Instagram アカウント管理"
+        />
+      ) : (
+        <EmptyCard
+          icon={<PlatformIcon platform="instagram" size={14} />}
+          label="Instagram 未連携"
           hint="登録すると投稿可能に"
           href="/x-accounts"
         />
@@ -124,17 +146,23 @@ function ConnectedCard({
 }: {
   avatar: string | null;
   fallbackInitial: string;
-  platformBadge: 'x' | 'threads';
+  platformBadge: 'x' | 'threads' | 'instagram';
   platformTitle: string;
   name: string;
   username: string;
   tagText?: string;
-  accent?: 'purple';
+  accent?: 'purple' | 'pink';
   settingsHref: string;
   settingsTitle: string;
 }) {
-  const accentBg     = accent === 'purple' ? 'rgba(168,85,247,0.05)'   : 'rgba(255,255,255,0.03)';
-  const accentBorder = accent === 'purple' ? 'rgba(168,85,247,0.15)'   : 'rgba(255,255,255,0.07)';
+  const accentBg =
+    accent === 'purple' ? 'rgba(168,85,247,0.05)'
+    : accent === 'pink' ? 'rgba(236,72,153,0.05)'
+    : 'rgba(255,255,255,0.03)';
+  const accentBorder =
+    accent === 'purple' ? 'rgba(168,85,247,0.15)'
+    : accent === 'pink' ? 'rgba(236,72,153,0.15)'
+    : 'rgba(255,255,255,0.07)';
 
   return (
     <div

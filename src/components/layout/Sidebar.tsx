@@ -43,7 +43,7 @@ const subNav = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { setActivePersona, setXUser, setThreadsUser, authUser, signOut } = useSettings();
+  const { setActivePersona, setXUser, setThreadsUser, setInstagramUser, authUser, signOut } = useSettings();
 
   // ページ遷移のたびにX情報・Threads情報・ペルソナを再取得
   useEffect(() => {
@@ -60,6 +60,11 @@ export function Sidebar() {
     apiFetch('/api/threads/me')
       .then((r) => r.json())
       .then((d) => { setThreadsUser(d.user ?? null); })
+      .catch(() => {});
+
+    apiFetch('/api/instagram/me')
+      .then((r) => r.json())
+      .then((d) => { setInstagramUser(d.user ?? null); })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
