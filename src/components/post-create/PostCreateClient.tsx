@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { VoiceTextarea, FieldLabel } from '@/components/ui/Input';
 import { PostPreview } from './PostPreview';
 import { ThreadsPreview } from './ThreadsPreview';
+import { InstagramPreview } from './InstagramPreview';
 import {
   splitPosts,
   stripManualSplitMarkers,
@@ -50,7 +51,13 @@ const LIMIT_OPTIONS_THREADS = [
   { value: 500, label: '500カウント', note: 'Threads 標準（500文字）' },
 ];
 
+const LIMIT_OPTIONS_INSTAGRAM = [
+  { value: 2200, label: '2,200カウント', note: 'Instagram キャプション上限' },
+];
+
 const THREADS_MAX_COUNT = 500;
+const INSTAGRAM_CAPTION_MAX = 2200;
+const INSTAGRAM_MAX_IMAGES = 10;
 
 export function PostCreateClient() {
   const { xUser } = useSettings();
@@ -69,11 +76,19 @@ export function PostCreateClient() {
   // 投稿先プラットフォーム選択
   const [targetX, setTargetX] = useState(false);
   const [targetThreads, setTargetThreads] = useState(false);
+  const [targetInstagram, setTargetInstagram] = useState(false);
   // 連携アカウントの登録状況。null は取得中。
   const [xAccountConfigured, setXAccountConfigured] = useState<boolean | null>(null);
   const [threadsAccountConfigured, setThreadsAccountConfigured] = useState<boolean | null>(null);
+  const [instagramAccountConfigured, setInstagramAccountConfigured] = useState<boolean | null>(null);
   // Threads プレビュー用のアカウント情報（@ユーザー名・アイコンのみ）
   const [threadsAccount, setThreadsAccount] = useState<{
+    name: string | null;
+    username: string | null;
+    profile_image_url: string | null;
+  } | null>(null);
+  // Instagram プレビュー用のアカウント情報（@ユーザー名・アイコンのみ）
+  const [instagramAccount, setInstagramAccount] = useState<{
     name: string | null;
     username: string | null;
     profile_image_url: string | null;
@@ -86,7 +101,8 @@ export function PostCreateClient() {
   const [todayCount, setTodayCount] = useState<{
     x: number;
     threads: number;
-    limits: { x: number; threads: number };
+    instagram: number;
+    limits: { x: number; threads: number; instagram: number };
   } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -95,17 +111,21 @@ export function PostCreateClient() {
     let cancelled = false;
     (async () => {
       try {
-        const [xRes, tRes] = await Promise.all([
+        const [xRes, tRes, igRes] = await Promise.all([
           apiFetch('/api/x-accounts').then((r) => r.json()).catch(() => ({ accounts: [] })),
           apiFetch('/api/threads-accounts').then((r) => r.json()).catch(() => ({ accounts: [] })),
+          apiFetch('/api/instagram-accounts').then((r) => r.json()).catch(() => ({ accounts: [] })),
         ]);
         if (cancelled) return;
         const xConf = Array.isArray(xRes?.accounts) && xRes.accounts.length > 0;
         const tConf = Array.isArray(tRes?.accounts) && tRes.accounts.length > 0;
+        const igConf = Array.isArray(igRes?.accounts) && igRes.accounts.length > 0;
         setXAccountConfigured(xConf);
         setThreadsAccountConfigured(tConf);
+        setInstagramAccountConfigured(igConf);
         setTargetX(xConf);
         setTargetThreads(tConf);
+        setTargetInstagram(igConf);
         if (tConf) {
           const ta = tRes.accounts[0];
           setThreadsAccount({
@@ -114,10 +134,19 @@ export function PostCreateClient() {
             profile_image_url: ta?.profile_image_url ?? null,
           });
         }
+        if (igConf) {
+          const ia = igRes.accounts[0];
+          setInstagramAccount({
+            name:              ia?.name              ?? null,
+            username:          ia?.username          ?? null,
+            profile_image_url: ia?.profile_image_url ?? null,
+          });
+        }
       } catch {
         if (cancelled) return;
         setXAccountConfigured(false);
         setThreadsAccountConfigured(false);
+        setInstagramAccountConfigured(false);
       }
     })();
     return () => { cancelled = true; };
@@ -129,7 +158,12 @@ export function PostCreateClient() {
       const res = await apiFetch('/api/posts/today-count');
       const data = await res.json();
       if (res.ok && typeof data.x === 'number' && typeof data.threads === 'number') {
-        setTodayCount({ x: data.x, threads: data.threads, limits: data.limits });
+        setTodayCount({
+          x: data.x,
+          threads: data.threads,
+          instagram: typeof data.instagram === 'number' ? data.instagram : 0,
+          limits: data.limits,
+        });
       }
     } catch { /* 表示用情報なので失敗しても無視 */ }
   };
@@ -189,11 +223,22 @@ export function PostCreateClient() {
   // 投稿先プラットフォームに応じて文字数上限を動的に決める。
   //   - Threads 単独: 500（Threads 標準・固定）
   //   - X 含む（単独 or 両方）: X 基準（無料280 / Premium25000）。両方投稿は短い X 側に合わせる
-  const isThreadsOnly = !targetX && targetThreads;
+  // Instagram は単一投稿（分割なし・画像必須）。X/Threads と排他ではないが
+  // 文字数上限は「Instagram のみ選択」のとき 2,200 に切り替える。
+  const isInstagramOnly = !targetX && !targetThreads && targetInstagram;
+  const isThreadsOnly = !targetX && targetThreads && !targetInstagram;
   const defaultMaxCount = isPaidPlan ? 25000 : 280;
-  const maxCount = isThreadsOnly ? THREADS_MAX_COUNT : (maxCountOverride ?? defaultMaxCount);
+  const maxCount = isInstagramOnly
+    ? INSTAGRAM_CAPTION_MAX
+    : isThreadsOnly
+      ? THREADS_MAX_COUNT
+      : (maxCountOverride ?? defaultMaxCount);
   const setMaxCount = (n: number) => setMaxCountOverride(n);
-  const limitOptions = isThreadsOnly ? LIMIT_OPTIONS_THREADS : LIMIT_OPTIONS_X;
+  const limitOptions = isInstagramOnly
+    ? LIMIT_OPTIONS_INSTAGRAM
+    : isThreadsOnly
+      ? LIMIT_OPTIONS_THREADS
+      : LIMIT_OPTIONS_X;
 
   // 分割結果（リアルタイム）
   // mode === 'none' の場合は分割せず原文を単一ポストとして扱う
@@ -261,10 +306,30 @@ export function PostCreateClient() {
     [chunkImages, chunks.length],
   );
 
+  // ── Instagram は単一投稿（分割なし）──
+  // 全チャンクのテキストを連結して1キャプションにし、全画像を最大10枚に集約する。
+  const instagramCaption = useMemo(
+    () => chunks.map((c) => c.text).join('\n\n').trim(),
+    [chunks],
+  );
+  const instagramImages = useMemo(
+    () => chunkImages.slice(0, chunks.length).flat().slice(0, INSTAGRAM_MAX_IMAGES),
+    [chunkImages, chunks.length],
+  );
+  const instagramPreviews = useMemo(
+    () => chunkPreviews.slice(0, chunks.length).flat().slice(0, INSTAGRAM_MAX_IMAGES),
+    [chunkPreviews, chunks.length],
+  );
+  const instagramNeedsImage = targetInstagram && instagramImages.length === 0;
+
   const handlePost = async () => {
     if (chunks.length === 0) return;
-    if (!targetX && !targetThreads) {
+    if (!targetX && !targetThreads && !targetInstagram) {
       setError('投稿先プラットフォームを選択してください');
+      return;
+    }
+    if (instagramNeedsImage) {
+      setError('Instagram は画像が1枚以上必要です');
       return;
     }
     setIsPosting(true);
@@ -275,7 +340,7 @@ export function PostCreateClient() {
     // 'none' は1件なのでサーバー側では 'separate' と等価
     const sendMode = mode === 'none' ? 'separate' : mode;
 
-    type PostOutcome = { platform: 'X' | 'Threads'; ok: boolean; count: number; error?: string };
+    type PostOutcome = { platform: 'X' | 'Threads' | 'Instagram'; ok: boolean; count: number; error?: string };
 
     const postToX = async (): Promise<PostOutcome> => {
       try {
@@ -333,10 +398,27 @@ export function PostCreateClient() {
       }
     };
 
+    const postToInstagram = async (): Promise<PostOutcome> => {
+      try {
+        const fd = new FormData();
+        fd.append('caption', instagramCaption);
+        for (const f of instagramImages) fd.append('images', f);
+        const res = await apiFetch('/api/instagram/post', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          return { platform: 'Instagram', ok: false, count: 0, error: data.error ?? '投稿に失敗しました' };
+        }
+        return { platform: 'Instagram', ok: true, count: 1 };
+      } catch (err) {
+        return { platform: 'Instagram', ok: false, count: 0, error: err instanceof Error ? err.message : '投稿に失敗しました' };
+      }
+    };
+
     try {
       const tasks: Promise<PostOutcome>[] = [];
       if (targetX) tasks.push(postToX());
       if (targetThreads) tasks.push(postToThreads());
+      if (targetInstagram) tasks.push(postToInstagram());
       const outcomes = await Promise.all(tasks);
 
       const successes = outcomes.filter((o) => o.ok);
@@ -376,8 +458,12 @@ export function PostCreateClient() {
   // ── 予約投稿 ──
   const handleSchedule = async () => {
     if (chunks.length === 0) return;
-    if (!targetX && !targetThreads) {
+    if (!targetX && !targetThreads && !targetInstagram) {
       setError('投稿先プラットフォームを選択してください');
+      return;
+    }
+    if (instagramNeedsImage) {
+      setError('Instagram は画像が1枚以上必要です');
       return;
     }
     if (!scheduledAt) {
@@ -396,9 +482,10 @@ export function PostCreateClient() {
 
     const texts = chunks.map((c) => c.text);
     const sendMode = mode === 'none' ? 'separate' : mode;
-    const platforms: ('x' | 'threads')[] = [];
-    if (targetX)       platforms.push('x');
-    if (targetThreads) platforms.push('threads');
+    const platforms: ('x' | 'threads' | 'instagram')[] = [];
+    if (targetX)         platforms.push('x');
+    if (targetThreads)   platforms.push('threads');
+    if (targetInstagram) platforms.push('instagram');
 
     try {
       const fd = new FormData();
@@ -420,8 +507,9 @@ export function PostCreateClient() {
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
       });
       const targetLabel =
-        targetX && targetThreads ? 'X + Threads' :
-        targetX                  ? 'X'           : 'Threads';
+        [targetX && 'X', targetThreads && 'Threads', targetInstagram && 'Instagram']
+          .filter(Boolean)
+          .join(' + ') || '投稿先';
       setSuccess(`${when} に ${targetLabel} へ ${chunks.length} ポスト予約しました`);
       // 投稿フォームをクリア（送信成功と同等の挙動）
       setText('');
@@ -542,7 +630,7 @@ export function PostCreateClient() {
               <p className="section-label mt-1.5">どのSNSに投稿しますか？（未登録は選択不可）</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <PlatformToggle
                 active={targetX}
                 disabled={xAccountConfigured === false}
@@ -561,23 +649,51 @@ export function PostCreateClient() {
                 label="Threads"
                 disabledNote="アカウント未登録"
               />
+              <PlatformToggle
+                active={targetInstagram}
+                disabled={instagramAccountConfigured === false}
+                loading={instagramAccountConfigured === null}
+                onClick={() => setTargetInstagram((v) => !v)}
+                platform="instagram"
+                label="Instagram"
+                disabledNote="アカウント未登録"
+              />
             </div>
+
+            {(targetX || targetThreads) && targetInstagram && (
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Instagram は分割せず単一投稿（キャプション最大2,200文字・画像必須）として投稿します。X / Threads とは分割設定が異なる点にご注意ください。
+              </p>
+            )}
 
             {targetX && targetThreads && (
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                両方に投稿時は文字数上限を X 基準（短い方）に合わせています。
+                X と Threads の両方に投稿時は文字数上限を X 基準（短い方）に合わせています。
+              </p>
+            )}
+
+            {instagramNeedsImage && (
+              <p
+                className="text-[11px] text-amber-300 px-3 py-2 rounded-xl flex items-start gap-2"
+                style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)' }}
+              >
+                <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+                <span>Instagram は画像が必須です。画像を1枚以上添付してください。</span>
               </p>
             )}
 
             {/* ── 過去24h投稿数（BAN回避ソフトリミット）── */}
-            {todayCount && (xAccountConfigured || threadsAccountConfigured) && (
+            {todayCount && (xAccountConfigured || threadsAccountConfigured || instagramAccountConfigured) && (
               <DailyCountStrip
                 showX={!!xAccountConfigured}
                 showThreads={!!threadsAccountConfigured}
+                showInstagram={!!instagramAccountConfigured}
                 xCount={todayCount.x}
                 threadsCount={todayCount.threads}
+                instagramCount={todayCount.instagram}
                 xLimit={todayCount.limits.x}
                 threadsLimit={todayCount.limits.threads}
+                instagramLimit={todayCount.limits.instagram}
               />
             )}
           </div>
@@ -739,7 +855,7 @@ export function PostCreateClient() {
                 className="justify-center"
                 size="lg"
                 onClick={handlePost}
-                disabled={chunks.length === 0 || isPosting || isScheduling || !!splitError || (!targetX && !targetThreads)}
+                disabled={chunks.length === 0 || isPosting || isScheduling || !!splitError || (!targetX && !targetThreads && !targetInstagram) || instagramNeedsImage}
               >
                 {isPosting ? (
                   <>
@@ -751,10 +867,10 @@ export function PostCreateClient() {
                     <Send size={14} />
                     {(() => {
                       const targetLabel =
-                        targetX && targetThreads ? 'X + Threads' :
-                        targetX                  ? 'X'           :
-                        targetThreads            ? 'Threads'     : '投稿先未選択';
-                      if (chunks.length === 0 || !targetX && !targetThreads) return `${targetLabel}に投稿`;
+                        [targetX && 'X', targetThreads && 'Threads', targetInstagram && 'Instagram']
+                          .filter(Boolean)
+                          .join(' + ') || '投稿先未選択';
+                      if (chunks.length === 0 || (!targetX && !targetThreads && !targetInstagram)) return `${targetLabel}に投稿`;
                       const modeLabel = mode === 'thread' ? 'スレッド' : mode === 'separate' ? '独立' : '分割無し';
                       return `${targetLabel}に投稿（${chunks.length}ポスト・${modeLabel}）`;
                     })()}
@@ -764,7 +880,7 @@ export function PostCreateClient() {
               <button
                 type="button"
                 onClick={() => (scheduleOpen ? setScheduleOpen(false) : openSchedulePanel())}
-                disabled={chunks.length === 0 || isPosting || isScheduling || !!splitError || (!targetX && !targetThreads)}
+                disabled={chunks.length === 0 || isPosting || isScheduling || !!splitError || (!targetX && !targetThreads && !targetInstagram) || instagramNeedsImage}
                 className="inline-flex items-center justify-center gap-1.5 px-4 rounded-xl text-[13px] font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: scheduleOpen ? 'rgba(34,211,238,0.18)' : 'rgba(34,211,238,0.08)',
@@ -847,17 +963,16 @@ export function PostCreateClient() {
           <div className="flex items-center gap-2">
             <h3 className="text-[13px] font-semibold text-slate-300">Post Previews</h3>
             <span className="text-[11px] text-slate-600">
-              {targetX && targetThreads
-                ? '（X / Threads）'
-                : targetX
-                ? '（X）'
-                : targetThreads
-                ? '（Threads）'
-                : '（投稿先未選択）'}
+              {(() => {
+                const label = [targetX && 'X', targetThreads && 'Threads', targetInstagram && 'Instagram']
+                  .filter(Boolean)
+                  .join(' / ');
+                return label ? `（${label}）` : '（投稿先未選択）';
+              })()}
             </span>
           </div>
 
-          {!targetX && !targetThreads ? (
+          {!targetX && !targetThreads && !targetInstagram ? (
             <div
               className="flex flex-col items-center justify-center rounded-2xl p-10 text-center"
               style={{
@@ -868,7 +983,7 @@ export function PostCreateClient() {
             >
               <p className="text-[13px] text-slate-400">投稿先を選択してください</p>
               <p className="text-[11px] text-slate-600 mt-1">
-                左の「投稿先」セクションで X / Threads をONにすると、対応するプレビューが表示されます。
+                左の「投稿先」セクションで X / Threads / Instagram をONにすると、対応するプレビューが表示されます。
               </p>
             </div>
           ) : (
@@ -882,6 +997,13 @@ export function PostCreateClient() {
                   mode={mode}
                   chunkPreviews={chunkPreviews}
                   threadsAccount={threadsAccount}
+                />
+              )}
+              {targetInstagram && (
+                <InstagramPreview
+                  caption={instagramCaption}
+                  imagePreviews={instagramPreviews}
+                  instagramAccount={instagramAccount}
                 />
               )}
             </>
@@ -988,11 +1110,11 @@ function PlatformToggle({
   disabled: boolean;
   loading: boolean;
   onClick: () => void;
-  platform: 'x' | 'threads';
+  platform: 'x' | 'threads' | 'instagram';
   label: string;
   disabledNote: string;
 }) {
-  const accent = platform === 'x' ? '#60a5fa' : '#c084fc';
+  const accent = platform === 'x' ? '#60a5fa' : platform === 'instagram' ? '#ec4899' : '#c084fc';
   return (
     <button
       type="button"
@@ -1042,14 +1164,19 @@ function PlatformToggle({
  * BAN 回避ガイド準拠のソフトリミット可視化（強制ブロックはしない）。
  */
 function DailyCountStrip({
-  showX, showThreads, xCount, threadsCount, xLimit, threadsLimit,
+  showX, showThreads, showInstagram,
+  xCount, threadsCount, instagramCount,
+  xLimit, threadsLimit, instagramLimit,
 }: {
   showX: boolean;
   showThreads: boolean;
+  showInstagram: boolean;
   xCount: number;
   threadsCount: number;
+  instagramCount: number;
   xLimit: number;
   threadsLimit: number;
+  instagramLimit: number;
 }) {
   return (
     <div
@@ -1066,6 +1193,9 @@ function DailyCountStrip({
         )}
         {showThreads && (
           <CountChip platform="Threads" count={threadsCount} limit={threadsLimit} />
+        )}
+        {showInstagram && (
+          <CountChip platform="Instagram" count={instagramCount} limit={instagramLimit} />
         )}
       </div>
       <Link
