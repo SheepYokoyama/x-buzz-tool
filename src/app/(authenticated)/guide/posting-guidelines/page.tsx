@@ -10,7 +10,7 @@ export default function PostingGuidelinesPage() {
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
       <Header
         title="投稿ガイドライン / BAN 回避"
-        subtitle="X / Threads 自動投稿で凍結されないための運用ルール（2026 年 5 月時点の調査ベース）"
+        subtitle="X / Threads / Instagram 自動投稿で凍結されないための運用ルール（2026 年 5 月時点の調査ベース）"
       />
 
       <Link
@@ -190,6 +190,11 @@ export default function PostingGuidelinesPage() {
                 <td className="px-3 py-2 font-semibold">Threads</td>
                 <td className="px-3 py-2 text-amber-300 font-mono">250 投稿 / 24h</td>
                 <td className="px-3 py-2">Meta 公式の API ハードリミット</td>
+              </tr>
+              <tr className="border-t border-white/10">
+                <td className="px-3 py-2 font-semibold">Instagram</td>
+                <td className="px-3 py-2 text-amber-300 font-mono">25 投稿 / 24h</td>
+                <td className="px-3 py-2">Meta 公式のコンテンツ公開 API 上限（content publishing limit）</td>
               </tr>
             </tbody>
           </table>

@@ -343,20 +343,25 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
         <>
           {payloadV1 && (
             <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400">
-              {payloadV1.platforms.map((p) => (
-                <span
-                  key={p}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md"
-                  style={{
-                    background: p === 'x' ? 'rgba(96,165,250,0.10)' : 'rgba(168,85,247,0.10)',
-                    border: p === 'x' ? '1px solid rgba(96,165,250,0.30)' : '1px solid rgba(168,85,247,0.30)',
-                    color: p === 'x' ? '#60a5fa' : '#c084fc',
-                  }}
-                >
-                  <PlatformIcon platform={p} size={10} />
-                  {p === 'x' ? 'X' : 'Threads'}
-                </span>
-              ))}
+              {payloadV1.platforms.map((p) => {
+                const style =
+                  p === 'x'
+                    ? { background: 'rgba(96,165,250,0.10)', border: '1px solid rgba(96,165,250,0.30)', color: '#60a5fa' }
+                    : p === 'instagram'
+                      ? { background: 'rgba(236,72,153,0.10)', border: '1px solid rgba(236,72,153,0.30)', color: '#f472b6' }
+                      : { background: 'rgba(168,85,247,0.10)', border: '1px solid rgba(168,85,247,0.30)', color: '#c084fc' };
+                const label = p === 'x' ? 'X' : p === 'instagram' ? 'Instagram' : 'Threads';
+                return (
+                  <span
+                    key={p}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md"
+                    style={style}
+                  >
+                    <PlatformIcon platform={p} size={10} />
+                    {label}
+                  </span>
+                );
+              })}
               <span className="inline-flex items-center gap-1 text-slate-500">
                 <MessageSquare size={11} />
                 {payloadV1.chunks.length}ポスト

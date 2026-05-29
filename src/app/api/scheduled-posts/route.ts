@@ -3,6 +3,7 @@ import { getAuthUser } from '@/lib/auth';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getActiveXAccountId } from '@/lib/x-client';
 import { getActiveThreadsAccountId } from '@/lib/threads-client';
+import { getActiveInstagramAccountId } from '@/lib/instagram-client';
 import { uploadPostImage, deletePostImages } from '@/lib/post-storage';
 import type {
   ScheduledMode,
@@ -15,7 +16,7 @@ const MAX_IMAGES_PER_POST = 4;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 const ALLOWED_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 const VALID_MODES: ReadonlySet<ScheduledMode> = new Set(['thread', 'separate', 'none'] as const);
-const VALID_PLATFORMS: ReadonlySet<ScheduledPlatform> = new Set(['x', 'threads'] as const);
+const VALID_PLATFORMS: ReadonlySet<ScheduledPlatform> = new Set(['x', 'threads', 'instagram'] as const);
 
 /**
  * POST /api/scheduled-posts
@@ -152,6 +153,17 @@ export async function POST(req: Request) {
     chunkFiles.push(files);
   }
 
+  // ── Instagram は画像必須（全chunk合計で1枚以上）──
+  if (platforms.includes('instagram')) {
+    const totalImages = chunkFiles.reduce((sum, files) => sum + files.length, 0);
+    if (totalImages === 0) {
+      return NextResponse.json(
+        { error: 'Instagram への予約投稿には画像が1枚以上必要です' },
+        { status: 400 },
+      );
+    }
+  }
+
   // ── 画像アップロード（失敗時は巻き戻し）──────
   const chunks: ScheduledChunk[] = texts.map((t) => ({ text: t, images: [] }));
   const allUploadedPaths: string[] = [];
@@ -184,11 +196,12 @@ export async function POST(req: Request) {
   // content には全 chunk テキストを 2 行空けて連結（旧UIで開いても可読）。
   const legacyContent = texts.join('\n\n---\n\n');
 
-  // x_account_id 列は X 単独/混在なら Xアカウント、Threads単独なら Threadsアカウント。
-  const wantsX = platforms.includes('x');
-  const accountId = wantsX
+  // x_account_id 列は代表アカウントの UUID を記録する（X 優先、次に Threads、最後に Instagram）。
+  const accountId = platforms.includes('x')
     ? await getActiveXAccountId(user.id)
-    : await getActiveThreadsAccountId(user.id);
+    : platforms.includes('threads')
+      ? await getActiveThreadsAccountId(user.id)
+      : await getActiveInstagramAccountId(user.id);
 
   // ── DB INSERT ─────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

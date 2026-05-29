@@ -1,6 +1,7 @@
 import { Header } from '@/components/layout/Header';
 import { XAccountsClient } from './XAccountsClient';
 import { ThreadsAccountsClient } from './ThreadsAccountsClient';
+import { InstagramAccountsClient } from './InstagramAccountsClient';
 import { XApiPricingNotice } from '@/components/x-accounts/XApiPricingNotice';
 
 export default function XAccountsPage() {
@@ -26,6 +27,8 @@ export default function XAccountsPage() {
       <XAccountsClient />
 
       <ThreadsAccountsClient />
+
+      <InstagramAccountsClient />
     </div>
   );
 }

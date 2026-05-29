@@ -9,7 +9,7 @@
  */
 
 export type ScheduledMode = 'thread' | 'separate' | 'none';
-export type ScheduledPlatform = 'x' | 'threads';
+export type ScheduledPlatform = 'x' | 'threads' | 'instagram';
 
 export interface ScheduledImage {
   /** post-uploads バケット内のオブジェクトパス（cleanup 時に使用）*/
@@ -30,8 +30,10 @@ export interface ScheduledPostResultItem {
 
 export interface ScheduledPostResults {
   /** プラットフォーム別の成功した投稿リスト（chunk 順）。未投稿は null */
-  x:       ScheduledPostResultItem[] | null;
-  threads: ScheduledPostResultItem[] | null;
+  x:         ScheduledPostResultItem[] | null;
+  threads:   ScheduledPostResultItem[] | null;
+  /** Instagram は単一投稿のみ（要素は最大1件）。未投稿は null */
+  instagram: ScheduledPostResultItem[] | null;
   /** プラットフォーム別の最終エラー（成功時は undefined）*/
   errors?: Partial<Record<ScheduledPlatform, string>>;
   /** cron が走った時刻 */
