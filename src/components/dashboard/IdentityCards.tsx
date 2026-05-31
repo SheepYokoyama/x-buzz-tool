@@ -18,6 +18,16 @@ export function IdentityCards() {
   const xPlan      = getXPlan(xUser?.verifiedType, xUser?.subscriptionType);
   const xPlanText  = getPlanLabel(xPlan);
 
+  /** 連携アカウントの実プロフィールURL（別ウィンドウで開く用） */
+  const profileUrl = (platform: 'x' | 'threads' | 'instagram', username: string): string => {
+    const handle = username.replace(/^@/, '');
+    switch (platform) {
+      case 'x':         return `https://x.com/${handle}`;
+      case 'threads':   return `https://www.threads.net/@${handle}`;
+      case 'instagram': return `https://www.instagram.com/${handle}`;
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
       {/* ── X アカウントカード ── */}
@@ -30,6 +40,7 @@ export function IdentityCards() {
           name={xUser.name}
           username={xUser.username}
           tagText={xPlan !== 'free' ? xPlanText : undefined}
+          profileUrl={profileUrl('x', xUser.username)}
           settingsHref="/x-accounts"
           settingsTitle="X アカウント管理"
         />
@@ -52,6 +63,7 @@ export function IdentityCards() {
           name={threadsUser.name}
           username={threadsUser.username}
           accent="purple"
+          profileUrl={profileUrl('threads', threadsUser.username)}
           settingsHref="/x-accounts"
           settingsTitle="Threads アカウント管理"
         />
@@ -74,6 +86,7 @@ export function IdentityCards() {
           name={instagramUser.name}
           username={instagramUser.username}
           accent="pink"
+          profileUrl={profileUrl('instagram', instagramUser.username)}
           settingsHref="/x-accounts"
           settingsTitle="Instagram アカウント管理"
         />
@@ -141,6 +154,7 @@ function ConnectedCard({
   username,
   tagText,
   accent,
+  profileUrl,
   settingsHref,
   settingsTitle,
 }: {
@@ -152,6 +166,7 @@ function ConnectedCard({
   username: string;
   tagText?: string;
   accent?: 'purple' | 'pink';
+  profileUrl: string;
   settingsHref: string;
   settingsTitle: string;
 }) {
@@ -169,6 +184,13 @@ function ConnectedCard({
       className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
       style={{ background: accentBg, border: `1px solid ${accentBorder}` }}
     >
+      <a
+        href={profileUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={`${platformTitle} のプロフィールを開く`}
+        className="flex items-center gap-2.5 flex-1 min-w-0 transition-opacity hover:opacity-80"
+      >
       <div className="relative shrink-0">
         {avatar ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -218,6 +240,7 @@ function ConnectedCard({
           )}
         </div>
       </div>
+      </a>
       <Link
         href={settingsHref}
         className="p-1 rounded-md transition-colors hover:bg-white/[0.06]"

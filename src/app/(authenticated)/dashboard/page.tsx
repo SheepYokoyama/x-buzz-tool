@@ -1,39 +1,38 @@
 export const dynamic = 'force-dynamic';
 
 import { Header } from '@/components/layout/Header';
-import { StatsCard } from '@/components/dashboard/StatsCard';
+// import { StatsCard } from '@/components/dashboard/StatsCard';            // 今月の成果セクション非表示のため一時停止
 import { RecentPosts } from '@/components/dashboard/RecentPosts';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { QuickActions } from '@/components/dashboard/QuickActions';
-import { getDashboardStats } from '@/lib/api/stats';
+// import { getDashboardStats } from '@/lib/api/stats';                     // 今月の成果セクション非表示のため一時停止
 import { XPostDebug } from '@/components/dashboard/XPostDebug';
-import { SyncMetricsButton } from '@/components/dashboard/SyncMetricsButton';
-import { FollowersStatsCard } from '@/components/dashboard/FollowersStatsCard';
+// import { SyncMetricsButton } from '@/components/dashboard/SyncMetricsButton';     // 今月の成果セクション非表示のため一時停止
+// import { FollowersStatsCard } from '@/components/dashboard/FollowersStatsCard';   // 今月の成果セクション非表示のため一時停止
 import { XAccountSetupBanner } from '@/components/dashboard/XAccountSetupBanner';
 import { IdentityCards } from '@/components/dashboard/IdentityCards';
 import { getRecentPublishedPosts, getUpcomingScheduledPosts } from '@/lib/api/scheduled-posts';
 import { getTodayDraftSummary } from '@/lib/api/generated-posts';
 import { getCurrentUserId } from '@/lib/auth';
 import { getActiveXAccountId } from '@/lib/x-client';
-import { getLastSyncedAt } from '@/lib/metrics-sync';
-import { FileText, Heart, Eye, TrendingUp, Sparkles, ArrowRight } from 'lucide-react';
+// import { getLastSyncedAt } from '@/lib/metrics-sync';                    // 今月の成果セクション非表示のため一時停止
+import { Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-function fmt(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000)     return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
-}
+// 今月の成果セクション非表示のため一時停止（手動投稿と自動投稿が混在し数値の信頼性が低いため）
+// function fmt(n: number): string {
+//   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+//   if (n >= 1_000)     return `${(n / 1_000).toFixed(1)}K`;
+//   return String(n);
+// }
 
 export default async function DashboardPage() {
   const userId = await getCurrentUserId();
-  const [stats, recentPosts, upcomingPosts, todayDrafts, activeXAccountId, lastSyncedAt] = await Promise.all([
-    getDashboardStats(),
+  const [recentPosts, upcomingPosts, todayDrafts, activeXAccountId] = await Promise.all([
     getRecentPublishedPosts(4),
     getUpcomingScheduledPosts(3),
     getTodayDraftSummary(),
     userId ? getActiveXAccountId(userId) : Promise.resolve(null),
-    userId ? getLastSyncedAt(userId)    : Promise.resolve(null),
   ]);
 
   const hasDrafts = todayDrafts.count > 0;
@@ -98,7 +97,10 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {/* ── KPI 4枚 ──────────────────────────────── */}
+      {/* ── KPI 4枚 ───────────────────────────────────────────
+          手動投稿と自動投稿が混在し数値の信頼性が低いため一時的に非表示。
+          再表示する場合は下記のブロックと上部の import / データ取得のコメントアウトを解除する。
+
       <div className="mb-2 flex items-center justify-between">
         <p className="section-label">今月の成果</p>
         <SyncMetricsButton lastSyncedAt={lastSyncedAt} />
@@ -138,6 +140,7 @@ export default async function DashboardPage() {
         />
         <FollowersStatsCard />
       </div>
+      ─────────────────────────────────────────────────────── */}
 
       {/* ── 投稿一覧 + クイックアクション ────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

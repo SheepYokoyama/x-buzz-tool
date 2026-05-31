@@ -1,5 +1,7 @@
 import { getSupabaseAdmin, getSupabaseServer } from '@/lib/supabase';
 import { getActiveXAccountId } from '@/lib/x-client';
+import { getActiveThreadsAccountId } from '@/lib/threads-client';
+import { getActiveInstagramAccountId } from '@/lib/instagram-client';
 import type { ScheduledPost, ScheduledPostWithMetrics, PostMetrics } from '@/lib/types';
 
 type RowWithMetrics = ScheduledPost & { post_metrics: PostMetrics[] };
@@ -17,6 +19,22 @@ async function getCurrentUserId(): Promise<string | null> {
   const supabase = await getSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   return user?.id ?? null;
+}
+
+/**
+ * ダッシュボード絞り込み用：X / Threads / Instagram それぞれのアクティブアカウントIDを集約する。
+ *
+ * scheduled_posts.x_account_id には「代表アカウント」の UUID が入る（X優先→Threads→Instagram、
+ * scheduled-posts/route.ts 参照）。X のアクティブIDだけで絞ると Threads/Instagram 単独投稿が
+ * 除外されてしまうため、3プラットフォームのアクティブIDをまとめて返し `.in()` で絞り込む。
+ */
+async function getActiveAccountIds(userId: string): Promise<string[]> {
+  const [xId, threadsId, instagramId] = await Promise.all([
+    getActiveXAccountId(userId),
+    getActiveThreadsAccountId(userId),
+    getActiveInstagramAccountId(userId),
+  ]);
+  return [xId, threadsId, instagramId].filter((id): id is string => !!id);
 }
 
 /** 全ステータスの投稿一覧（ユーザー自身の投稿のみ・scheduled_at 昇順） */
@@ -57,7 +75,7 @@ export async function getRecentPublishedPosts(limit = 4): Promise<ScheduledPostW
   if (!userId) return [];
 
   const supabase = getSupabaseAdmin();
-  const activeAccountId = await getActiveXAccountId(userId);
+  const activeAccountIds = await getActiveAccountIds(userId);
 
   let query = supabase
     .from('scheduled_posts')
@@ -67,8 +85,9 @@ export async function getRecentPublishedPosts(limit = 4): Promise<ScheduledPostW
     .order('published_at', { ascending: false })
     .limit(limit);
 
+  // X / Threads / Instagram のアクティブアカウントの投稿に絞る
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (activeAccountId) query = (query as any).eq('x_account_id', activeAccountId);
+  if (activeAccountIds.length > 0) query = (query as any).in('x_account_id', activeAccountIds);
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
@@ -81,7 +100,7 @@ export async function getUpcomingScheduledPosts(limit = 3): Promise<ScheduledPos
   if (!userId) return [];
 
   const supabase = getSupabaseAdmin();
-  const activeAccountId = await getActiveXAccountId(userId);
+  const activeAccountIds = await getActiveAccountIds(userId);
 
   let query = supabase
     .from('scheduled_posts')
@@ -91,8 +110,9 @@ export async function getUpcomingScheduledPosts(limit = 3): Promise<ScheduledPos
     .order('scheduled_at', { ascending: true })
     .limit(limit);
 
+  // X / Threads / Instagram のアクティブアカウントの投稿に絞る
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (activeAccountId) query = (query as any).eq('x_account_id', activeAccountId);
+  if (activeAccountIds.length > 0) query = (query as any).in('x_account_id', activeAccountIds);
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
