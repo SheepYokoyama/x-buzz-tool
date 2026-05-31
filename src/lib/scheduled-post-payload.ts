@@ -65,6 +65,15 @@ export function isPayloadV1(value: unknown): value is ScheduledPostPayloadV1 {
   return true;
 }
 
+/**
+ * 投稿の payload から対象プラットフォーム一覧を取得する。
+ * payload IS NULL の旧仕様レコードは X 単独投稿として扱う。
+ */
+export function getPostPlatforms(payload: unknown): ScheduledPlatform[] {
+  if (isPayloadV1(payload) && payload.platforms.length > 0) return payload.platforms;
+  return ['x'];
+}
+
 /** payload.chunks から含まれる全ての画像パスを抽出（Storage cleanup 用）*/
 export function collectImagePaths(payload: ScheduledPostPayload): string[] {
   const paths: string[] = [];

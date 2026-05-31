@@ -1,4 +1,6 @@
 import { CalendarClock } from 'lucide-react';
+import { PlatformIcon } from '@/components/ui/PlatformIcon';
+import { getPostPlatforms } from '@/lib/scheduled-post-payload';
 import type { ScheduledPost } from '@/lib/types';
 
 interface Props {
@@ -38,7 +40,14 @@ export function ActivityFeed({ upcomingPosts }: Props) {
                 <div className="w-1.5 h-1.5 rounded-full bg-neon-cyan mt-2 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-slate-300 line-clamp-1">{post.content}</p>
-                  <p className="text-xs text-neon-cyan mt-0.5">{formatScheduleTime(post.scheduled_at)}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-xs text-neon-cyan">{formatScheduleTime(post.scheduled_at)}</p>
+                    <span className="flex items-center gap-1 text-slate-500">
+                      {getPostPlatforms(post.payload).map((p) => (
+                        <PlatformIcon key={p} platform={p} size={11} />
+                      ))}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))

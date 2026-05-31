@@ -1,5 +1,7 @@
 import { Badge } from '@/components/ui/Badge';
 import { Heart, Repeat2, Eye, MessageCircle } from 'lucide-react';
+import { PlatformIcon } from '@/components/ui/PlatformIcon';
+import { getPostPlatforms } from '@/lib/scheduled-post-payload';
 import type { ScheduledPostWithMetrics } from '@/lib/types';
 
 const statusConfig = {
@@ -24,7 +26,7 @@ export function RecentPosts({ posts }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-[15px] font-semibold text-slate-200 leading-none">最近のバズ投稿</h2>
+          <h2 className="text-[15px] font-semibold text-slate-200 leading-none">最近の投稿</h2>
           <p className="section-label mt-1.5">直近4件のパフォーマンス</p>
         </div>
         <a
@@ -46,7 +48,12 @@ export function RecentPosts({ posts }: Props) {
                 <p className="text-[13px] text-slate-300 leading-[1.6] line-clamp-2 flex-1">
                   {post.content}
                 </p>
-                <div className="shrink-0 pt-0.5">
+                <div className="shrink-0 pt-0.5 flex items-center gap-2">
+                  <span className="flex items-center gap-1 text-slate-500">
+                    {getPostPlatforms(post.payload).map((p) => (
+                      <PlatformIcon key={p} platform={p} size={12} />
+                    ))}
+                  </span>
                   <Badge color={color}>{label}</Badge>
                 </div>
               </div>
