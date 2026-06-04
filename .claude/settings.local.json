@@ -73,7 +73,16 @@
       "Bash(grep -E \"^C:.*\\\\.\\(ts|tsx\\)$\")",
       "Bash(gh issue *)",
       "Bash(gh repo *)",
-      "Bash(\"/c/Program Files/Git/mingw64/bin/pdftotext.exe\" -enc UTF-8 -nopgbrk \"C:/work/2026-05-15_SNS自動投稿ツール開発調査.pdf\" \"C:/work/sns-research2.txt\")"
+      "Bash(\"/c/Program Files/Git/mingw64/bin/pdftotext.exe\" -enc UTF-8 -nopgbrk \"C:/work/2026-05-15_SNS自動投稿ツール開発調査.pdf\" \"C:/work/sns-research2.txt\")",
+      "Bash(git -C C:\\\\Claude\\\\x-buzz-tool log --oneline -20)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(gh api *)",
+      "Bash(git -C C:/Claude/x-buzz-tool grep -l \"runScheduledPost\\\\|scheduled-posts\" -- \"src/**/*.ts\" \"src/**/*.tsx\")",
+      "Bash(npx eslint *)",
+      "Bash(Select-Object -Last 40)",
+      "PowerShell(npm run build 2>&1)",
+      "Bash(npx vercel *)"
     ]
   },
   "hooks": {

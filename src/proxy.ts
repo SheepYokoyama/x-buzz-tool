@@ -17,10 +17,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // app-auth Cookie が存在するかチェック（ネットワーク通信なし）
+  // 合言葉ゲート（gate-ok）と認証（app-auth）の両方の Cookie をチェック
+  // （ネットワーク通信なし）。どちらか欠けていれば /login へ。
+  const hasGate = request.cookies.has('gate-ok');
   const hasAuthCookie = request.cookies.has('app-auth');
 
-  if (!hasAuthCookie) {
+  if (!hasGate || !hasAuthCookie) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
