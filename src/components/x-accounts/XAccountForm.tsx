@@ -107,17 +107,17 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
     >
       <div
         className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl"
-        style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.1)' }}
       >
         {/* ── ヘッダー ── */}
-        <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <h2 className="text-[15px] font-semibold text-slate-200">
+        <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: 'rgba(15,23,42,0.06)' }}>
+          <h2 className="text-[16px] font-semibold text-slate-800">
             {isEdit ? 'Xアカウントを編集' : 'Xアカウントを追加'}
           </h2>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-            style={{ background: 'rgba(255,255,255,0.05)', color: '#64748b' }}
+            style={{ background: 'rgba(15,23,42,0.05)', color: '#64748b' }}
           >
             <X size={15} />
           </button>
@@ -127,7 +127,7 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           {/* アカウント名（任意） */}
           <div>
-            <label className="block text-[12px] font-medium text-slate-400 mb-1.5">
+            <label className="block text-[13px] font-medium text-slate-600 mb-1.5">
               アカウント名 <span className="text-slate-600 font-normal">（任意）</span>
             </label>
             <input
@@ -135,10 +135,10 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="空欄の場合は X の表示名を使用します"
-              className="w-full rounded-lg px-3 py-2.5 text-[13px] text-slate-200 outline-none transition-colors"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+              className="w-full rounded-lg px-3 py-2.5 text-[14px] text-slate-800 outline-none transition-colors"
+              style={{ background: 'rgba(15,23,42,0.05)', border: '1px solid rgba(15,23,42,0.08)' }}
             />
-            <p className="text-[11px] text-slate-500 mt-1.5">
+            <p className="text-[12px] text-slate-500 mt-1.5">
               @ユーザー名・表示名・アイコンはトークンを検証して X から自動取得します
             </p>
           </div>
@@ -146,16 +146,16 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
           {/* トークンフィールド */}
           <div
             className="rounded-xl p-4 space-y-3"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+            style={{ background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.05)' }}
           >
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[12px] text-slate-500">
               {isEdit ? 'トークンを変更する場合のみ入力してください（空欄は変更しません）' : 'X Developer Console から取得した認証情報を入力してください'}
             </p>
             {!isEdit && (
               <Link
                 href="/guide/x-account"
                 target="_blank"
-                className="inline-flex items-center gap-1.5 text-[11px] text-sky-300 hover:underline"
+                className="inline-flex items-center gap-1.5 text-[12px] text-sky-600 hover:underline"
               >
                 <BookOpen size={11} />
                 トークンの取得方法（登録マニュアル）を見る
@@ -163,9 +163,9 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
             )}
             {TOKEN_FIELDS.map((f) => (
               <div key={f.key}>
-                <label className="block text-[11px] font-medium text-slate-500 mb-1">
+                <label className="block text-[12px] font-medium text-slate-500 mb-1">
                   {f.label}
-                  {f.required && !isEdit && <span className="text-red-400 ml-1">*</span>}
+                  {f.required && !isEdit && <span className="text-red-600 ml-1">*</span>}
                 </label>
                 <div className="relative">
                   <input
@@ -179,15 +179,15 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
                       f.key === 'access_secret' ? account?.access_secret_masked :
                       account?.bearer_token_masked ?? '未設定'
                     }` : f.placeholder}
-                    className="w-full rounded-lg pl-3 pr-10 py-2 text-[12px] font-mono text-slate-300 outline-none"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+                    className="w-full rounded-lg pl-3 pr-10 py-2 text-[13px] font-mono text-slate-700 outline-none"
+                    style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.07)' }}
                     autoComplete="off"
                     spellCheck={false}
                   />
                   <button
                     type="button"
                     onClick={() => toggleShow(f.key)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-600 transition-colors"
                     tabIndex={-1}
                   >
                     {showMap[f.key] ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -199,7 +199,7 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
 
           {/* エラー */}
           {error && (
-            <p className="text-[12px] text-red-400 rounded-lg px-3 py-2" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
+            <p className="text-[13px] text-red-600 rounded-lg px-3 py-2" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
               認証に失敗しました: {error}
             </p>
           )}
@@ -207,14 +207,14 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
           {/* 成功 */}
           {successUser && !error && (
             <div
-              className="flex items-center gap-2 text-[12px] rounded-lg px-3 py-2"
+              className="flex items-center gap-2 text-[13px] rounded-lg px-3 py-2"
               style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}
             >
-              <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
-              <span className="text-emerald-300">
+              <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+              <span className="text-emerald-600">
                 認証成功: @{successUser.username}{' '}
                 {successUser.name !== successUser.username && (
-                  <span className="text-emerald-400/60">（{successUser.name}）</span>
+                  <span className="text-emerald-600/60">（{successUser.name}）</span>
                 )}
                 で連携しました
               </span>
@@ -226,15 +226,15 @@ export function XAccountForm({ account, onClose, onSave }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl text-[13px] font-medium text-slate-500 transition-colors"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+              className="flex-1 py-2.5 rounded-xl text-[14px] font-medium text-slate-500 transition-colors"
+              style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.07)' }}
             >
               キャンセル
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+              className="flex-1 py-2.5 rounded-xl text-[14px] font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-60"
               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff' }}
             >
               {saving && !successUser && <Loader2 size={14} className="animate-spin" />}

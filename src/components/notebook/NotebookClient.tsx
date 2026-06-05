@@ -128,7 +128,7 @@ export function NotebookClient({ initialNotes }: Props) {
 
         {error && (
           <p
-            className="text-[12px] text-red-400 px-3 py-2 rounded-xl"
+            className="text-[13px] text-red-600 px-3 py-2 rounded-xl"
             style={{
               background: 'rgba(239,68,68,0.08)',
               border: '1px solid rgba(239,68,68,0.2)',
@@ -142,7 +142,7 @@ export function NotebookClient({ initialNotes }: Props) {
           <EmptyState
             icon={NotebookPen}
             title={notes.length === 0 ? 'まだメモがありません' : 'メモが見つかりません'}
-            iconColor="#a78bfa"
+            iconColor="#7c3aed"
           />
         ) : (
           filtered.map((note) => (
@@ -172,7 +172,7 @@ export function NotebookClient({ initialNotes }: Props) {
             <EmptyState
               icon={NotebookPen}
               title={notes.length === 0 ? '「新規」からメモを作成してください' : 'ノートを選択してください'}
-              iconColor="#a78bfa"
+              iconColor="#7c3aed"
             />
           </div>
         )}

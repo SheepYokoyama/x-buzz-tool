@@ -40,7 +40,7 @@ export function QuickActions() {
   return (
     <div className="neon-card p-6">
       <div className="mb-6">
-        <h2 className="text-[15px] font-semibold text-slate-200 leading-none">クイックアクション</h2>
+        <h2 className="text-[17px] font-bold text-slate-800 leading-none">クイックアクション</h2>
         <p className="section-label mt-1.5">よく使う操作へ素早くアクセス</p>
       </div>
 
@@ -62,14 +62,14 @@ export function QuickActions() {
 
             {/* Text */}
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-slate-200 leading-none">{label}</p>
-              <p className="text-[11px] text-slate-600 mt-1.5 leading-none">{description}</p>
+              <p className="text-[15px] font-semibold text-slate-800 leading-none">{label}</p>
+              <p className="text-[13px] text-slate-500 mt-1.5 leading-none">{description}</p>
             </div>
 
             {/* Arrow */}
             <ArrowRight
               size={13}
-              className="text-slate-700 group-hover:text-slate-400 transition-colors shrink-0"
+              className="text-slate-400 group-hover:text-slate-700 transition-colors shrink-0"
             />
           </Link>
         ))}

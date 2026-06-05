@@ -10,11 +10,11 @@ interface StatsCardProps {
 }
 
 const colorConfig = {
-  blue:   { hex: '#60a5fa', bg: 'rgba(96,165,250,0.09)',   topLine: 'linear-gradient(90deg, #60a5fa, #818cf8)' },
-  purple: { hex: '#a78bfa', bg: 'rgba(167,139,250,0.09)',  topLine: 'linear-gradient(90deg, #a78bfa, #ec4899)' },
-  cyan:   { hex: '#22d3ee', bg: 'rgba(34,211,238,0.09)',   topLine: 'linear-gradient(90deg, #22d3ee, #60a5fa)' },
-  green:  { hex: '#34d399', bg: 'rgba(52,211,153,0.09)',   topLine: 'linear-gradient(90deg, #34d399, #22d3ee)' },
-  pink:   { hex: '#f472b6', bg: 'rgba(244,114,182,0.09)',  topLine: 'linear-gradient(90deg, #f472b6, #a78bfa)' },
+  blue:   { hex: '#2563eb', bg: 'rgba(37,99,235,0.08)',    topLine: 'linear-gradient(90deg, #2563eb, #6366f1)' },
+  purple: { hex: '#7c3aed', bg: 'rgba(124,58,237,0.08)',   topLine: 'linear-gradient(90deg, #7c3aed, #db2777)' },
+  cyan:   { hex: '#0891b2', bg: 'rgba(8,145,178,0.08)',    topLine: 'linear-gradient(90deg, #0891b2, #2563eb)' },
+  green:  { hex: '#059669', bg: 'rgba(5,150,105,0.08)',    topLine: 'linear-gradient(90deg, #059669, #0891b2)' },
+  pink:   { hex: '#db2777', bg: 'rgba(219,39,119,0.08)',   topLine: 'linear-gradient(90deg, #db2777, #7c3aed)' },
 };
 
 export function StatsCard({
@@ -60,10 +60,10 @@ export function StatsCard({
 
         {change !== undefined && (
           <span
-            className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg ${
+            className={`flex items-center gap-1 text-[12px] font-semibold px-2 py-1 rounded-lg ${
               isPositive
-                ? 'bg-neon-green/10 text-neon-green'
-                : 'bg-red-500/10 text-red-400'
+                ? 'bg-neon-green/12 text-neon-green'
+                : 'bg-red-500/12 text-red-600'
             }`}
           >
             {isPositive ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
@@ -73,16 +73,16 @@ export function StatsCard({
       </div>
 
       {/* Value */}
-      <p className="text-[1.75rem] font-bold text-slate-100 leading-none tracking-tight mb-2">
+      <p className="text-[2rem] font-bold text-slate-900 leading-none tracking-tight mb-2">
         {value}
       </p>
 
       {/* Title */}
-      <p className="text-[13px] text-slate-400 leading-none">{title}</p>
+      <p className="text-[15px] text-slate-600 leading-none">{title}</p>
 
       {/* Change label */}
       {changeLabel && (
-        <p className="text-[11px] text-slate-600 mt-1.5">{changeLabel}</p>
+        <p className="text-[13px] text-slate-500 mt-1.5">{changeLabel}</p>
       )}
     </div>
   );

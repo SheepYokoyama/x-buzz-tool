@@ -26,12 +26,12 @@ export function RecentPosts({ posts }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-[15px] font-semibold text-slate-200 leading-none">最近の投稿</h2>
+          <h2 className="text-[17px] font-bold text-slate-800 leading-none">最近の投稿</h2>
           <p className="section-label mt-1.5">直近4件のパフォーマンス</p>
         </div>
         <a
           href="/history"
-          className="text-[12px] text-neon-purple/80 hover:text-neon-purple transition-colors font-medium"
+          className="text-[14px] text-neon-purple hover:text-[#5b21b6] transition-colors font-semibold"
         >
           すべて見る →
         </a>
@@ -45,7 +45,7 @@ export function RecentPosts({ posts }: Props) {
             <div key={post.id} className="post-item">
               {/* Status + content */}
               <div className="flex items-start justify-between gap-4 mb-3.5">
-                <p className="text-[13px] text-slate-300 leading-[1.6] line-clamp-2 flex-1">
+                <p className="text-[15px] text-slate-700 leading-[1.6] line-clamp-2 flex-1">
                   {post.content}
                 </p>
                 <div className="shrink-0 pt-0.5 flex items-center gap-2">
@@ -61,10 +61,10 @@ export function RecentPosts({ posts }: Props) {
               {/* Metrics row */}
               {post.status === 'published' && m && (
                 <div className="flex items-center gap-6">
-                  <Metric icon={Heart}         color="#f472b6" value={formatNumber(m.likes)} />
-                  <Metric icon={Repeat2}       color="#34d399" value={formatNumber(m.retweets)} />
-                  <Metric icon={Eye}           color="#60a5fa" value={formatNumber(m.impressions)} />
-                  <Metric icon={MessageCircle} color="#22d3ee" value={formatNumber(m.replies)} />
+                  <Metric icon={Heart}         color="#db2777" value={formatNumber(m.likes)} />
+                  <Metric icon={Repeat2}       color="#059669" value={formatNumber(m.retweets)} />
+                  <Metric icon={Eye}           color="#2563eb" value={formatNumber(m.impressions)} />
+                  <Metric icon={MessageCircle} color="#0891b2" value={formatNumber(m.replies)} />
                 </div>
               )}
 
@@ -72,7 +72,7 @@ export function RecentPosts({ posts }: Props) {
               {post.tags.length > 0 && (
                 <div className="flex gap-2 mt-2.5 flex-wrap">
                   {post.tags.map((tag) => (
-                    <span key={tag} className="text-[11px] text-slate-600 tracking-wide">
+                    <span key={tag} className="text-[13px] text-slate-500 tracking-wide">
                       #{tag}
                     </span>
                   ))}
@@ -96,9 +96,9 @@ function Metric({
   value: string;
 }) {
   return (
-    <span className="flex items-center gap-1.5 text-[12px]">
+    <span className="flex items-center gap-1.5 text-[14px]">
       <Icon size={11} style={{ color }} />
-      <span className="text-slate-300 font-medium tabular-nums">{value}</span>
+      <span className="text-slate-700 font-medium tabular-nums">{value}</span>
     </span>
   );
 }

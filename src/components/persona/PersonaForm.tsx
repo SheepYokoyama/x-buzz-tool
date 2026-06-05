@@ -149,15 +149,15 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
         {/* ヘッダー */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-[15px] font-semibold text-slate-200">
+            <h2 className="text-[16px] font-semibold text-slate-800">
               {isEdit ? 'ペルソナを編集' : '新しいペルソナを作成'}
             </h2>
             <p className="section-label mt-1">投稿のトーン・スタイルを設定します</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors"
+            style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.08)' }}
           >
             <X size={14} />
           </button>
@@ -167,7 +167,7 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
         <div>
           <div className="flex items-center justify-between mb-2.5">
             <FieldLabel>アバター</FieldLabel>
-            <span className="text-2xl leading-none">{form.avatar}</span>
+            <span className="text-3xl leading-none">{form.avatar}</span>
           </div>
 
           <div className="flex gap-1.5 mb-2.5">
@@ -175,11 +175,11 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
               <button
                 key={g.label}
                 onClick={() => { setAvatarTab(g.label); gridRef.current?.scrollTo(0, 0); }}
-                className="text-[11px] px-2.5 py-1 rounded-lg transition-all"
+                className="text-[12px] px-2.5 py-1 rounded-lg transition-all"
                 style={{
-                  background: avatarTab === g.label ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.04)',
-                  border: avatarTab === g.label ? '1px solid rgba(167,139,250,0.35)' : '1px solid rgba(255,255,255,0.07)',
-                  color: avatarTab === g.label ? '#c4b5fd' : '#64748b',
+                  background: avatarTab === g.label ? 'rgba(167,139,250,0.15)' : 'rgba(15,23,42,0.04)',
+                  border: avatarTab === g.label ? '1px solid rgba(167,139,250,0.35)' : '1px solid rgba(15,23,42,0.07)',
+                  color: avatarTab === g.label ? '#7c3aed' : '#64748b',
                   fontWeight: avatarTab === g.label ? 600 : 400,
                 }}
               >
@@ -193,19 +193,19 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
             className="flex flex-wrap gap-1.5 overflow-y-auto rounded-xl p-2"
             style={{
               maxHeight: '120px',
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)',
+              background: 'rgba(15,23,42,0.02)',
+              border: '1px solid rgba(15,23,42,0.06)',
               scrollbarWidth: 'thin',
-              scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+              scrollbarColor: 'rgba(15,23,42,0.1) transparent',
             }}
           >
             {AVATAR_GROUPS.find((g) => g.label === avatarTab)?.emojis.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => set('avatar', emoji)}
-                className="w-9 h-9 rounded-lg text-xl transition-all flex items-center justify-center"
+                className="w-9 h-9 rounded-lg text-2xl transition-all flex items-center justify-center"
                 style={{
-                  background: form.avatar === emoji ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.03)',
+                  background: form.avatar === emoji ? 'rgba(167,139,250,0.2)' : 'rgba(15,23,42,0.03)',
                   border: form.avatar === emoji ? '1px solid rgba(167,139,250,0.5)' : '1px solid transparent',
                   boxShadow: form.avatar === emoji ? '0 0 8px rgba(167,139,250,0.3)' : 'none',
                   transform: form.avatar === emoji ? 'scale(1.15)' : 'scale(1)',
@@ -219,7 +219,7 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
 
         {/* ペルソナ名 */}
         <div>
-          <FieldLabel>ペルソナ名 <span className="text-red-400">*</span></FieldLabel>
+          <FieldLabel>ペルソナ名 <span className="text-red-600">*</span></FieldLabel>
           <Input
             value={form.name}
             onChange={(e) => set('name', e.target.value)}
@@ -272,7 +272,7 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
             <button
               onClick={addKeyword}
               className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all"
-              style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}
+              style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)', color: '#7c3aed' }}
             >
               <Plus size={14} />
             </button>
@@ -282,11 +282,11 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
               {form.keywords.map((kw) => (
                 <span
                   key={kw}
-                  className="flex items-center gap-1 text-[12px] px-2.5 py-1 rounded-lg"
-                  style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}
+                  className="flex items-center gap-1 text-[13px] px-2.5 py-1 rounded-lg"
+                  style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)', color: '#7c3aed' }}
                 >
                   {kw}
-                  <button onClick={() => removeKeyword(kw)} className="hover:text-red-400 transition-colors">
+                  <button onClick={() => removeKeyword(kw)} className="hover:text-red-600 transition-colors">
                     <X size={10} />
                   </button>
                 </span>
@@ -297,7 +297,7 @@ export function PersonaForm({ persona, onClose, onSave }: Props) {
 
         {/* エラー */}
         {error && (
-          <p className="text-[12px] text-red-400 px-3 py-2 rounded-xl"
+          <p className="text-[13px] text-red-600 px-3 py-2 rounded-xl"
             style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
             {error}
           </p>

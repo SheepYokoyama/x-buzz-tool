@@ -77,12 +77,12 @@ export function NoteDetail({ note, onChange, onDelete, saving, savedAt }: Props)
           <div className="flex items-center gap-2 mb-2">
             <button
               onClick={toggleImportant}
-              className="shrink-0 p-1 rounded hover:bg-white/5 transition-colors"
+              className="shrink-0 p-1 rounded hover:bg-slate-900/5 transition-colors"
               title={note.is_important ? '重要を外す' : '重要としてマーク'}
             >
               <Star
                 size={16}
-                className={note.is_important ? 'text-yellow-400' : 'text-slate-600'}
+                className={note.is_important ? 'text-yellow-600' : 'text-slate-600'}
                 fill={note.is_important ? 'currentColor' : 'none'}
               />
             </button>
@@ -91,10 +91,10 @@ export function NoteDetail({ note, onChange, onDelete, saving, savedAt }: Props)
               onChange={(e) => setTitle(e.target.value)}
               onBlur={commitTitle}
               placeholder="無題のメモ"
-              className="flex-1 bg-transparent text-[17px] font-semibold text-slate-100 leading-snug outline-none placeholder-slate-700"
+              className="flex-1 bg-transparent text-[18px] font-semibold text-slate-900 leading-snug outline-none placeholder-slate-700"
             />
           </div>
-          <div className="flex items-center gap-3 flex-wrap text-[11px] text-slate-600">
+          <div className="flex items-center gap-3 flex-wrap text-[12px] text-slate-600">
             <span>作成: {fmtDate(note.created_at)}</span>
             <span>更新: {fmtDate(note.updated_at)}</span>
             <span className="flex items-center gap-1">
@@ -124,8 +124,8 @@ export function NoteDetail({ note, onChange, onDelete, saving, savedAt }: Props)
         {note.tags.map((tag) => (
           <span
             key={tag}
-            className="text-[11px] pl-2 pr-1 py-0.5 rounded-md flex items-center gap-1"
-            style={{ background: 'rgba(167,139,250,0.08)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.15)' }}
+            className="text-[12px] pl-2 pr-1 py-0.5 rounded-md flex items-center gap-1"
+            style={{ background: 'rgba(167,139,250,0.08)', color: '#7c3aed', border: '1px solid rgba(167,139,250,0.15)' }}
           >
             {tag}
             <button
@@ -148,7 +148,7 @@ export function NoteDetail({ note, onChange, onDelete, saving, savedAt }: Props)
           }}
           onBlur={addTag}
           placeholder="タグを追加…"
-          className="text-[11px] bg-white/[0.02] border border-white/[0.06] rounded-md px-2 py-0.5 outline-none focus:border-neon-purple/40 text-slate-300 placeholder-slate-700 w-28"
+          className="text-[12px] bg-slate-900/[0.02] border border-slate-900/[0.08] rounded-md px-2 py-0.5 outline-none focus:border-neon-purple/40 text-slate-700 placeholder-slate-700 w-28"
         />
       </div>
 
@@ -159,7 +159,7 @@ export function NoteDetail({ note, onChange, onDelete, saving, savedAt }: Props)
           onChange={(e) => setContent(e.target.value)}
           onBlur={commitContent}
           placeholder="ここにメモを入力…"
-          className="w-full h-full min-h-[300px] bg-transparent text-[13px] text-slate-300 leading-[1.8] resize-none outline-none placeholder-slate-700"
+          className="w-full h-full min-h-[300px] bg-transparent text-[14px] text-slate-700 leading-[1.8] resize-none outline-none placeholder-slate-700"
         />
       </div>
     </div>

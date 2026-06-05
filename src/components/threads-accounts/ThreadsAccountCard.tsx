@@ -19,19 +19,19 @@ export function ThreadsAccountCard({ account, isRefreshing, onEdit, onDelete, on
       style={{
         background: account.is_active
           ? 'rgba(168,85,247,0.06)'
-          : 'rgba(255,255,255,0.025)',
+          : 'rgba(15,23,42,0.025)',
         border: account.is_active
           ? '1px solid rgba(168,85,247,0.2)'
-          : '1px solid rgba(255,255,255,0.07)',
+          : '1px solid rgba(15,23,42,0.07)',
       }}
     >
       {/* ── アクティブバッジ ── */}
       {account.is_active && (
         <span
-          className="absolute top-4 right-4 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
-          style={{ background: 'rgba(168,85,247,0.15)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.25)' }}
+          className="absolute top-4 right-4 text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+          style={{ background: 'rgba(168,85,247,0.15)', color: '#7c3aed', border: '1px solid rgba(168,85,247,0.25)' }}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-neon-green inline-block" style={{ boxShadow: '0 0 5px #34d399' }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-neon-green inline-block" style={{ boxShadow: '0 0 5px #059669' }} />
           使用中
         </span>
       )}
@@ -45,15 +45,15 @@ export function ThreadsAccountCard({ account, isRefreshing, onEdit, onDelete, on
               src={account.profile_image_url}
               alt={account.name}
               className="w-10 h-10 rounded-full"
-              style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ border: '1px solid rgba(15,23,42,0.1)' }}
             />
           ) : (
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-bold"
               style={{
-                background: account.is_active ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.05)',
-                border: account.is_active ? '1px solid rgba(168,85,247,0.2)' : '1px solid rgba(255,255,255,0.08)',
-                color: account.is_active ? '#c084fc' : '#64748b',
+                background: account.is_active ? 'rgba(168,85,247,0.15)' : 'rgba(15,23,42,0.05)',
+                border: account.is_active ? '1px solid rgba(168,85,247,0.2)' : '1px solid rgba(15,23,42,0.08)',
+                color: account.is_active ? '#7c3aed' : '#64748b',
               }}
             >
               <User size={18} />
@@ -64,7 +64,7 @@ export function ThreadsAccountCard({ account, isRefreshing, onEdit, onDelete, on
             className="absolute -bottom-1 -right-1 w-[18px] h-[18px] rounded-full flex items-center justify-center"
             style={{
               background: '#000',
-              border: '1.5px solid rgba(2,6,23,1)',
+              border: '1.5px solid #ffffff',
               color: '#fff',
             }}
             title="Threads"
@@ -73,18 +73,18 @@ export function ThreadsAccountCard({ account, isRefreshing, onEdit, onDelete, on
           </span>
         </div>
         <div className="min-w-0">
-          <p className="text-[14px] font-semibold text-slate-200 truncate">{account.name}</p>
+          <p className="text-[15px] font-semibold text-slate-800 truncate">{account.name}</p>
           {account.username && (
-            <p className="text-[12px] text-slate-500 truncate">@{account.username}</p>
+            <p className="text-[13px] text-slate-500 truncate">@{account.username}</p>
           )}
         </div>
       </div>
 
       {/* ── トークン情報 ── */}
       <div className="grid grid-cols-1 gap-2">
-        <div className="rounded-lg px-3 py-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <p className="text-[10px] text-slate-600 mb-0.5">Access Token</p>
-          <p className="text-[11px] text-slate-400 font-mono">{account.access_token_masked || '—'}</p>
+        <div className="rounded-lg px-3 py-2" style={{ background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.05)' }}>
+          <p className="text-[11px] text-slate-600 mb-0.5">Access Token</p>
+          <p className="text-[12px] text-slate-600 font-mono">{account.access_token_masked || '—'}</p>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ export function ThreadsAccountCard({ account, isRefreshing, onEdit, onDelete, on
               onClick={() => onRefresh(account.id)}
               disabled={isRefreshing}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-50"
-              style={{ background: 'rgba(168,85,247,0.07)', border: '1px solid rgba(168,85,247,0.15)', color: '#c084fc' }}
+              style={{ background: 'rgba(168,85,247,0.07)', border: '1px solid rgba(168,85,247,0.15)', color: '#7c3aed' }}
               title="Threads の最新情報（表示名・@・アイコン）に更新"
             >
               <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
@@ -105,7 +105,7 @@ export function ThreadsAccountCard({ account, isRefreshing, onEdit, onDelete, on
           <button
             onClick={() => onEdit(account)}
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: '#64748b' }}
+            style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.07)', color: '#64748b' }}
             title="編集"
           >
             <Pencil size={13} />

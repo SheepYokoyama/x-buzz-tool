@@ -6,22 +6,22 @@ import { UserCircle, Sparkles, CalendarClock, TrendingUp, ShieldAlert, ArrowRigh
 
 const STEPS = [
   {
-    step: 1, color: '#60a5fa', icon: UserCircle,
+    step: 1, color: '#2563eb', icon: UserCircle,
     title: 'ペルソナを設定する',
     description: '「ペルソナ」ページでキャラクターのトーン・スタイル・キーワードを設定します。AIがこの設定に基づいて投稿文を生成するため、あなたらしい声になります。',
   },
   {
-    step: 2, color: '#a78bfa', icon: Sparkles,
+    step: 2, color: '#7c3aed', icon: Sparkles,
     title: 'AI投稿を生成する',
     description: '「AI投稿生成」ページでトピックを選択するだけ。AIが複数のパターンを提案します。気に入ったものをコピーするか、そのまま予約投稿へ送ることができます。',
   },
   {
-    step: 3, color: '#22d3ee', icon: CalendarClock,
+    step: 3, color: '#0891b2', icon: CalendarClock,
     title: '予約投稿をセットする',
     description: '「予約投稿」ページで投稿日時を設定します。朝6時・昼12時・夜21時の3タイムスロットが特に効果的です。',
   },
   {
-    step: 4, color: '#34d399', icon: TrendingUp,
+    step: 4, color: '#059669', icon: TrendingUp,
     title: '結果を分析して改善する',
     description: '「投稿履歴」でいいね・RT・インプレッションを確認します。反応が良かった投稿のパターンをノートに記録してループを回しましょう。',
   },
@@ -49,10 +49,10 @@ export default function GuidePage() {
           border: '1px solid rgba(96,165,250,0.15)',
         }}
       >
-        <p className="text-[22px] font-bold text-slate-100 leading-snug mb-2">
+        <p className="text-[24px] font-bold text-slate-900 leading-snug mb-2">
           AIで毎日5分、<span className="gradient-text">バズ投稿</span>を量産しよう
         </p>
-        <p className="text-[13px] text-slate-500 leading-relaxed max-w-xl">
+        <p className="text-[14px] text-slate-500 leading-relaxed max-w-xl">
           XpressoはXでバズる投稿をAIで自動生成・管理するツールです。
           ペルソナ設定 → 生成 → 予約 → 分析のサイクルを回すことで、
           フォロワーを継続的に増やすことができます。
@@ -72,11 +72,11 @@ export default function GuidePage() {
           className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.22)' }}
         >
-          <ShieldAlert size={18} className="text-rose-300" />
+          <ShieldAlert size={18} className="text-rose-600" />
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-semibold text-slate-100">投稿ガイドライン / BAN 回避（必読）</p>
-          <p className="text-[12px] text-slate-400 mt-1 leading-relaxed">
+          <p className="text-[15px] font-semibold text-slate-900">投稿ガイドライン / BAN 回避（必読）</p>
+          <p className="text-[13px] text-slate-600 mt-1 leading-relaxed">
             自動投稿で凍結されないための運用ルール集。1 日上限、外部リンク戦略、EU AI Act 対応、よくある失敗まで網羅
           </p>
         </div>

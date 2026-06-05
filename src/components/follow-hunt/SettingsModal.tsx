@@ -62,15 +62,15 @@ export function SettingsModal({ settings, onClose, onSaved }: Props) {
         className="w-full max-w-xl rounded-[1.5rem] p-6 my-8"
         style={{
           background: 'rgba(15,23,42,0.95)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid rgba(15,23,42,0.08)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── ヘッダー ── */}
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-[15px] font-semibold text-slate-200">フォロー候補の設定</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-300">
+          <h3 className="text-[16px] font-semibold text-slate-800">フォロー候補の設定</h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-700">
             <X size={18} />
           </button>
         </div>
@@ -78,9 +78,9 @@ export function SettingsModal({ settings, onClose, onSaved }: Props) {
         <div className="space-y-5">
           {/* ── 1回の探索件数 ── */}
           <div>
-            <label className="block text-[12px] font-medium text-slate-400 mb-2">
+            <label className="block text-[13px] font-medium text-slate-600 mb-2">
               1回の探索で取得する件数
-              <span className="ml-2 text-[10px] text-slate-600">
+              <span className="ml-2 text-[11px] text-slate-600">
                 ≈ ${estimatedCost.toFixed(2)}
               </span>
             </label>
@@ -94,13 +94,13 @@ export function SettingsModal({ settings, onClose, onSaved }: Props) {
                 onChange={(e) => setMaxResults(Number(e.target.value))}
                 className="flex-1"
               />
-              <span className="text-[13px] font-mono text-slate-300 w-12 text-right">{maxResults}</span>
+              <span className="text-[14px] font-mono text-slate-700 w-12 text-right">{maxResults}</span>
             </div>
           </div>
 
           {/* ── FF比範囲 ── */}
           <div>
-            <label className="block text-[12px] font-medium text-slate-400 mb-2">
+            <label className="block text-[13px] font-medium text-slate-600 mb-2">
               FF比の範囲（フォロワー ÷ フォロー中）
             </label>
             <div className="flex items-center gap-2">
@@ -112,7 +112,7 @@ export function SettingsModal({ settings, onClose, onSaved }: Props) {
 
           {/* ── フォロワー数範囲 ── */}
           <div>
-            <label className="block text-[12px] font-medium text-slate-400 mb-2">
+            <label className="block text-[13px] font-medium text-slate-600 mb-2">
               フォロワー数の範囲
             </label>
             <div className="flex items-center gap-2">
@@ -124,7 +124,7 @@ export function SettingsModal({ settings, onClose, onSaved }: Props) {
 
           {/* ── 日次フォロー上限 ── */}
           <div>
-            <label className="block text-[12px] font-medium text-slate-400 mb-2">
+            <label className="block text-[13px] font-medium text-slate-600 mb-2">
               1日のフォロー上限
             </label>
             <NumberField value={dailyCap} onChange={setDailyCap} step={1} min={1} max={100} />
@@ -132,40 +132,40 @@ export function SettingsModal({ settings, onClose, onSaved }: Props) {
 
           {/* ── 禁止ワード ── */}
           <div>
-            <label className="block text-[12px] font-medium text-slate-400 mb-2">
+            <label className="block text-[13px] font-medium text-slate-600 mb-2">
               bio 除外ワード（改行で区切る）
             </label>
             <textarea
               value={bannedWordsText}
               onChange={(e) => setBannedWordsText(e.target.value)}
               rows={6}
-              className="w-full px-3 py-2 text-[12px] text-slate-200 rounded-lg font-mono resize-none"
+              className="w-full px-3 py-2 text-[13px] text-slate-800 rounded-lg font-mono resize-none"
               style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                background: 'rgba(15,23,42,0.03)',
+                border: '1px solid rgba(15,23,42,0.07)',
               }}
             />
           </div>
 
           {error && (
-            <p className="text-[12px] text-red-400">{error}</p>
+            <p className="text-[13px] text-red-600">{error}</p>
           )}
         </div>
 
         {/* ── アクションボタン ── */}
-        <div className="flex items-center justify-end gap-2 mt-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="flex items-center justify-end gap-2 mt-6 pt-4" style={{ borderTop: '1px solid rgba(15,23,42,0.05)' }}>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-[13px] text-slate-400 hover:text-slate-200 rounded-lg transition-colors"
+            className="px-4 py-2 text-[14px] text-slate-600 hover:text-slate-800 rounded-lg transition-colors"
           >
             キャンセル
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium text-white rounded-lg transition-all disabled:opacity-40"
+            className="flex items-center gap-1.5 px-4 py-2 text-[14px] font-medium text-white rounded-lg transition-all disabled:opacity-40"
             style={{
-              background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
+              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
               boxShadow: '0 0 14px rgba(167,139,250,0.2)',
             }}
           >
@@ -195,10 +195,10 @@ function NumberField({
       min={min}
       max={max}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="w-full px-3 py-1.5 text-[12px] text-slate-200 rounded-lg font-mono"
+      className="w-full px-3 py-1.5 text-[13px] text-slate-800 rounded-lg font-mono"
       style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(15,23,42,0.03)',
+        border: '1px solid rgba(15,23,42,0.07)',
       }}
     />
   );

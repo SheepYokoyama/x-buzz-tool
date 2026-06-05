@@ -57,7 +57,7 @@ export function AIKeysClient() {
     return (
       <div className="flex items-center justify-center py-20 text-slate-600">
         <Loader2 size={20} className="animate-spin mr-2" />
-        <span className="text-[13px]">読み込み中…</span>
+        <span className="text-[14px]">読み込み中…</span>
       </div>
     );
   }
@@ -76,8 +76,8 @@ export function AIKeysClient() {
               key={provider}
               className="rounded-2xl p-5 space-y-4"
               style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                background: 'rgba(15,23,42,0.02)',
+                border: '1px solid rgba(15,23,42,0.07)',
               }}
             >
               <div className="flex items-start gap-3">
@@ -85,13 +85,13 @@ export function AIKeysClient() {
                   className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: `${meta.roleColor}18`, border: `1px solid ${meta.roleColor}35` }}
                 >
-                  <Icon size={18} className="text-slate-200" />
+                  <Icon size={18} className="text-slate-800" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-[14px] font-semibold text-slate-200">{meta.label}</h3>
+                    <h3 className="text-[15px] font-semibold text-slate-800">{meta.label}</h3>
                     <span
-                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md whitespace-nowrap"
+                      className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md whitespace-nowrap"
                       style={{
                         color: meta.roleColor,
                         background: `${meta.roleColor}18`,
@@ -101,16 +101,16 @@ export function AIKeysClient() {
                       {meta.roleLabel}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{meta.desc}</p>
+                  <p className="text-[12px] text-slate-500 mt-1 leading-relaxed">{meta.desc}</p>
                 </div>
               </div>
 
               {/* 登録すると使える機能 */}
               <div
                 className="rounded-xl p-3 space-y-1.5"
-                style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}
+                style={{ background: 'rgba(15,23,42,0.025)', border: '1px solid rgba(15,23,42,0.06)' }}
               >
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">登録すると使える機能</p>
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">登録すると使える機能</p>
                 <ul className="space-y-1">
                   {meta.features.map((feature) => {
                     const isExclusive = exclusiveSet.has(feature);
@@ -120,10 +120,10 @@ export function AIKeysClient() {
                           ? <Star size={10} style={{ color: meta.roleColor }} />
                           : <Check size={10} style={{ color: meta.roleColor }} />
                         }
-                        <span className="text-[12px] text-slate-300">{feature}</span>
+                        <span className="text-[13px] text-slate-700">{feature}</span>
                         {isExclusive && (
                           <span
-                            className="text-[9px] font-semibold px-1 py-px rounded"
+                            className="text-[10px] font-semibold px-1 py-px rounded"
                             style={{ color: meta.roleColor, background: `${meta.roleColor}15`, border: `1px solid ${meta.roleColor}30` }}
                           >
                             専用
@@ -133,7 +133,7 @@ export function AIKeysClient() {
                     );
                   })}
                 </ul>
-                <p className="text-[10px] text-slate-600 leading-relaxed mt-1.5 pt-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                <p className="text-[11px] text-slate-600 leading-relaxed mt-1.5 pt-1.5" style={{ borderTop: '1px solid rgba(15,23,42,0.04)' }}>
                   料金: {meta.pricing}
                 </p>
               </div>
@@ -144,22 +144,22 @@ export function AIKeysClient() {
                     className="rounded-lg px-3 py-2 flex items-center gap-2"
                     style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.18)' }}
                   >
-                    <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
-                    <span className="text-[12px] text-emerald-300 font-medium">登録済み</span>
-                    <span className="text-[11px] text-slate-500 font-mono ml-auto">{existing.keyMasked}</span>
+                    <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                    <span className="text-[13px] text-emerald-600 font-medium">登録済み</span>
+                    <span className="text-[12px] text-slate-500 font-mono ml-auto">{existing.keyMasked}</span>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setEditingProvider(provider)}
-                      className="flex-1 py-2 rounded-lg text-[12px] font-medium text-slate-300 flex items-center justify-center gap-1.5 transition-colors hover:bg-white/[0.04]"
-                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+                      className="flex-1 py-2 rounded-lg text-[13px] font-medium text-slate-700 flex items-center justify-center gap-1.5 transition-colors hover:bg-white/[0.04]"
+                      style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.07)' }}
                     >
                       <Pencil size={12} />
                       更新
                     </button>
                     <button
                       onClick={() => handleDelete(provider)}
-                      className="py-2 px-3 rounded-lg text-[12px] text-red-400 flex items-center gap-1.5 transition-colors hover:bg-red-500/10"
+                      className="py-2 px-3 rounded-lg text-[13px] text-red-600 flex items-center gap-1.5 transition-colors hover:bg-red-500/10"
                       style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}
                     >
                       <Trash2 size={12} />
@@ -170,7 +170,7 @@ export function AIKeysClient() {
               ) : (
                 <button
                   onClick={() => setEditingProvider(provider)}
-                  className="w-full py-3 rounded-lg text-[13px] font-semibold text-white flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-3 rounded-lg text-[14px] font-semibold text-white flex items-center justify-center gap-2 transition-all"
                   style={{ background: `linear-gradient(135deg, ${meta.roleColor}, ${meta.roleColor}aa)` }}
                 >
                   <Plus size={14} />

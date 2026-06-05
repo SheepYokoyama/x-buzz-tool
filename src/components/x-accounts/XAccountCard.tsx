@@ -21,19 +21,19 @@ export function XAccountCard({ account, isActivating, isRefreshing, onActivate, 
       style={{
         background: account.is_active
           ? 'rgba(96,165,250,0.06)'
-          : 'rgba(255,255,255,0.025)',
+          : 'rgba(15,23,42,0.025)',
         border: account.is_active
           ? '1px solid rgba(96,165,250,0.2)'
-          : '1px solid rgba(255,255,255,0.07)',
+          : '1px solid rgba(15,23,42,0.07)',
       }}
     >
       {/* ── アクティブバッジ ── */}
       {account.is_active && (
         <span
-          className="absolute top-4 right-4 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
-          style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }}
+          className="absolute top-4 right-4 text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+          style={{ background: 'rgba(96,165,250,0.15)', color: '#2563eb', border: '1px solid rgba(96,165,250,0.25)' }}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-neon-green inline-block" style={{ boxShadow: '0 0 5px #34d399' }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-neon-green inline-block" style={{ boxShadow: '0 0 5px #059669' }} />
           使用中
         </span>
       )}
@@ -47,15 +47,15 @@ export function XAccountCard({ account, isActivating, isRefreshing, onActivate, 
               src={account.profile_image_url}
               alt={account.name}
               className="w-10 h-10 rounded-full"
-              style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ border: '1px solid rgba(15,23,42,0.1)' }}
             />
           ) : (
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-bold"
               style={{
-                background: account.is_active ? 'rgba(96,165,250,0.15)' : 'rgba(255,255,255,0.05)',
-                border: account.is_active ? '1px solid rgba(96,165,250,0.2)' : '1px solid rgba(255,255,255,0.08)',
-                color: account.is_active ? '#60a5fa' : '#64748b',
+                background: account.is_active ? 'rgba(96,165,250,0.15)' : 'rgba(15,23,42,0.05)',
+                border: account.is_active ? '1px solid rgba(96,165,250,0.2)' : '1px solid rgba(15,23,42,0.08)',
+                color: account.is_active ? '#2563eb' : '#64748b',
               }}
             >
               <User size={18} />
@@ -66,7 +66,7 @@ export function XAccountCard({ account, isActivating, isRefreshing, onActivate, 
             className="absolute -bottom-1 -right-1 w-[18px] h-[18px] rounded-full flex items-center justify-center"
             style={{
               background: '#000',
-              border: '1.5px solid rgba(2,6,23,1)',
+              border: '1.5px solid #ffffff',
               color: '#fff',
             }}
             title="X (旧 Twitter)"
@@ -75,9 +75,9 @@ export function XAccountCard({ account, isActivating, isRefreshing, onActivate, 
           </span>
         </div>
         <div className="min-w-0">
-          <p className="text-[14px] font-semibold text-slate-200 truncate">{account.name}</p>
+          <p className="text-[15px] font-semibold text-slate-800 truncate">{account.name}</p>
           {account.username && (
-            <p className="text-[12px] text-slate-500 truncate">@{account.username}</p>
+            <p className="text-[13px] text-slate-500 truncate">@{account.username}</p>
           )}
         </div>
       </div>
@@ -91,9 +91,9 @@ export function XAccountCard({ account, isActivating, isRefreshing, onActivate, 
           { label: 'Access Secret', value: account.access_secret_masked },
           ...(account.bearer_token_masked ? [{ label: 'Bearer Token', value: account.bearer_token_masked }] : []),
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-lg px-3 py-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <p className="text-[10px] text-slate-600 mb-0.5">{label}</p>
-            <p className="text-[11px] text-slate-400 font-mono">{value || '—'}</p>
+          <div key={label} className="rounded-lg px-3 py-2" style={{ background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.05)' }}>
+            <p className="text-[11px] text-slate-600 mb-0.5">{label}</p>
+            <p className="text-[12px] text-slate-600 font-mono">{value || '—'}</p>
           </div>
         ))}
       </div>
@@ -104,11 +104,11 @@ export function XAccountCard({ account, isActivating, isRefreshing, onActivate, 
           <button
             onClick={() => onActivate(account.id)}
             disabled={isActivating}
-            className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 text-[13px] font-medium px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
             style={{
               background: 'rgba(96,165,250,0.1)',
               border: '1px solid rgba(96,165,250,0.2)',
-              color: '#60a5fa',
+              color: '#2563eb',
             }}
           >
             <CheckCircle2 size={13} />
@@ -121,7 +121,7 @@ export function XAccountCard({ account, isActivating, isRefreshing, onActivate, 
               onClick={() => onRefresh(account.id)}
               disabled={isRefreshing}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-50"
-              style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.15)', color: '#60a5fa' }}
+              style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.15)', color: '#2563eb' }}
               title="X の最新情報（表示名・@・アイコン）に更新"
             >
               <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
@@ -130,7 +130,7 @@ export function XAccountCard({ account, isActivating, isRefreshing, onActivate, 
           <button
             onClick={() => onEdit(account)}
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: '#64748b' }}
+            style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.07)', color: '#64748b' }}
             title="編集"
           >
             <Pencil size={13} />

@@ -54,27 +54,27 @@ export function SettingsModal({ onClose }: Props) {
         {/* ヘッダー */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-[15px] font-semibold text-slate-200">設定</h2>
-            <p className="text-[11px] text-slate-500 mt-1">アプリの動作設定を変更します</p>
+            <h2 className="text-[16px] font-semibold text-slate-800">設定</h2>
+            <p className="text-[12px] text-slate-500 mt-1">アプリの動作設定を変更します</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors"
+            style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.08)' }}
           >
             <X size={14} />
           </button>
         </div>
 
         {/* 区切り */}
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+        <div style={{ height: '1px', background: 'rgba(15,23,42,0.06)' }} />
 
         {/* AI プロバイダー */}
         <div>
-          <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider mb-3">
+          <p className="text-[13px] font-semibold text-slate-600 uppercase tracking-wider mb-3">
             AI プロバイダー
           </p>
-          <p className="text-[12px] text-slate-500 mb-3">
+          <p className="text-[13px] text-slate-500 mb-3">
             投稿生成に使用する AI エンジンを選択します。
           </p>
           <div className="flex flex-col gap-2">
@@ -86,29 +86,29 @@ export function SettingsModal({ onClose }: Props) {
                   onClick={() => updateSettings({ aiProvider: value })}
                   className="flex items-center gap-3 p-4 rounded-xl transition-all text-left cursor-pointer"
                   style={{
-                    background: active ? 'rgba(96,165,250,0.1)' : 'rgba(255,255,255,0.025)',
-                    border: active ? '1px solid rgba(96,165,250,0.3)' : '1px solid rgba(255,255,255,0.06)',
+                    background: active ? 'rgba(96,165,250,0.1)' : 'rgba(15,23,42,0.025)',
+                    border: active ? '1px solid rgba(96,165,250,0.3)' : '1px solid rgba(15,23,42,0.06)',
                   }}
                 >
                   {/* ラジオ */}
                   <span
                     className="w-4 h-4 rounded-full border-2 shrink-0 transition-all"
                     style={{
-                      borderColor: active ? '#60a5fa' : '#334155',
-                      background: active ? '#60a5fa' : 'transparent',
+                      borderColor: active ? '#2563eb' : '#334155',
+                      background: active ? '#2563eb' : 'transparent',
                       boxShadow: active ? '0 0 6px rgba(96,165,250,0.5)' : 'none',
                     }}
                   />
                   {/* テキスト */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium" style={{ color: active ? '#e2e8f0' : '#94a3b8' }}>
+                    <p className="text-[14px] font-medium" style={{ color: active ? '#1e293b' : '#94a3b8' }}>
                       {label}
                     </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: '#475569' }}>{desc}</p>
+                    <p className="text-[12px] mt-0.5" style={{ color: '#475569' }}>{desc}</p>
                   </div>
                   {/* バッジ */}
                   <span
-                    className="text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0"
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-md shrink-0"
                     style={{
                       color: badgeColor,
                       background: `${badgeColor}18`,

@@ -116,14 +116,14 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
         {/* Top row */}
         <div className="flex items-center gap-2.5">
           <span
-            className="text-[11px] font-semibold px-2 py-0.5 rounded-lg"
-            style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)' }}
+            className="text-[12px] font-semibold px-2 py-0.5 rounded-lg"
+            style={{ background: 'rgba(15,23,42,0.06)', color: '#94a3b8', border: '1px solid rgba(15,23,42,0.1)' }}
           >
             下書き
           </span>
-          <span className="text-[11px] text-slate-600">{fmtDate(draft.created_at)}</span>
+          <span className="text-[12px] text-slate-600">{fmtDate(draft.created_at)}</span>
           <span
-            className={`text-[11px] ml-auto cursor-help ${overLimit ? 'text-red-400' : 'text-slate-600'}`}
+            className={`text-[12px] ml-auto cursor-help ${overLimit ? 'text-red-600' : 'text-slate-600'}`}
             title={X_COUNT_RULE}
           >
             {charCount}/{xLimit.toLocaleString()} cnt
@@ -131,7 +131,7 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
         </div>
 
         {/* Content */}
-        <p className="text-[13px] text-slate-300 leading-[1.65] whitespace-pre-wrap line-clamp-4">
+        <p className="text-[14px] text-slate-700 leading-[1.65] whitespace-pre-wrap line-clamp-4">
           {draft.content}
         </p>
 
@@ -139,7 +139,7 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
         {draft.tags.length > 0 && (
           <div className="flex gap-2 flex-wrap">
             {draft.tags.map((t) => (
-              <span key={t} className="text-[11px] text-slate-600">#{t}</span>
+              <span key={t} className="text-[12px] text-slate-600">#{t}</span>
             ))}
           </div>
         )}
@@ -149,11 +149,11 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
           {/* コピー */}
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-xl transition-all"
+            className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-xl transition-all"
             style={{
-              background: copied ? 'rgba(52,211,153,0.08)' : 'rgba(255,255,255,0.04)',
-              border: copied ? '1px solid rgba(52,211,153,0.2)' : '1px solid rgba(255,255,255,0.07)',
-              color: copied ? '#34d399' : '#64748b',
+              background: copied ? 'rgba(52,211,153,0.08)' : 'rgba(15,23,42,0.04)',
+              border: copied ? '1px solid rgba(52,211,153,0.2)' : '1px solid rgba(15,23,42,0.07)',
+              color: copied ? '#059669' : '#64748b',
             }}
           >
             {copied ? <Check size={11} /> : <Copy size={11} />}
@@ -166,8 +166,8 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
               href={tweetUrl!}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-xl"
-              style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', color: '#34d399' }}
+              className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-xl"
+              style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', color: '#059669' }}
             >
               <ExternalLink size={11} />
               投稿済み ↗
@@ -176,15 +176,15 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
             <button
               onClick={handleTweetClick}
               disabled={tweeting || overLimit}
-              className="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-xl transition-all"
+              className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-xl transition-all"
               style={{
-                background: tweetConfirm ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.04)',
+                background: tweetConfirm ? 'rgba(251,191,36,0.1)' : 'rgba(15,23,42,0.04)',
                 border: tweetConfirm
                   ? '1px solid rgba(251,191,36,0.3)'
                   : overLimit
                     ? '1px solid rgba(239,68,68,0.2)'
-                    : '1px solid rgba(255,255,255,0.07)',
-                color: tweetConfirm ? '#fbbf24' : overLimit || tweeting ? '#475569' : '#64748b',
+                    : '1px solid rgba(15,23,42,0.07)',
+                color: tweetConfirm ? '#b45309' : overLimit || tweeting ? '#475569' : '#64748b',
                 cursor: tweeting || overLimit ? 'not-allowed' : 'pointer',
               }}
             >
@@ -197,11 +197,11 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-xl transition-all ml-auto"
+            className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-xl transition-all ml-auto"
             style={{
-              background: confirmDelete ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.03)',
-              border: confirmDelete ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.06)',
-              color: confirmDelete ? '#f87171' : '#475569',
+              background: confirmDelete ? 'rgba(239,68,68,0.1)' : 'rgba(15,23,42,0.03)',
+              border: confirmDelete ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(15,23,42,0.06)',
+              color: confirmDelete ? '#dc2626' : '#475569',
               cursor: deleting ? 'default' : 'pointer',
             }}
           >
@@ -211,7 +211,7 @@ export function DraftPostItem({ draft, onDeleted }: Props) {
         </div>
 
         {tweetError && (
-          <p className="text-[11px] text-red-400">{tweetError}</p>
+          <p className="text-[12px] text-red-600">{tweetError}</p>
         )}
       </div>
     </div>

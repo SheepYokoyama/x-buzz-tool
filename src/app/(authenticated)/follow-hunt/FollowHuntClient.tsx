@@ -207,7 +207,7 @@ export function FollowHuntClient() {
     return (
       <div className="flex items-center justify-center py-20 text-slate-600">
         <Loader2 size={20} className="animate-spin mr-2" />
-        <span className="text-[13px]">読み込み中…</span>
+        <span className="text-[14px]">読み込み中…</span>
       </div>
     );
   }
@@ -220,14 +220,14 @@ export function FollowHuntClient() {
     return (
       <div
         className="rounded-[1.375rem] p-8 text-center"
-        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+        style={{ background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)' }}
       >
-        <p className="text-[13px] text-slate-400 mb-4">
+        <p className="text-[14px] text-slate-600 mb-4">
           アクティブなペルソナが設定されていません。
         </p>
         <Link
           href="/persona"
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] text-[#a78bfa] rounded-lg transition-all"
+          className="inline-flex items-center gap-1.5 px-4 py-2 text-[14px] text-[#7c3aed] rounded-lg transition-all"
           style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.22)' }}
         >
           <Sparkles size={13} />
@@ -242,33 +242,33 @@ export function FollowHuntClient() {
       {/* ── コントロールバー ── */}
       <div
         className="rounded-[1.375rem] p-4 mb-6 flex items-center justify-between gap-3 flex-wrap"
-        style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}
+        style={{ background: 'rgba(15,23,42,0.025)', border: '1px solid rgba(15,23,42,0.07)' }}
       >
         <div className="flex items-center gap-3 min-w-0">
           <span
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0"
             style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.15)' }}
           >
             {activePersona.avatar}
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] text-slate-600 leading-tight">使用中のペルソナ</p>
-            <p className="text-[13px] font-medium text-slate-200 truncate leading-tight">
+            <p className="text-[12px] text-slate-600 leading-tight">使用中のペルソナ</p>
+            <p className="text-[14px] font-medium text-slate-800 truncate leading-tight">
               {activePersona.name}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-slate-500">
-            本日 <span className="text-slate-200 font-medium">{followedToday}</span> / {dailyCap}
+          <span className="text-[12px] text-slate-500">
+            本日 <span className="text-slate-800 font-medium">{followedToday}</span> / {dailyCap}
           </span>
           <button
             onClick={() => setShowSettings(true)}
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.07)',
+              background: 'rgba(15,23,42,0.04)',
+              border: '1px solid rgba(15,23,42,0.07)',
               color: '#64748b',
             }}
             title="設定"
@@ -278,9 +278,9 @@ export function FollowHuntClient() {
           <button
             onClick={handleDiscover}
             disabled={discovering || totalKeywordCount === 0}
-            className="flex items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-white rounded-lg transition-all disabled:opacity-40"
+            className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium text-white rounded-lg transition-all disabled:opacity-40"
             style={{
-              background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
+              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
               boxShadow: '0 0 14px rgba(167,139,250,0.2)',
             }}
           >
@@ -297,9 +297,9 @@ export function FollowHuntClient() {
       >
         <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <Tag size={13} className="text-[#a78bfa]" />
-            <p className="text-[12px] font-medium text-slate-300">検索に使うキーワード</p>
-            <span className="text-[11px] text-slate-600">
+            <Tag size={13} className="text-[#7c3aed]" />
+            <p className="text-[13px] font-medium text-slate-700">検索に使うキーワード</p>
+            <span className="text-[12px] text-slate-600">
               OR 条件 ({totalKeywordCount}個)
             </span>
           </div>
@@ -307,11 +307,11 @@ export function FollowHuntClient() {
             {(extraKeywords.length > 0 || excludedPersonaKeywords.length > 0) && (
               <button
                 onClick={resetKeywords}
-                className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all"
+                className="flex items-center gap-1 px-2 py-1 text-[12px] font-medium rounded-md transition-all"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
+                  background: 'rgba(15,23,42,0.04)',
                   color: '#94a3b8',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(15,23,42,0.08)',
                 }}
                 title="ペルソナ登録時の状態に戻す（除外・追加を取り消し）"
               >
@@ -322,10 +322,10 @@ export function FollowHuntClient() {
             {!showKeywordInput && (
               <button
                 onClick={() => setShowKeywordInput(true)}
-                className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all"
+                className="flex items-center gap-1 px-2 py-1 text-[12px] font-medium rounded-md transition-all"
                 style={{
                   background: 'rgba(167,139,250,0.1)',
-                  color: '#c4b5fd',
+                  color: '#7c3aed',
                   border: '1px solid rgba(167,139,250,0.2)',
                 }}
               >
@@ -341,10 +341,10 @@ export function FollowHuntClient() {
           {effectivePersonaKeywords.map((kw) => (
             <span
               key={`persona-${kw}`}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-medium"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-medium"
               style={{
                 background: 'rgba(167,139,250,0.12)',
-                color: '#c4b5fd',
+                color: '#7c3aed',
                 border: '1px solid rgba(167,139,250,0.25)',
               }}
               title="ペルソナから取得（× で今回の検索から除外）"
@@ -352,7 +352,7 @@ export function FollowHuntClient() {
               {kw}
               <button
                 onClick={() => excludePersonaKeyword(kw)}
-                className="hover:text-white transition-colors"
+                className="hover:text-slate-900 transition-colors"
                 title="今回の検索から除外（ペルソナの登録は消えません）"
               >
                 <XIcon size={10} />
@@ -362,10 +362,10 @@ export function FollowHuntClient() {
           {extraKeywords.map((kw) => (
             <span
               key={`extra-${kw}`}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-medium"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-medium"
               style={{
                 background: 'rgba(96,165,250,0.12)',
-                color: '#93c5fd',
+                color: '#2563eb',
                 border: '1px solid rgba(96,165,250,0.25)',
               }}
               title="追加キーワード（このセッションのみ）"
@@ -373,7 +373,7 @@ export function FollowHuntClient() {
               {kw}
               <button
                 onClick={() => removeExtraKeyword(kw)}
-                className="hover:text-white transition-colors"
+                className="hover:text-slate-900 transition-colors"
                 title="削除"
               >
                 <XIcon size={10} />
@@ -395,18 +395,18 @@ export function FollowHuntClient() {
                 autoFocus
                 placeholder="キーワード"
                 maxLength={40}
-                className="px-2 py-1 text-[12px] text-slate-200 rounded-lg w-32"
+                className="px-2 py-1 text-[13px] text-slate-800 rounded-lg w-32"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
+                  background: 'rgba(15,23,42,0.04)',
                   border: '1px solid rgba(96,165,250,0.3)',
                 }}
               />
               <button
                 onClick={addExtraKeyword}
-                className="px-2 py-1 text-[11px] font-medium rounded-md"
+                className="px-2 py-1 text-[12px] font-medium rounded-md"
                 style={{
                   background: 'rgba(96,165,250,0.15)',
-                  color: '#93c5fd',
+                  color: '#2563eb',
                   border: '1px solid rgba(96,165,250,0.3)',
                 }}
               >
@@ -414,7 +414,7 @@ export function FollowHuntClient() {
               </button>
               <button
                 onClick={() => { setShowKeywordInput(false); setKeywordInput(''); }}
-                className="text-slate-500 hover:text-slate-300 px-1"
+                className="text-slate-500 hover:text-slate-700 px-1"
                 title="閉じる"
               >
                 <XIcon size={13} />
@@ -426,12 +426,12 @@ export function FollowHuntClient() {
         {/* キーワードが何もない場合 */}
         {totalKeywordCount === 0 && !showKeywordInput && (
           <div
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-amber-300 mt-2"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-amber-600 mt-2"
             style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)' }}
           >
             <AlertTriangle size={13} />
             キーワードがありません。
-            <Link href="/persona" className="underline hover:text-amber-200">
+            <Link href="/persona" className="underline hover:text-amber-700">
               ペルソナに登録
             </Link>
             するか、「追加キーワード」ボタンから入力してください。
@@ -441,16 +441,16 @@ export function FollowHuntClient() {
         {/* 除外中のペルソナキーワード（取り消し線） */}
         {excludedPersonaKeywords.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5 items-center">
-            <span className="text-[10px] text-slate-600">今回除外:</span>
+            <span className="text-[11px] text-slate-600">今回除外:</span>
             {excludedPersonaKeywords.map((kw) => (
               <button
                 key={`excluded-${kw}`}
                 onClick={() => setExcludedPersonaKeywords((prev) => prev.filter((k) => k !== kw))}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] line-through hover:no-underline transition-all"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[12px] line-through hover:no-underline transition-all"
                 style={{
-                  background: 'rgba(255,255,255,0.02)',
+                  background: 'rgba(15,23,42,0.02)',
                   color: '#475569',
-                  border: '1px dashed rgba(255,255,255,0.08)',
+                  border: '1px dashed rgba(15,23,42,0.08)',
                 }}
                 title="クリックして復活"
               >
@@ -460,7 +460,7 @@ export function FollowHuntClient() {
           </div>
         )}
 
-        <p className="text-[10px] text-slate-600 mt-3 leading-relaxed">
+        <p className="text-[11px] text-slate-600 mt-3 leading-relaxed">
           紫=ペルソナ登録済み、青=その場追加（保存されません）。× で除外可。リセットで遷移直後の状態に戻ります。
         </p>
       </div>
@@ -468,7 +468,7 @@ export function FollowHuntClient() {
       {/* ── メッセージ ── */}
       {message && (
         <div
-          className="rounded-xl px-4 py-3 mb-4 text-[12px] text-slate-300"
+          className="rounded-xl px-4 py-3 mb-4 text-[13px] text-slate-700"
           style={{ background: 'rgba(96,165,250,0.05)', border: '1px solid rgba(96,165,250,0.12)' }}
         >
           {message}
@@ -479,12 +479,12 @@ export function FollowHuntClient() {
       {candidates.length === 0 && (
         <div
           className="rounded-[1.375rem] p-10 text-center"
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)' }}
         >
-          <p className="text-[13px] text-slate-500 mb-2">
+          <p className="text-[14px] text-slate-500 mb-2">
             表示できる候補がありません
           </p>
-          <p className="text-[11px] text-slate-600">
+          <p className="text-[12px] text-slate-600">
             「候補を探す」を押すと、ペルソナのキーワードで検索して候補を追加します。
           </p>
         </div>

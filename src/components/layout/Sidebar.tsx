@@ -79,7 +79,7 @@ export function Sidebar() {
       <div className="px-6 pt-7 pb-6">
         <div className="flex items-center gap-3">
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[18px] select-none"
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[20px] select-none"
             style={{
               background: 'linear-gradient(135deg, #f59e0b, #ec4899, #a78bfa)',
               boxShadow: '0 0 18px rgba(236,72,153,0.45), 0 2px 8px rgba(0,0,0,0.4)',
@@ -88,14 +88,13 @@ export function Sidebar() {
             🔥
           </div>
           <div>
-            <p className="font-bold text-[15px] tracking-tight leading-none" style={{
+            <p className="font-bold text-[16px] tracking-tight leading-none" style={{
               background: 'linear-gradient(90deg, #fbbf24, #f472b6, #a78bfa)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
             }}>
               Xpresso
             </p>
-            <p className="text-[11px] text-slate-500 mt-1 tracking-wide">X バズ投稿ツール</p>
           </div>
         </div>
       </div>
@@ -126,7 +125,7 @@ export function Sidebar() {
       {/* ── ログインユーザー ─────────────────────── */}
       {authUser && (
         <>
-          <div className="mx-5 border-t border-white/[0.04]" />
+          <div className="mx-5 border-t border-slate-900/[0.08]" />
           <div className="px-4 py-4">
             <div className="flex items-center gap-2.5">
               {authUser.avatarUrl ? (
@@ -135,27 +134,27 @@ export function Sidebar() {
                   src={authUser.avatarUrl}
                   alt={authUser.name}
                   className="w-8 h-8 rounded-full shrink-0"
-                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+                  style={{ border: '1px solid rgba(15,23,42,0.12)' }}
                 />
               ) : (
                 <span
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0"
-                  style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa' }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
+                  style={{ background: 'rgba(124,58,237,0.12)', color: '#7c3aed' }}
                 >
                   {authUser.name.charAt(0).toUpperCase()}
                 </span>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-slate-300 leading-tight truncate">
+                <p className="text-[14px] font-semibold text-slate-700 leading-tight truncate">
                   {authUser.name}
                 </p>
-                <p className="text-[11px] leading-tight truncate" style={{ color: '#475569' }}>
+                <p className="text-[13px] leading-tight truncate" style={{ color: '#64748b' }}>
                   {authUser.email}
                 </p>
               </div>
               <button
                 onClick={signOut}
-                className="p-1.5 rounded-lg transition-colors hover:bg-white/[0.06]"
+                className="p-1.5 rounded-lg transition-colors hover:bg-slate-900/[0.06]"
                 title="ログアウト"
               >
                 <LogOut size={14} style={{ color: '#64748b' }} />
@@ -167,7 +166,7 @@ export function Sidebar() {
 
       {/* ── Version ──────────────────────────────── */}
       <div className="px-5 pb-4 pt-1">
-        <p className="text-[10px] tracking-wide" style={{ color: '#334155' }}>
+        <p className="text-[12px] tracking-wide" style={{ color: '#94a3b8' }}>
           v{process.env.NEXT_PUBLIC_APP_VERSION} · {process.env.NEXT_PUBLIC_GIT_SHA}
         </p>
       </div>
@@ -192,7 +191,7 @@ function NavLink({
       <Icon
         size={16}
         className="shrink-0 transition-colors"
-        color={active ? '#a78bfa' : undefined}
+        color={active ? '#7c3aed' : undefined}
       />
       <span className="flex-1">{label}</span>
     </Link>

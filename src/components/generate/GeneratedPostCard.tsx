@@ -49,12 +49,12 @@ function SectionLabel({
   if (deleted) return null;
   return (
     <div className="flex items-center justify-between mb-1.5">
-      <p className="text-[11px] font-medium tracking-wide" style={{ color }}>{label}</p>
+      <p className="text-[12px] font-medium tracking-wide" style={{ color }}>{label}</p>
       <div className="flex items-center gap-1">
         <button
           onClick={onEdit}
           className="p-0.5 rounded transition-colors"
-          style={{ color: editing ? '#a78bfa' : '#475569' }}
+          style={{ color: editing ? '#7c3aed' : '#475569' }}
           title={editing ? '編集を閉じる' : '編集'}
         >
           <Pencil size={11} />
@@ -62,7 +62,7 @@ function SectionLabel({
         {onDelete && (
           <button
             onClick={onDelete}
-            className="p-0.5 rounded transition-colors hover:text-red-400"
+            className="p-0.5 rounded transition-colors hover:text-red-600"
             style={{ color: '#475569' }}
             title="削除"
           >
@@ -250,11 +250,11 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
   // 編集用テキストエリアの共通スタイル
   const editareaStyle: React.CSSProperties = {
     width: '100%',
-    background: 'rgba(255,255,255,0.03)',
+    background: 'rgba(15,23,42,0.03)',
     border: '1px solid rgba(167,139,250,0.3)',
     borderRadius: 8,
     padding: '8px 10px',
-    color: '#e2e8f0',
+    color: '#1e293b',
     fontSize: 13,
     lineHeight: '1.75',
     resize: 'vertical',
@@ -270,24 +270,24 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <span
-            className="text-[11px] font-semibold px-2.5 py-1 rounded-lg"
-            style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.2)' }}
+            className="text-[12px] font-semibold px-2.5 py-1 rounded-lg"
+            style={{ background: 'rgba(167,139,250,0.1)', color: '#7c3aed', border: '1px solid rgba(167,139,250,0.2)' }}
           >
             パターン {index + 1}
           </span>
           <span
-            className="text-[12px] font-medium text-slate-300 truncate max-w-[200px]"
+            className="text-[13px] font-medium text-slate-700 truncate max-w-[200px]"
             title={pattern.titleIdea}
           >
             {pattern.titleIdea}
           </span>
         </div>
         <span
-          className={`text-[11px] shrink-0 cursor-help ${overLimit ? 'text-red-400' : 'text-slate-600'}`}
+          className={`text-[12px] shrink-0 cursor-help ${overLimit ? 'text-red-600' : 'text-slate-600'}`}
           title={X_COUNT_RULE}
         >
           {charCount}/{xLimit.toLocaleString()}
-          <span className="text-[10px] ml-0.5 opacity-60">cnt</span>
+          <span className="text-[11px] ml-0.5 opacity-60">cnt</span>
         </span>
       </div>
 
@@ -299,7 +299,7 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
         >
           <SectionLabel
             label="冒頭フック"
-            color="#a78bfa"
+            color="#7c3aed"
             editing={hookEditing}
             deleted={false}
             onEdit={() => setHookEditing((v) => !v)}
@@ -314,7 +314,7 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
               style={editareaStyle}
             />
           ) : (
-            <p className="text-[13px] text-slate-200 leading-relaxed whitespace-pre-wrap">{hookText}</p>
+            <p className="text-[14px] text-slate-800 leading-relaxed whitespace-pre-wrap">{hookText}</p>
           )}
         </div>
       )}
@@ -322,7 +322,7 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
       {/* ── 本文 ── */}
       <div
         className="rounded-xl px-4 py-3"
-        style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${bodyEditing ? 'rgba(167,139,250,0.3)' : 'rgba(255,255,255,0.06)'}` }}
+        style={{ background: 'rgba(15,23,42,0.02)', border: `1px solid ${bodyEditing ? 'rgba(167,139,250,0.3)' : 'rgba(15,23,42,0.06)'}` }}
       >
         <SectionLabel
           label="本文"
@@ -341,7 +341,7 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
             style={editareaStyle}
           />
         ) : (
-          <p className="text-[13px] text-slate-300 whitespace-pre-wrap leading-[1.75]">{bodyText}</p>
+          <p className="text-[14px] text-slate-700 whitespace-pre-wrap leading-[1.75]">{bodyText}</p>
         )}
       </div>
 
@@ -353,7 +353,7 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
         >
           <SectionLabel
             label="CTA"
-            color="#60a5fa"
+            color="#2563eb"
             editing={ctaEditing}
             deleted={false}
             onEdit={() => setCtaEditing((v) => !v)}
@@ -368,7 +368,7 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
               style={editareaStyle}
             />
           ) : (
-            <p className="text-[13px] text-slate-300">{ctaText}</p>
+            <p className="text-[14px] text-slate-700">{ctaText}</p>
           )}
         </div>
       )}
@@ -379,8 +379,8 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
           {pattern.hashtags.map((tag) => (
             <span
               key={tag}
-              className="text-[11px] px-2 py-0.5 rounded-lg"
-              style={{ background: 'rgba(255,255,255,0.04)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.15)' }}
+              className="text-[12px] px-2 py-0.5 rounded-lg"
+              style={{ background: 'rgba(15,23,42,0.04)', color: '#2563eb', border: '1px solid rgba(96,165,250,0.15)' }}
             >
               {tag.startsWith('#') ? tag : `#${tag}`}
             </span>
@@ -389,15 +389,15 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
       )}
 
       {/* ── アクションバー ── */}
-      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-white/5">
+      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-900/10">
         {/* コピー */}
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-xl transition-all"
+          className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-xl transition-all"
           style={{
-            background: copied ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.04)',
-            border: copied ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(255,255,255,0.08)',
-            color: copied ? '#34d399' : '#94a3b8',
+            background: copied ? 'rgba(52,211,153,0.1)' : 'rgba(15,23,42,0.04)',
+            border: copied ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(15,23,42,0.08)',
+            color: copied ? '#059669' : '#94a3b8',
           }}
         >
           {copied ? <Check size={12} /> : <Copy size={12} />}
@@ -408,11 +408,11 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
         <button
           onClick={handleSave}
           disabled={saving || saved}
-          className="flex items-center gap-1.5 text-[12px] px-4 py-1.5 rounded-xl font-medium transition-all"
+          className="flex items-center gap-1.5 text-[13px] px-4 py-1.5 rounded-xl font-medium transition-all"
           style={{
             background: 'rgba(167,139,250,0.12)',
             border: saved ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(167,139,250,0.35)',
-            color: saved ? '#a78bfa' : saving ? '#64748b' : '#c4b5fd',
+            color: saved ? '#7c3aed' : saving ? '#64748b' : '#7c3aed',
             cursor: saving || saved ? 'default' : 'pointer',
           }}
         >
@@ -426,8 +426,8 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
             href={tweetUrl!}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-xl transition-all"
-            style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: '#34d399' }}
+            className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-xl transition-all"
+            style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: '#059669' }}
           >
             <ExternalLink size={12} />
             投稿済み ↗
@@ -436,11 +436,11 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
           <button
             onClick={handleTweetFirstClick}
             disabled={tweeting || overLimit}
-            className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-xl transition-all"
+            className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-xl transition-all"
             style={{
-              background: tweetConfirm ? 'rgba(251,191,36,0.12)' : overLimit || tweeting ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.04)',
-              border: tweetConfirm ? '1px solid rgba(251,191,36,0.35)' : overLimit ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(255,255,255,0.08)',
-              color: tweetConfirm ? '#fbbf24' : overLimit || tweeting ? '#475569' : '#94a3b8',
+              background: tweetConfirm ? 'rgba(251,191,36,0.12)' : overLimit || tweeting ? 'rgba(15,23,42,0.03)' : 'rgba(15,23,42,0.04)',
+              border: tweetConfirm ? '1px solid rgba(251,191,36,0.35)' : overLimit ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(15,23,42,0.08)',
+              color: tweetConfirm ? '#b45309' : overLimit || tweeting ? '#475569' : '#94a3b8',
               cursor: tweeting || overLimit ? 'not-allowed' : 'pointer',
             }}
           >
@@ -453,11 +453,11 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
         <button
           onClick={handleOpenSchedule}
           disabled={scheduled}
-          className="flex items-center gap-1.5 text-[12px] px-4 py-1.5 rounded-xl font-medium transition-all ml-auto"
+          className="flex items-center gap-1.5 text-[13px] px-4 py-1.5 rounded-xl font-medium transition-all ml-auto"
           style={{
             background: scheduled ? 'rgba(52,211,153,0.12)' : 'rgba(96,165,250,0.15)',
             border: scheduled ? '1px solid rgba(52,211,153,0.4)' : '1px solid rgba(96,165,250,0.4)',
-            color: scheduled ? '#34d399' : '#93c5fd',
+            color: scheduled ? '#059669' : '#2563eb',
             cursor: scheduled ? 'default' : 'pointer',
           }}
         >
@@ -467,8 +467,8 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
       </div>
 
       {/* エラー表示 */}
-      {saveError && <p className="text-[11px] text-red-400">{saveError}</p>}
-      {tweetError && <p className="text-[11px] text-red-400">{tweetError}</p>}
+      {saveError && <p className="text-[12px] text-red-600">{saveError}</p>}
+      {tweetError && <p className="text-[12px] text-red-600">{tweetError}</p>}
 
       {/* ── 予約投稿モーダル（インライン） ── */}
       {scheduleOpen && (
@@ -477,18 +477,18 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
           style={{ background: 'rgba(96,165,250,0.04)', border: '1px solid rgba(96,165,250,0.18)' }}
         >
           <div className="flex items-center justify-between">
-            <p className="text-[12px] font-semibold text-neon-blue">投稿日時を選択</p>
-            <button onClick={() => setScheduleOpen(false)} className="text-slate-600 hover:text-slate-400 transition-colors">
+            <p className="text-[13px] font-semibold text-neon-blue">投稿日時を選択</p>
+            <button onClick={() => setScheduleOpen(false)} className="text-slate-600 hover:text-slate-600 transition-colors">
               <X size={14} />
             </button>
           </div>
 
           <div
             className="rounded-xl px-3 py-2.5"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.06)' }}
           >
-            <p className="text-[11px] text-slate-600 mb-1">投稿内容プレビュー</p>
-            <p className="text-[12px] text-slate-400 whitespace-pre-wrap line-clamp-3 leading-relaxed">{fullText}</p>
+            <p className="text-[12px] text-slate-600 mb-1">投稿内容プレビュー</p>
+            <p className="text-[13px] text-slate-600 whitespace-pre-wrap line-clamp-3 leading-relaxed">{fullText}</p>
           </div>
 
           <div>
@@ -498,27 +498,27 @@ export function GeneratedPostCard({ pattern, index, generationInput }: Props) {
               value={scheduleDate}
               onChange={(e) => setScheduleDate(e.target.value)}
               min={new Date().toISOString().slice(0, 16)}
-              style={{ colorScheme: 'dark' }}
+              style={{ colorScheme: 'light' }}
             />
           </div>
 
-          {scheduleError && <p className="text-[11px] text-red-400">{scheduleError}</p>}
+          {scheduleError && <p className="text-[12px] text-red-600">{scheduleError}</p>}
 
           <div className="flex gap-2 justify-end">
             <button
               onClick={() => setScheduleOpen(false)}
-              className="text-[12px] px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-300 transition-colors"
+              className="text-[13px] px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-700 transition-colors"
             >
               キャンセル
             </button>
             <button
               onClick={handleSchedule}
               disabled={!scheduleDate || scheduling}
-              className="flex items-center gap-1.5 text-[12px] px-4 py-1.5 rounded-xl font-medium transition-all"
+              className="flex items-center gap-1.5 text-[13px] px-4 py-1.5 rounded-xl font-medium transition-all"
               style={{
                 background: !scheduleDate || scheduling ? 'rgba(96,165,250,0.1)' : 'rgba(96,165,250,0.15)',
                 border: '1px solid rgba(96,165,250,0.3)',
-                color: !scheduleDate || scheduling ? '#475569' : '#60a5fa',
+                color: !scheduleDate || scheduling ? '#475569' : '#2563eb',
                 cursor: !scheduleDate || scheduling ? 'default' : 'pointer',
               }}
             >

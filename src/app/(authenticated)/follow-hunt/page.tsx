@@ -10,10 +10,10 @@ export default function FollowHuntPage() {
       />
 
       <div
-        className="mb-6 rounded-xl px-4 py-3 text-[12px] text-slate-500"
-        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+        className="mb-6 rounded-xl px-4 py-3 text-[13px] text-slate-500"
+        style={{ background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.05)' }}
       >
-        <span className="text-slate-400 font-medium">スパム対策:</span>{' '}
+        <span className="text-slate-600 font-medium">スパム対策:</span>{' '}
         フォローは1件ずつ手動承認制です。スキップした候補は再提案されません。1日のフォロー上限は設定で変更できます。
       </div>
 

@@ -28,16 +28,16 @@ export function HistoryPostItem({ post }: { post: ScheduledPostWithMetrics }) {
         {/* Top row */}
         <div className="flex items-center gap-2.5 mb-2.5">
           <Badge color={cfg.color}>{cfg.label}</Badge>
-          <span className="text-[11px] text-slate-600">{fmtDate(post.published_at)}</span>
+          <span className="text-[12px] text-slate-600">{fmtDate(post.published_at)}</span>
           {engRate && (
-            <span className="text-[11px] text-neon-green ml-auto font-medium">
+            <span className="text-[12px] text-neon-green ml-auto font-medium">
               ENG {engRate}%
             </span>
           )}
         </div>
 
         {/* Content */}
-        <p className="text-[13px] text-slate-300 leading-[1.65] whitespace-pre-wrap line-clamp-3">
+        <p className="text-[14px] text-slate-700 leading-[1.65] whitespace-pre-wrap line-clamp-3">
           {post.content}
         </p>
 
@@ -45,7 +45,7 @@ export function HistoryPostItem({ post }: { post: ScheduledPostWithMetrics }) {
         {post.tags.length > 0 && (
           <div className="flex gap-2 mt-2.5">
             {post.tags.map((t) => (
-              <span key={t} className="text-[11px] text-slate-600">#{t}</span>
+              <span key={t} className="text-[12px] text-slate-600">#{t}</span>
             ))}
           </div>
         )}
@@ -55,17 +55,17 @@ export function HistoryPostItem({ post }: { post: ScheduledPostWithMetrics }) {
       {m && post.status === 'published' && (
         <div
           className="shrink-0 rounded-xl p-3 space-y-2"
-          style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)', minWidth: 72 }}
+          style={{ background: 'rgba(15,23,42,0.025)', border: '1px solid rgba(15,23,42,0.06)', minWidth: 72 }}
         >
           {[
-            { icon: Heart,         color: '#f472b6', val: fmt(m.likes)       },
-            { icon: Repeat2,       color: '#34d399', val: fmt(m.retweets)    },
-            { icon: Eye,           color: '#60a5fa', val: fmt(m.impressions) },
-            { icon: MessageCircle, color: '#22d3ee', val: fmt(m.replies)     },
+            { icon: Heart,         color: '#db2777', val: fmt(m.likes)       },
+            { icon: Repeat2,       color: '#059669', val: fmt(m.retweets)    },
+            { icon: Eye,           color: '#2563eb', val: fmt(m.impressions) },
+            { icon: MessageCircle, color: '#0891b2', val: fmt(m.replies)     },
           ].map(({ icon: Icon, color: c, val }) => (
-            <div key={c} className="flex items-center gap-1.5 text-[12px]">
+            <div key={c} className="flex items-center gap-1.5 text-[13px]">
               <Icon size={11} style={{ color: c }} />
-              <span className="text-slate-300 font-medium tabular-nums">{val}</span>
+              <span className="text-slate-700 font-medium tabular-nums">{val}</span>
             </div>
           ))}
         </div>

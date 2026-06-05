@@ -49,10 +49,10 @@ export default function AuthCallbackPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0a' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#e7ebf3' }}>
       <div className="flex items-center gap-3">
         <Loader2 size={20} className="animate-spin text-slate-500" />
-        <p className="text-sm text-slate-400">ログイン処理中...</p>
+        <p className="text-base text-slate-600">ログイン処理中...</p>
       </div>
     </div>
   );
