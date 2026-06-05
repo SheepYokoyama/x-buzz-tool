@@ -69,15 +69,15 @@ function LoginContent() {
       <div
         className="w-full max-w-sm rounded-3xl p-8 text-center"
         style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
+          background: '#f8fafc',
+          border: '1px solid rgba(15,23,42,0.09)',
+          boxShadow: '0 8px 40px rgba(15,23,42,0.1)',
         }}
       >
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl select-none"
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl select-none"
             style={{
               background: 'linear-gradient(135deg, #f59e0b, #ec4899, #a78bfa)',
               boxShadow: '0 0 24px rgba(236,72,153,0.45), 0 4px 12px rgba(0,0,0,0.4)',
@@ -88,7 +88,7 @@ function LoginContent() {
         </div>
 
         <h1
-          className="text-2xl font-bold mb-1"
+          className="text-3xl font-bold mb-8"
           style={{
             background: 'linear-gradient(90deg, #fbbf24, #f472b6, #a78bfa)',
             WebkitBackgroundClip: 'text',
@@ -97,14 +97,13 @@ function LoginContent() {
         >
           Xpresso
         </h1>
-        <p className="text-slate-500 text-sm mb-8">X バズ投稿ツール</p>
 
         {error && (
           <div
-            className="mb-6 px-4 py-3 rounded-xl text-sm text-red-400"
+            className="mb-6 px-4 py-3 rounded-xl text-base text-red-600"
             style={{
               background: 'rgba(239,68,68,0.08)',
-              border: '1px solid rgba(239,68,68,0.15)',
+              border: '1px solid rgba(239,68,68,0.2)',
             }}
           >
             ログインに失敗しました。もう一度お試しください。
@@ -128,18 +127,18 @@ function LoginContent() {
                   }}
                   autoFocus
                   placeholder="合言葉を入力"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl text-[16px] outline-none transition-all"
                   style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: `1px solid ${gateError ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                    color: '#e2e8f0',
+                    background: '#ffffff',
+                    border: `1px solid ${gateError ? 'rgba(239,68,68,0.5)' : 'rgba(15,23,42,0.18)'}`,
+                    color: '#0f172a',
                   }}
                 />
               </div>
               <button
                 type="submit"
                 disabled={submitting || !password}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-medium text-sm transition-all disabled:opacity-40"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-medium text-base transition-all disabled:opacity-40"
                 style={{
                   background: 'linear-gradient(135deg, #f59e0b, #ec4899, #a78bfa)',
                   color: '#ffffff',
@@ -150,9 +149,9 @@ function LoginContent() {
               </button>
             </form>
             {gateError && (
-              <p className="text-[12px] text-red-400 mt-3">合言葉が違います。</p>
+              <p className="text-[14px] text-red-600 mt-3">合言葉が違います。</p>
             )}
-            <p className="text-[11px] text-slate-600 mt-6">
+            <p className="text-[13px] text-slate-500 mt-6">
               利用には管理者から共有された合言葉が必要です
             </p>
           </>
@@ -160,19 +159,19 @@ function LoginContent() {
           <>
             <button
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-medium text-sm transition-all"
+              className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-medium text-[16px] transition-all"
               style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: '#e2e8f0',
+                background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.15)',
+                color: '#1e293b',
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)';
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.15)';
+                (e.currentTarget as HTMLElement).style.background = 'rgba(15,23,42,0.03)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(15,23,42,0.22)';
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)';
+                (e.currentTarget as HTMLElement).style.background = '#ffffff';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(15,23,42,0.15)';
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24">
@@ -183,7 +182,7 @@ function LoginContent() {
               </svg>
               Google でログイン
             </button>
-            <p className="text-[11px] text-slate-600 mt-6">
+            <p className="text-[13px] text-slate-500 mt-6">
               ログインすることで、あなたの投稿データが安全に保存されます
             </p>
           </>

@@ -38,20 +38,20 @@ export function HistoryClient({ posts, drafts: initialDrafts }: Props) {
       <div className="flex items-center gap-2 mb-5">
         <button
           onClick={() => setMainTab('history')}
-          className="flex items-center gap-1.5 text-[13px] px-4 py-2 rounded-xl font-medium transition-all"
+          className="flex items-center gap-1.5 text-[14px] px-4 py-2 rounded-xl font-medium transition-all"
           style={{
-            background: mainTab === 'history' ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.03)',
-            border: mainTab === 'history' ? '1px solid rgba(167,139,250,0.3)' : '1px solid rgba(255,255,255,0.07)',
-            color: mainTab === 'history' ? '#a78bfa' : '#64748b',
+            background: mainTab === 'history' ? 'rgba(167,139,250,0.12)' : 'rgba(15,23,42,0.03)',
+            border: mainTab === 'history' ? '1px solid rgba(167,139,250,0.3)' : '1px solid rgba(15,23,42,0.07)',
+            color: mainTab === 'history' ? '#7c3aed' : '#64748b',
           }}
         >
           <History size={14} />
           投稿履歴
           <span
-            className="text-[11px] px-1.5 py-0.5 rounded-md ml-0.5"
+            className="text-[12px] px-1.5 py-0.5 rounded-md ml-0.5"
             style={{
-              background: mainTab === 'history' ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.05)',
-              color: mainTab === 'history' ? '#c4b5fd' : '#475569',
+              background: mainTab === 'history' ? 'rgba(167,139,250,0.15)' : 'rgba(15,23,42,0.05)',
+              color: mainTab === 'history' ? '#7c3aed' : '#475569',
             }}
           >
             {posts.length}
@@ -60,21 +60,21 @@ export function HistoryClient({ posts, drafts: initialDrafts }: Props) {
 
         <button
           onClick={() => setMainTab('drafts')}
-          className="flex items-center gap-1.5 text-[13px] px-4 py-2 rounded-xl font-medium transition-all"
+          className="flex items-center gap-1.5 text-[14px] px-4 py-2 rounded-xl font-medium transition-all"
           style={{
-            background: mainTab === 'drafts' ? 'rgba(96,165,250,0.12)' : 'rgba(255,255,255,0.03)',
-            border: mainTab === 'drafts' ? '1px solid rgba(96,165,250,0.3)' : '1px solid rgba(255,255,255,0.07)',
-            color: mainTab === 'drafts' ? '#60a5fa' : '#64748b',
+            background: mainTab === 'drafts' ? 'rgba(96,165,250,0.12)' : 'rgba(15,23,42,0.03)',
+            border: mainTab === 'drafts' ? '1px solid rgba(96,165,250,0.3)' : '1px solid rgba(15,23,42,0.07)',
+            color: mainTab === 'drafts' ? '#2563eb' : '#64748b',
           }}
         >
           <Bookmark size={14} />
           下書き
           {drafts.length > 0 && (
             <span
-              className="text-[11px] px-1.5 py-0.5 rounded-md ml-0.5"
+              className="text-[12px] px-1.5 py-0.5 rounded-md ml-0.5"
               style={{
                 background: mainTab === 'drafts' ? 'rgba(96,165,250,0.15)' : 'rgba(251,191,36,0.1)',
-                color: mainTab === 'drafts' ? '#93c5fd' : '#fbbf24',
+                color: mainTab === 'drafts' ? '#2563eb' : '#b45309',
               }}
             >
               {drafts.length}
@@ -92,7 +92,7 @@ export function HistoryClient({ posts, drafts: initialDrafts }: Props) {
 
           {filtered.length === 0 ? (
             <div className="neon-card">
-              <EmptyState icon={History} title="該当する投稿はありません" iconColor="#60a5fa" />
+              <EmptyState icon={History} title="該当する投稿はありません" iconColor="#2563eb" />
             </div>
           ) : (
             <div className="space-y-3 max-w-3xl">
@@ -107,7 +107,7 @@ export function HistoryClient({ posts, drafts: initialDrafts }: Props) {
         <>
           {drafts.length === 0 ? (
             <div className="neon-card">
-              <EmptyState icon={Bookmark} title="下書きはありません" iconColor="#60a5fa" />
+              <EmptyState icon={Bookmark} title="下書きはありません" iconColor="#2563eb" />
             </div>
           ) : (
             <div className="space-y-3 max-w-3xl">

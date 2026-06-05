@@ -69,9 +69,9 @@ export function ThreadsAccountsClient() {
   return (
     <div className="mb-8">
       <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
-        <h3 className="text-[14px] font-semibold text-slate-300 flex items-center gap-2">
+        <h3 className="text-[15px] font-semibold text-slate-700 flex items-center gap-2">
           <span
-            className="w-5 h-5 rounded-md flex items-center justify-center text-[12px] text-slate-200"
+            className="w-5 h-5 rounded-md flex items-center justify-center text-[13px] text-slate-800"
             style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}
           >
             <PlatformIcon platform="threads" size={11} />
@@ -80,7 +80,7 @@ export function ThreadsAccountsClient() {
         </h3>
         <Link
           href="/guide/threads-account"
-          className="inline-flex items-center gap-1.5 text-[11px] text-purple-300 hover:underline shrink-0"
+          className="inline-flex items-center gap-1.5 text-[12px] text-purple-600 hover:underline shrink-0"
         >
           <BookOpen size={11} />
           登録マニュアル
@@ -90,7 +90,7 @@ export function ThreadsAccountsClient() {
       {loading ? (
         <div className="flex items-center py-6 text-slate-600">
           <Loader2 size={16} className="animate-spin mr-2" />
-          <span className="text-[12px]">読み込み中…</span>
+          <span className="text-[13px]">読み込み中…</span>
         </div>
       ) : account ? (
         <div className="max-w-xl">
@@ -107,22 +107,22 @@ export function ThreadsAccountsClient() {
           onClick={() => setShowForm(true)}
           className="rounded-[1.375rem] flex flex-col items-center justify-center gap-3 p-8 transition-all min-h-48 max-w-xl w-full"
           style={{
-            border: '2px dashed rgba(255,255,255,0.07)',
-            background: 'rgba(255,255,255,0.015)',
+            border: '2px dashed rgba(15,23,42,0.07)',
+            background: 'rgba(15,23,42,0.015)',
             color: '#475569',
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(168,85,247,0.25)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(15,23,42,0.07)'; }}
         >
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.08)' }}
           >
             <Plus size={20} />
           </div>
           <div className="text-center">
-            <p className="text-[13px] font-medium text-slate-500">Threadsアカウントを登録</p>
-            <p className="text-[11px] text-slate-700 mt-1">アクセストークンを登録して Threads 投稿機能を有効化します</p>
+            <p className="text-[14px] font-medium text-slate-500">Threadsアカウントを登録</p>
+            <p className="text-[12px] text-slate-700 mt-1">アクセストークンを登録して Threads 投稿機能を有効化します</p>
           </div>
         </button>
       )}

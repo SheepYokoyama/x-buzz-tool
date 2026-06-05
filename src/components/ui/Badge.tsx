@@ -11,15 +11,15 @@ const colorStyles: Record<Color, string> = {
   cyan: 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/30',
   green: 'bg-neon-green/15 text-neon-green border-neon-green/30',
   pink: 'bg-neon-pink/15 text-neon-pink border-neon-pink/30',
-  gray: 'bg-white/5 text-slate-400 border-white/10',
-  red: 'bg-red-500/15 text-red-400 border-red-500/30',
+  gray: 'bg-slate-900/[0.05] text-slate-600 border-slate-900/10',
+  red: 'bg-red-500/12 text-red-600 border-red-500/30',
 };
 
 export function Badge({ children, color = 'gray' }: BadgeProps) {
   return (
     <span
       className={`
-        inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border
+        inline-flex items-center px-2 py-0.5 rounded-md text-sm font-medium border
         ${colorStyles[color]}
       `}
     >

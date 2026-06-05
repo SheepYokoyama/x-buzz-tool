@@ -65,33 +65,33 @@ export default async function DashboardPage() {
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           style={{
-            background: 'rgba(96,165,250,0.12)',
-            border: '1px solid rgba(96,165,250,0.2)',
+            background: 'rgba(37,99,235,0.1)',
+            border: '1px solid rgba(37,99,235,0.22)',
           }}
         >
-          <Sparkles size={16} style={{ color: '#60a5fa' }} />
+          <Sparkles size={16} style={{ color: '#2563eb' }} />
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-medium text-slate-200 leading-none">
+          <p className="text-[16px] font-semibold text-slate-800 leading-none">
             {hasDrafts ? (
               <>
                 AIが本日のバズ投稿候補を{' '}
-                <span style={{ color: '#60a5fa' }}>{todayDrafts.count}件</span> 生成しました
+                <span style={{ color: '#2563eb' }}>{todayDrafts.count}件</span> 生成しました
               </>
             ) : (
               bannerTitle
             )}
           </p>
-          <p className="text-[12px] text-slate-500 mt-1.5 leading-none">
+          <p className="text-[14px] text-slate-500 mt-1.5 leading-none">
             {bannerSubtitle}
           </p>
         </div>
 
         <Link
           href={bannerLinkHref}
-          className="flex items-center gap-1.5 text-[12px] font-semibold whitespace-nowrap transition-colors"
-          style={{ color: '#60a5fa' }}
+          className="flex items-center gap-1.5 text-[14px] font-semibold whitespace-nowrap transition-colors"
+          style={{ color: '#2563eb' }}
         >
           {bannerLinkLabel} <ArrowRight size={13} />
         </Link>

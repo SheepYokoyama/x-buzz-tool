@@ -48,16 +48,16 @@ export function MissingKeyBanner({ provider }: Props) {
       className="group flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 transition-colors hover:bg-amber-500/[0.08]"
       style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}
     >
-      <AlertTriangle size={14} className="text-amber-400 shrink-0" />
+      <AlertTriangle size={14} className="text-amber-600 shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] font-medium text-amber-200 leading-tight">
+        <p className="text-[13px] font-medium text-amber-700 leading-tight">
           {LABELS[provider]} API キーが未登録です
         </p>
-        <p className="text-[11px] text-amber-300/60 mt-0.5">
+        <p className="text-[12px] text-amber-600/60 mt-0.5">
           登録すると生成・リライトが利用できます
         </p>
       </div>
-      <ArrowRight size={13} className="text-amber-300 shrink-0 transition-transform group-hover:translate-x-0.5" />
+      <ArrowRight size={13} className="text-amber-600 shrink-0 transition-transform group-hover:translate-x-0.5" />
     </Link>
   );
 }

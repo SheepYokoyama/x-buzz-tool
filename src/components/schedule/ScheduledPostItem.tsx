@@ -18,9 +18,9 @@ interface Props {
 }
 
 const STATUS_STYLES: Record<ScheduledPostStatus, { color: string; label: string }> = {
-  scheduled:  { color: '#22d3ee', label: '予約中' },
-  published:  { color: '#34d399', label: '公開済み' },
-  failed:     { color: '#f87171', label: '失敗' },
+  scheduled:  { color: '#0891b2', label: '予約中' },
+  published:  { color: '#059669', label: '公開済み' },
+  failed:     { color: '#dc2626', label: '失敗' },
   cancelled:  { color: '#64748b', label: 'キャンセル' },
 };
 
@@ -191,10 +191,10 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
             className="w-2 h-2 rounded-full shrink-0"
             style={{ background: style.color, boxShadow: `0 0 6px ${style.color}88` }}
           />
-          <span className="text-[11px] font-medium" style={{ color: style.color }}>
+          <span className="text-[12px] font-medium" style={{ color: style.color }}>
             {style.label}
           </span>
-          <span className="flex items-center gap-1 text-[11px] text-slate-500">
+          <span className="flex items-center gap-1 text-[12px] text-slate-500">
             <CalendarClock size={11} />
             {formatDate(post.scheduled_at)}
           </span>
@@ -211,11 +211,11 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
                     onClick={handlePostNow}
                     disabled={postingNow}
                     title="今すぐXに投稿する"
-                    className="flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg transition-all"
+                    className="flex items-center gap-1 text-[12px] px-2.5 py-1.5 rounded-lg transition-all"
                     style={{
                       background: 'rgba(96,165,250,0.1)',
                       border: '1px solid rgba(96,165,250,0.25)',
-                      color: postingNow ? '#475569' : '#60a5fa',
+                      color: postingNow ? '#475569' : '#2563eb',
                       cursor: postingNow ? 'not-allowed' : 'pointer',
                     }}
                   >
@@ -228,11 +228,11 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
                   onClick={handleTestPublish}
                   disabled={publishing}
                   title="テスト公開（ローカルでステータスを published に変更）"
-                  className="flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg transition-all"
+                  className="flex items-center gap-1 text-[12px] px-2.5 py-1.5 rounded-lg transition-all"
                   style={{
                     background: 'rgba(52,211,153,0.08)',
                     border: '1px solid rgba(52,211,153,0.2)',
-                    color: '#34d399',
+                    color: '#059669',
                   }}
                 >
                   <Send size={11} />
@@ -243,7 +243,7 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
                   <button
                     onClick={() => setEditing(true)}
                     className="w-7 h-7 rounded-lg flex items-center justify-center transition-all text-slate-500 hover:text-neon-blue"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    style={{ background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.06)' }}
                   >
                     <Edit2 size={12} />
                   </button>
@@ -251,9 +251,9 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
                 {/* キャンセル */}
                 <button
                   onClick={handleCancel}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all text-slate-500 hover:text-slate-400"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all text-slate-500 hover:text-slate-600"
                   title="予約キャンセル"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                  style={{ background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.06)' }}
                 >
                   <X size={12} />
                 </button>
@@ -263,27 +263,27 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
             {!confirmDelete ? (
               <button
                 onClick={() => setConfirmDelete(true)}
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all text-slate-500 hover:text-red-400"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all text-slate-500 hover:text-red-600"
+                style={{ background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.06)' }}
               >
                 <Trash2 size={12} />
               </button>
             ) : (
               <div className="flex items-center gap-1">
-                <span className="text-[11px] text-red-400 flex items-center gap-1">
+                <span className="text-[12px] text-red-600 flex items-center gap-1">
                   <AlertCircle size={11} /> 削除?
                 </span>
                 <button
                   onClick={handleDelete}
-                  className="text-[11px] px-2 py-1 rounded-lg"
-                  style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171' }}
+                  className="text-[12px] px-2 py-1 rounded-lg"
+                  style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)', color: '#dc2626' }}
                 >
                   削除
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
-                  className="text-[11px] px-2 py-1 rounded-lg text-slate-500"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                  className="text-[12px] px-2 py-1 rounded-lg text-slate-500"
+                  style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.08)' }}
                 >
                   戻る
                 </button>
@@ -293,7 +293,7 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
         )}
       </div>
 
-      {postNowError && <p className="text-[11px] text-red-400 px-1">{postNowError}</p>}
+      {postNowError && <p className="text-[12px] text-red-600 px-1">{postNowError}</p>}
 
       {/* ── 本文（通常表示 or 編集フォーム） ── */}
       {editing ? (
@@ -308,30 +308,30 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
             type="datetime-local"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            style={{ colorScheme: 'dark' }}
+            style={{ colorScheme: 'light' }}
           />
           <Input
             value={tagsInput}
             onChange={(e) => setTagsInput(e.target.value)}
             placeholder="タグ（カンマ区切り）例: AI, 副業"
           />
-          {editError && <p className="text-[11px] text-red-400">{editError}</p>}
+          {editError && <p className="text-[12px] text-red-600">{editError}</p>}
           <div className="flex gap-2 justify-end">
             <button
               onClick={handleCancelEdit}
-              className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-xl text-slate-500"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+              className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-xl text-slate-500"
+              style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.08)' }}
             >
               <X size={12} /> キャンセル
             </button>
             <button
               onClick={handleSave}
               disabled={saving || !content.trim() || !date}
-              className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-xl"
+              className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-xl"
               style={{
                 background: 'rgba(167,139,250,0.1)',
                 border: '1px solid rgba(167,139,250,0.25)',
-                color: '#a78bfa',
+                color: '#7c3aed',
                 opacity: saving || !content.trim() || !date ? 0.5 : 1,
               }}
             >
@@ -342,14 +342,14 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
       ) : (
         <>
           {payloadV1 && (
-            <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400">
+            <div className="flex items-center gap-2 flex-wrap text-[12px] text-slate-600">
               {payloadV1.platforms.map((p) => {
                 const style =
                   p === 'x'
-                    ? { background: 'rgba(96,165,250,0.10)', border: '1px solid rgba(96,165,250,0.30)', color: '#60a5fa' }
+                    ? { background: 'rgba(96,165,250,0.10)', border: '1px solid rgba(96,165,250,0.30)', color: '#2563eb' }
                     : p === 'instagram'
-                      ? { background: 'rgba(236,72,153,0.10)', border: '1px solid rgba(236,72,153,0.30)', color: '#f472b6' }
-                      : { background: 'rgba(168,85,247,0.10)', border: '1px solid rgba(168,85,247,0.30)', color: '#c084fc' };
+                      ? { background: 'rgba(236,72,153,0.10)', border: '1px solid rgba(236,72,153,0.30)', color: '#db2777' }
+                      : { background: 'rgba(168,85,247,0.10)', border: '1px solid rgba(168,85,247,0.30)', color: '#7c3aed' };
                 const label = p === 'x' ? 'X' : p === 'instagram' ? 'Instagram' : 'Threads';
                 return (
                   <span
@@ -375,18 +375,18 @@ export function ScheduledPostItem({ post, onDelete, onUpdate }: Props) {
               )}
             </div>
           )}
-          <p className="text-[13px] text-slate-300 leading-relaxed whitespace-pre-wrap">
+          <p className="text-[14px] text-slate-700 leading-relaxed whitespace-pre-wrap">
             {payloadV1 ? payloadV1.chunks[0]?.text ?? post.content : post.content}
           </p>
           {payloadV1 && payloadV1.chunks.length > 1 && (
-            <p className="text-[11px] text-slate-600">
+            <p className="text-[12px] text-slate-600">
               … 他 {payloadV1.chunks.length - 1} ポスト
             </p>
           )}
           {post.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {post.tags.map((tag) => (
-                <span key={tag} className="text-[11px] text-slate-600">#{tag}</span>
+                <span key={tag} className="text-[12px] text-slate-600">#{tag}</span>
               ))}
             </div>
           )}

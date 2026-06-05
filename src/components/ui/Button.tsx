@@ -13,33 +13,33 @@ const variantStyles: Record<Variant, string> = {
   primary:
     'text-white hover:opacity-90',
   secondary:
-    'text-[#a78bfa] hover:text-white',
+    'text-[#6d28d9] hover:text-[#5b21b6]',
   ghost:
-    'text-slate-500 hover:text-slate-200 hover:bg-white/5',
+    'text-slate-600 hover:text-slate-900 hover:bg-slate-900/[0.05]',
   danger:
-    'text-red-400 hover:text-red-300',
+    'text-red-600 hover:text-red-700',
 };
 
 const variantInline: Record<Variant, React.CSSProperties> = {
   primary: {
-    background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
-    boxShadow: '0 0 20px rgba(167,139,250,0.25)',
+    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+    boxShadow: '0 2px 12px rgba(124,58,237,0.28)',
   },
   secondary: {
-    background: 'rgba(167,139,250,0.08)',
-    border: '1px solid rgba(167,139,250,0.22)',
+    background: 'rgba(124,58,237,0.08)',
+    border: '1px solid rgba(124,58,237,0.28)',
   },
   ghost: {},
   danger: {
-    background: 'rgba(239,68,68,0.1)',
-    border: '1px solid rgba(239,68,68,0.2)',
+    background: 'rgba(239,68,68,0.08)',
+    border: '1px solid rgba(239,68,68,0.28)',
   },
 };
 
 const sizeStyles: Record<Size, string> = {
-  sm: 'px-3 py-1.5 text-[12px] rounded-xl',
-  md: 'px-4 py-2   text-[13px] rounded-xl',
-  lg: 'px-6 py-3   text-[14px] rounded-2xl',
+  sm: 'px-3 py-1.5 text-[14px] rounded-xl',
+  md: 'px-4 py-2   text-[15px] rounded-xl',
+  lg: 'px-6 py-3   text-[16px] rounded-2xl',
 };
 
 export function Button({

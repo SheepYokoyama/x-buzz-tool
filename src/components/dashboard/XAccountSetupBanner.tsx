@@ -19,19 +19,19 @@ export function XAccountSetupBanner({ hasXAccount }: { hasXAccount: boolean }) {
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
         style={{
-          background: 'rgba(167,139,250,0.12)',
-          border: '1px solid rgba(167,139,250,0.2)',
+          background: 'rgba(124,58,237,0.1)',
+          border: '1px solid rgba(124,58,237,0.22)',
         }}
       >
-        <Link2 size={16} style={{ color: '#a78bfa' }} />
+        <Link2 size={16} style={{ color: '#7c3aed' }} />
       </div>
 
       {/* テキスト */}
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-medium text-slate-200 leading-none">
+        <p className="text-[16px] font-semibold text-slate-800 leading-none">
           X（Twitter）アカウントを連携しましょう
         </p>
-        <p className="text-[12px] text-slate-500 mt-1.5 leading-none">
+        <p className="text-[14px] text-slate-500 mt-1.5 leading-none">
           投稿・メトリクス取得・フォロー候補の発見には X API 認証が必要です
         </p>
       </div>
@@ -39,8 +39,8 @@ export function XAccountSetupBanner({ hasXAccount }: { hasXAccount: boolean }) {
       {/* CTA */}
       <Link
         href="/x-accounts"
-        className="flex items-center gap-1.5 text-[12px] font-semibold whitespace-nowrap transition-colors pr-6 sm:pr-0"
-        style={{ color: '#a78bfa' }}
+        className="flex items-center gap-1.5 text-[14px] font-semibold whitespace-nowrap transition-colors pr-6 sm:pr-0"
+        style={{ color: '#7c3aed' }}
       >
         アカウントを登録する <ArrowRight size={13} />
       </Link>
@@ -49,7 +49,7 @@ export function XAccountSetupBanner({ hasXAccount }: { hasXAccount: boolean }) {
       <button
         onClick={() => setDismissed(true)}
         aria-label="閉じる"
-        className="absolute top-2 right-2 p-1 text-slate-500 hover:text-slate-300 transition-colors"
+        className="absolute top-2 right-2 p-1 text-slate-500 hover:text-slate-800 transition-colors"
       >
         <X size={14} />
       </button>

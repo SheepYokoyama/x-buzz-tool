@@ -55,14 +55,14 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
   const canLikeAndFollow = canFollow && !!candidate.sample_tweet_id;
 
   const ffRatio = candidate.ff_ratio;
-  const ffRatioColor = ffRatio && ffRatio >= 1.0 && ffRatio <= 1.5 ? '#a78bfa' : '#64748b';
+  const ffRatioColor = ffRatio && ffRatio >= 1.0 && ffRatio <= 1.5 ? '#7c3aed' : '#64748b';
 
   return (
     <div
       className="rounded-[1.375rem] p-5 flex flex-col gap-4 transition-all"
       style={{
-        background: 'rgba(255,255,255,0.025)',
-        border: '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(15,23,42,0.025)',
+        border: '1px solid rgba(15,23,42,0.07)',
       }}
     >
       {/* ── ヘッダー: アバター・名前・FF比 ── */}
@@ -73,12 +73,12 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
             src={candidate.profile_image_url}
             alt={candidate.display_name ?? candidate.username}
             className="w-11 h-11 rounded-full shrink-0"
-            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ border: '1px solid rgba(15,23,42,0.1)' }}
           />
         ) : (
           <span
-            className="w-11 h-11 rounded-full flex items-center justify-center text-[14px] font-bold shrink-0"
-            style={{ background: 'rgba(255,255,255,0.08)', color: '#94a3b8' }}
+            className="w-11 h-11 rounded-full flex items-center justify-center text-[15px] font-bold shrink-0"
+            style={{ background: 'rgba(15,23,42,0.08)', color: '#94a3b8' }}
           >
             {candidate.username.charAt(0).toUpperCase()}
           </span>
@@ -86,20 +86,20 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="text-[14px] font-semibold text-slate-200 truncate">
+            <p className="text-[15px] font-semibold text-slate-800 truncate">
               {candidate.display_name ?? candidate.username}
             </p>
             <a
               href={`https://x.com/${candidate.username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 text-slate-600 hover:text-slate-400 transition-colors"
+              className="shrink-0 text-slate-600 hover:text-slate-600 transition-colors"
               title="X で開く"
             >
               <ExternalLink size={12} />
             </a>
           </div>
-          <p className="text-[12px] text-slate-500 truncate">@{candidate.username}</p>
+          <p className="text-[13px] text-slate-500 truncate">@{candidate.username}</p>
         </div>
 
         {/* FF比バッジ */}
@@ -112,8 +112,8 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
             }}
             title="FF比 = フォロワー ÷ フォロー中"
           >
-            <p className="text-[9px] text-slate-600 font-medium leading-tight">FF比</p>
-            <p className="text-[13px] font-bold leading-tight" style={{ color: ffRatioColor }}>
+            <p className="text-[10px] text-slate-600 font-medium leading-tight">FF比</p>
+            <p className="text-[14px] font-bold leading-tight" style={{ color: ffRatioColor }}>
               {ffRatio.toFixed(2)}
             </p>
           </div>
@@ -121,11 +121,11 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
       </div>
 
       {/* ── フォロワー数 / フォロー中数 ── */}
-      <div className="flex items-center gap-4 text-[12px]">
-        <span className="text-slate-400">
+      <div className="flex items-center gap-4 text-[13px]">
+        <span className="text-slate-600">
           <span className="text-slate-600">フォロワー</span> {formatCount(candidate.followers_count)}
         </span>
-        <span className="text-slate-400">
+        <span className="text-slate-600">
           <span className="text-slate-600">フォロー中</span> {formatCount(candidate.following_count)}
         </span>
       </div>
@@ -133,8 +133,8 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
       {/* ── bio ── */}
       {candidate.bio && (
         <div
-          className="text-[12px] text-slate-400 leading-relaxed rounded-lg px-3 py-2 max-h-24 overflow-y-auto"
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
+          className="text-[13px] text-slate-600 leading-relaxed rounded-lg px-3 py-2 max-h-24 overflow-y-auto"
+          style={{ background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.04)' }}
         >
           {highlightKeywords(candidate.bio, candidate.matched_keywords)}
         </div>
@@ -143,10 +143,10 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
       {/* ── 直近ツイート ── */}
       {candidate.sample_tweet_text && (
         <div
-          className="text-[11px] text-slate-500 leading-relaxed rounded-lg px-3 py-2"
+          className="text-[12px] text-slate-500 leading-relaxed rounded-lg px-3 py-2"
           style={{ background: 'rgba(96,165,250,0.03)', border: '1px solid rgba(96,165,250,0.07)' }}
         >
-          <p className="text-[9px] text-slate-600 mb-1 uppercase tracking-wider">直近のツイート</p>
+          <p className="text-[10px] text-slate-600 mb-1 uppercase tracking-wider">直近のツイート</p>
           {highlightKeywords(candidate.sample_tweet_text, candidate.matched_keywords)}
         </div>
       )}
@@ -158,11 +158,11 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
           <button
             onClick={handleLikeAndFollow}
             disabled={acting !== null || !canLikeAndFollow}
-            className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 flex items-center justify-center gap-1.5 text-[13px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
               background: canLikeAndFollow
-                ? 'linear-gradient(135deg, #f472b6, #a78bfa)'
-                : 'rgba(255,255,255,0.04)',
+                ? 'linear-gradient(135deg, #db2777, #7c3aed)'
+                : 'rgba(15,23,42,0.04)',
               color: canLikeAndFollow ? 'white' : '#64748b',
               boxShadow: canLikeAndFollow ? '0 0 14px rgba(244,114,182,0.22)' : undefined,
             }}
@@ -182,11 +182,11 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
           <button
             onClick={handleFollow}
             disabled={acting !== null || !canFollow}
-            className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 text-[13px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
               background: 'rgba(96,165,250,0.08)',
               border: '1px solid rgba(96,165,250,0.2)',
-              color: canFollow ? '#93c5fd' : '#64748b',
+              color: canFollow ? '#2563eb' : '#64748b',
             }}
             title="フォローのみ実行"
           >
@@ -196,10 +196,10 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
           <button
             onClick={handleSkip}
             disabled={acting !== null}
-            className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40"
+            className="flex items-center gap-1.5 text-[13px] font-medium px-3 py-2 rounded-lg transition-all disabled:opacity-40"
             style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.07)',
+              background: 'rgba(15,23,42,0.03)',
+              border: '1px solid rgba(15,23,42,0.07)',
               color: '#64748b',
             }}
             title="スキップ（候補から除外）"
@@ -209,13 +209,13 @@ export function CandidateCard({ candidate, canFollow, onFollow, onLikeAndFollow,
         </div>
 
         {/* 注意書き: API トークン消費を抑えたい場合は X 直接操作を案内 */}
-        <p className="text-[10px] text-slate-600 leading-relaxed">
+        <p className="text-[11px] text-slate-600 leading-relaxed">
           API 消費を抑えたい場合は、上の{' '}
           <a
             href={`https://x.com/${candidate.username}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-slate-500 hover:text-slate-300 underline underline-offset-2"
+            className="text-slate-500 hover:text-slate-700 underline underline-offset-2"
           >
             外部リンク
           </a>

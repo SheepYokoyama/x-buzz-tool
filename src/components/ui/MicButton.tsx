@@ -20,11 +20,11 @@ export function MicButton({ isListening, isSupported, onToggle }: Props) {
       style={{
         background: isListening
           ? 'rgba(239,68,68,0.15)'
-          : 'rgba(255,255,255,0.04)',
+          : 'rgba(15,23,42,0.04)',
         border: isListening
           ? '1px solid rgba(239,68,68,0.4)'
-          : '1px solid rgba(255,255,255,0.08)',
-        color: isListening ? '#f87171' : '#475569',
+          : '1px solid rgba(15,23,42,0.08)',
+        color: isListening ? '#dc2626' : '#475569',
         boxShadow: isListening ? '0 0 8px rgba(239,68,68,0.3)' : 'none',
       }}
     >

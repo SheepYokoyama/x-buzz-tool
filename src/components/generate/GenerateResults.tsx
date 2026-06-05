@@ -25,16 +25,16 @@ export function GenerateResults({ results, generationInput, isGenerating, error,
           <Sparkles size={24} className="text-neon-purple animate-pulse" />
         </div>
         <div className="text-center space-y-1.5">
-          <p className="text-[15px] font-semibold text-slate-200">AIが投稿を生成しています</p>
-          <p className="text-[13px] text-slate-500">バズ投稿を用意しています…</p>
-          <p className="text-[12px] text-slate-600">通常 10〜20 秒かかります</p>
+          <p className="text-[16px] font-semibold text-slate-800">AIが投稿を生成しています</p>
+          <p className="text-[14px] text-slate-500">バズ投稿を用意しています…</p>
+          <p className="text-[13px] text-slate-600">通常 10〜20 秒かかります</p>
         </div>
         {/* ローディングバー */}
-        <div className="w-48 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+        <div className="w-48 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(15,23,42,0.05)' }}>
           <div
             className="h-full rounded-full"
             style={{
-              background: 'linear-gradient(90deg, #a78bfa, #60a5fa)',
+              background: 'linear-gradient(90deg, #7c3aed, #2563eb)',
               animation: 'loading-bar 2s ease-in-out infinite',
             }}
           />
@@ -51,11 +51,11 @@ export function GenerateResults({ results, generationInput, isGenerating, error,
             className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
             style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)' }}
           >
-            <span className="text-red-400 text-[15px]">!</span>
+            <span className="text-red-600 text-[16px]">!</span>
           </div>
           <div>
-            <p className="text-[14px] font-medium text-red-400">生成に失敗しました</p>
-            <p className="text-[12px] text-slate-500 mt-0.5">{error}</p>
+            <p className="text-[15px] font-medium text-red-600">生成に失敗しました</p>
+            <p className="text-[13px] text-slate-500 mt-0.5">{error}</p>
           </div>
         </div>
         <Button variant="secondary" size="sm" onClick={onRegenerate}>
@@ -82,8 +82,8 @@ export function GenerateResults({ results, generationInput, isGenerating, error,
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-[15px] font-semibold text-slate-200">生成結果</span>
-          <span className="text-[13px] text-slate-500 ml-2">{results.length}パターン</span>
+          <span className="text-[16px] font-semibold text-slate-800">生成結果</span>
+          <span className="text-[14px] text-slate-500 ml-2">{results.length}パターン</span>
         </div>
         <Button variant="ghost" size="sm" onClick={onRegenerate}>
           <RefreshCw size={13} />

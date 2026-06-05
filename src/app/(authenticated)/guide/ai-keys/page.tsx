@@ -14,29 +14,29 @@ export default function AIKeysGuidePage() {
 
       <Link
         href="/ai-keys"
-        className="inline-flex items-center gap-1 text-[12px] text-slate-500 hover:text-slate-300 transition-colors mb-6"
+        className="inline-flex items-center gap-1 text-[13px] text-slate-500 hover:text-slate-700 transition-colors mb-6"
       >
         <ArrowLeft size={12} /> AI API キー管理に戻る
       </Link>
 
       {/* 概要 */}
-      <GuideSection icon={Key} iconColor="#60a5fa" title="はじめに">
-        <p className="text-[13px] text-slate-400 leading-relaxed">
-          Xpresso の <span className="text-slate-200 font-medium">投稿生成</span> と <span className="text-slate-200 font-medium">リライト</span> 機能は、各ユーザーが自身で発行した API キーを使う
-          <span className="text-slate-200 font-medium"> BYOK 方式</span> です。
+      <GuideSection icon={Key} iconColor="#2563eb" title="はじめに">
+        <p className="text-[14px] text-slate-600 leading-relaxed">
+          Xpresso の <span className="text-slate-800 font-medium">投稿生成</span> と <span className="text-slate-800 font-medium">リライト</span> 機能は、各ユーザーが自身で発行した API キーを使う
+          <span className="text-slate-800 font-medium"> BYOK 方式</span> です。
           利用料金は各プロバイダから直接ご本人に請求されます。
         </p>
-        <p className="text-[13px] text-slate-400 leading-relaxed">
+        <p className="text-[14px] text-slate-600 leading-relaxed">
           どちらか一方のみ登録でも構いません。基本は無料枠がある
-          <span className="text-slate-200 font-medium"> Gemini </span>を推奨します。
+          <span className="text-slate-800 font-medium"> Gemini </span>を推奨します。
         </p>
         <KeyRequiredFeatures />
       </GuideSection>
 
       {/* Gemini セクション */}
-      <SectionDivider label="Gemini API（無料枠あり・推奨）" color="#34d399" />
+      <SectionDivider label="Gemini API（無料枠あり・推奨）" color="#059669" />
 
-      <GuideSection step={1} icon={CreditCard} iconColor="#34d399" title="Google AI Studio にアクセス">
+      <GuideSection step={1} icon={CreditCard} iconColor="#059669" title="Google AI Studio にアクセス">
         <OrderedList>
           <li>
             <ExtLink href="https://aistudio.google.com/apikey">aistudio.google.com/apikey</ExtLink> を開く
@@ -46,21 +46,21 @@ export default function AIKeysGuidePage() {
         </OrderedList>
       </GuideSection>
 
-      <GuideSection step={2} icon={Key} iconColor="#34d399" title="API キーを発行">
+      <GuideSection step={2} icon={Key} iconColor="#059669" title="API キーを発行">
         <OrderedList>
           <li>「Create API key（API キーを作成）」ボタンをクリック</li>
           <li>Google Cloud プロジェクトを選択（既存があればそれを、無ければ新規作成）</li>
-          <li>表示された API キー（<code className="text-emerald-300 font-mono text-[12px]">AIza...</code> で始まる文字列）をコピー</li>
+          <li>表示された API キー（<code className="text-emerald-600 font-mono text-[13px]">AIza...</code> で始まる文字列）をコピー</li>
         </OrderedList>
         <Note>
           ※ キーは発行後いつでも管理画面で確認できます。
         </Note>
       </GuideSection>
 
-      <GuideSection step={3} icon={CheckCircle2} iconColor="#34d399" title="Xpresso に登録">
+      <GuideSection step={3} icon={CheckCircle2} iconColor="#059669" title="Xpresso に登録">
         <OrderedList>
           <li>
-            Xpresso の「<Link href="/ai-keys" className="text-sky-300 hover:underline">AI API キー</Link>」ページを開く
+            Xpresso の「<Link href="/ai-keys" className="text-sky-600 hover:underline">AI API キー</Link>」ページを開く
           </li>
           <li>Gemini API カードの「API キーを登録」をクリック</li>
           <li>コピーしたキーを貼り付けて「登録する」</li>
@@ -69,8 +69,8 @@ export default function AIKeysGuidePage() {
       </GuideSection>
 
       <GuideSection icon={AlertTriangle} iconColor="#f59e0b" title="Gemini の無料枠について">
-        <p className="text-[13px] text-slate-400 leading-relaxed">
-          無料枠は <span className="text-slate-200 font-medium">1 分あたりのリクエスト数・1 日あたりのリクエスト数</span> が上限で、
+        <p className="text-[14px] text-slate-600 leading-relaxed">
+          無料枠は <span className="text-slate-800 font-medium">1 分あたりのリクエスト数・1 日あたりのリクエスト数</span> が上限で、
           超えると一時的に生成がブロックされます。個人利用の範囲なら通常は無料で収まりますが、
           大量生成する場合は Google Cloud 課金の有効化をご検討ください。
         </p>
@@ -86,7 +86,7 @@ export default function AIKeysGuidePage() {
           </li>
           <li>アカウントを作成 or ログイン</li>
           <li>
-            「Plans &amp; Billing」から<span className="text-slate-200 font-medium">クレジットを購入</span>
+            「Plans &amp; Billing」から<span className="text-slate-800 font-medium">クレジットを購入</span>
             （最低 $5 から）
           </li>
         </OrderedList>
@@ -101,11 +101,11 @@ export default function AIKeysGuidePage() {
           <li>「Create Key」ボタンをクリック</li>
           <li>キー名を入力（例: Xpresso）</li>
           <li>
-            表示された API キー（<code className="text-amber-300 font-mono text-[12px]">sk-ant-...</code> で始まる文字列）をコピー
+            表示された API キー（<code className="text-amber-600 font-mono text-[13px]">sk-ant-...</code> で始まる文字列）をコピー
           </li>
         </OrderedList>
         <Note>
-          ※ Anthropic のキーは <span className="text-rose-300">発行時 1 回しか表示されません</span>。
+          ※ Anthropic のキーは <span className="text-rose-600">発行時 1 回しか表示されません</span>。
           必ずその場で控えてください。失くした場合は削除して再発行となります。
         </Note>
       </GuideSection>
@@ -113,7 +113,7 @@ export default function AIKeysGuidePage() {
       <GuideSection step={3} icon={CheckCircle2} iconColor="#f59e0b" title="Xpresso に登録">
         <OrderedList>
           <li>
-            Xpresso の「<Link href="/ai-keys" className="text-sky-300 hover:underline">AI API キー</Link>」ページを開く
+            Xpresso の「<Link href="/ai-keys" className="text-sky-600 hover:underline">AI API キー</Link>」ページを開く
           </li>
           <li>Anthropic API カードの「API キーを登録」をクリック</li>
           <li>コピーしたキーを貼り付けて「登録する」</li>
@@ -124,10 +124,10 @@ export default function AIKeysGuidePage() {
       {/* エラーセクション */}
       <div className="neon-card p-6 mt-8">
         <div className="flex items-center gap-2 mb-4">
-          <AlertTriangle size={16} className="text-amber-400" />
-          <h2 className="text-[14px] font-semibold text-slate-200">よくあるエラー</h2>
+          <AlertTriangle size={16} className="text-amber-600" />
+          <h2 className="text-[15px] font-semibold text-slate-800">よくあるエラー</h2>
         </div>
-        <div className="space-y-3 text-[13px]">
+        <div className="space-y-3 text-[14px]">
           <ErrorRow
             code="API キーが無効です"
             solution="キーのコピーミスや、無効化されたキーを登録しようとしている可能性があります。プロバイダのコンソールでキーを再発行し、再度登録してください。"
@@ -158,18 +158,18 @@ function KeyRequiredFeatures() {
       className="rounded-xl p-4 mt-2"
       style={{ background: 'rgba(96,165,250,0.04)', border: '1px solid rgba(96,165,250,0.15)' }}
     >
-      <p className="text-[12px] font-semibold text-slate-200 mb-2">キーが必要な機能</p>
-      <ul className="space-y-1.5 text-[12px] text-slate-400">
+      <p className="text-[13px] font-semibold text-slate-800 mb-2">キーが必要な機能</p>
+      <ul className="space-y-1.5 text-[13px] text-slate-600">
         <li className="flex items-center gap-2">
           <Sparkles size={12} className="text-neon-purple shrink-0" />
-          <span>AI 投稿生成（<code className="font-mono text-[11px]">/generate</code>）</span>
+          <span>AI 投稿生成（<code className="font-mono text-[12px]">/generate</code>）</span>
         </li>
         <li className="flex items-center gap-2">
           <Zap size={12} className="text-neon-blue shrink-0" />
-          <span>リライト・X向け140文字要約（<code className="font-mono text-[11px]">/rewrite</code>）</span>
+          <span>リライト・X向け140文字要約（<code className="font-mono text-[12px]">/rewrite</code>）</span>
         </li>
       </ul>
-      <p className="text-[11px] text-slate-500 mt-2.5 leading-relaxed">
+      <p className="text-[12px] text-slate-500 mt-2.5 leading-relaxed">
         ※ ポスト作成・予約投稿・フォロー候補などは AI キー不要で利用できます。
       </p>
     </div>
@@ -180,7 +180,7 @@ function SectionDivider({ label, color }: { label: string; color: string }) {
   return (
     <div className="flex items-center gap-3 my-8">
       <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, ${color}40, transparent)` }} />
-      <span className="text-[12px] font-semibold px-3 py-1 rounded-lg"
+      <span className="text-[13px] font-semibold px-3 py-1 rounded-lg"
         style={{ color, background: `${color}10`, border: `1px solid ${color}30` }}>
         {label}
       </span>
@@ -203,14 +203,14 @@ function GuideSection({
       <div className="flex items-center gap-3 mb-4">
         {step != null && (
           <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-[13px] text-white shrink-0"
+            className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-[14px] text-white shrink-0"
             style={{ background: `linear-gradient(135deg, ${iconColor}, ${iconColor}99)` }}
           >
             {step}
           </div>
         )}
         <Icon size={16} style={{ color: iconColor }} />
-        <h2 className="text-[14px] font-semibold text-slate-200">{title}</h2>
+        <h2 className="text-[15px] font-semibold text-slate-800">{title}</h2>
       </div>
       <div className="space-y-3">{children}</div>
     </section>
@@ -219,14 +219,14 @@ function GuideSection({
 
 function OrderedList({ children }: { children: React.ReactNode }) {
   return (
-    <ol className="list-decimal list-inside text-[13px] text-slate-300 space-y-1.5 leading-relaxed">
+    <ol className="list-decimal list-inside text-[14px] text-slate-700 space-y-1.5 leading-relaxed">
       {children}
     </ol>
   );
 }
 
 function Note({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] text-slate-500 leading-relaxed">{children}</p>;
+  return <p className="text-[12px] text-slate-500 leading-relaxed">{children}</p>;
 }
 
 function ExtLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -235,7 +235,7 @@ function ExtLink({ href, children }: { href: string; children: React.ReactNode }
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-sky-300 hover:underline inline-flex items-center gap-0.5"
+      className="text-sky-600 hover:underline inline-flex items-center gap-0.5"
     >
       {children}
       <ExternalLink size={10} />
@@ -249,8 +249,8 @@ function ErrorRow({ code, solution }: { code: string; solution: string }) {
       className="rounded-lg px-3 py-2.5"
       style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.15)' }}
     >
-      <p className="font-mono text-[12px] text-rose-300 mb-1">{code}</p>
-      <p className="text-slate-400 text-[12px]">{solution}</p>
+      <p className="font-mono text-[13px] text-rose-600 mb-1">{code}</p>
+      <p className="text-slate-600 text-[13px]">{solution}</p>
     </div>
   );
 }

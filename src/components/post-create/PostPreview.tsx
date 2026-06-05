@@ -29,18 +29,18 @@ export function PostPreview({ chunks, mode, chunkPreviews }: PostPreviewProps) {
         className="flex flex-col items-center justify-center rounded-2xl p-10 text-center"
         style={{
           minHeight: 420,
-          background: 'rgba(255,255,255,0.02)',
-          border: '1px dashed rgba(255,255,255,0.08)',
+          background: 'rgba(15,23,42,0.02)',
+          border: '1px dashed rgba(15,23,42,0.15)',
         }}
       >
         <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center text-[22px] mb-4"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+          className="w-14 h-14 rounded-2xl flex items-center justify-center text-[24px] mb-4"
+          style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.08)' }}
         >
           🧵
         </div>
-        <p className="text-[14px] font-semibold text-slate-300">Xタイムライン プレビュー</p>
-        <p className="text-[12px] text-slate-600 mt-2 leading-relaxed">
+        <p className="text-[16px] font-bold text-slate-700">Xタイムライン プレビュー</p>
+        <p className="text-[14px] text-slate-500 mt-2 leading-relaxed">
           左のフォームにテキストを入力すると<br />ここに投稿イメージが表示されます
         </p>
       </div>
@@ -51,30 +51,30 @@ export function PostPreview({ chunks, mode, chunkPreviews }: PostPreviewProps) {
     <div
       className="rounded-2xl overflow-hidden"
       style={{
-        background: 'rgba(12,16,28,0.65)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: '#ffffff',
+        border: '1px solid rgba(15,23,42,0.1)',
       }}
     >
       {/* ヘッダー: タイムライン風ラベル */}
       <div
         className="flex items-center justify-between px-4 py-3"
         style={{
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(255,255,255,0.02)',
+          borderBottom: '1px solid rgba(15,23,42,0.08)',
+          background: 'rgba(15,23,42,0.02)',
         }}
       >
         <div className="flex items-center gap-2">
           <span
-            className="w-6 h-6 rounded-md flex items-center justify-center text-[12px] font-black"
-            style={{ background: 'rgba(255,255,255,0.08)', color: '#e2e8f0' }}
+            className="w-6 h-6 rounded-md flex items-center justify-center text-[13px] font-black"
+            style={{ background: '#0f172a', color: '#ffffff' }}
           >
             X
           </span>
           <div>
-            <p className="text-[12px] font-semibold text-slate-300 leading-none">
+            <p className="text-[14px] font-semibold text-slate-700 leading-none">
               {mode === 'thread' ? 'スレッド プレビュー' : '独立投稿 プレビュー'}
             </p>
-            <p className="text-[10px] text-slate-600 leading-none mt-1">
+            <p className="text-[12px] text-slate-500 leading-none mt-1">
               {chunks.length} ポスト ·{' '}
               {mode === 'thread' ? '1件目にリプライで連結' : 'それぞれ別投稿として公開'}
             </p>
@@ -127,7 +127,7 @@ function PostCard({
   return (
     <article
       className="relative px-4 pt-4 pb-2"
-      style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+      style={{ borderBottom: '1px solid rgba(15,23,42,0.07)' }}
     >
       <div className="flex gap-3">
         {/* アバター列（スレッド接続線付き） */}
@@ -138,15 +138,15 @@ function PostCard({
               src={avatarUrl}
               alt={displayName}
               className="w-10 h-10 rounded-full shrink-0 z-10"
-              style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ border: '1px solid rgba(15,23,42,0.1)' }}
             />
           ) : (
             <span
-              className="w-10 h-10 rounded-full flex items-center justify-center text-[14px] font-bold shrink-0 z-10"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shrink-0 z-10"
               style={{
-                background: 'linear-gradient(135deg, rgba(167,139,250,0.3), rgba(236,72,153,0.3))',
-                color: '#e2e8f0',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
+                color: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.1)',
               }}
             >
               {displayName.charAt(0).toUpperCase()}
@@ -168,11 +168,11 @@ function PostCard({
         {/* 本文 */}
         <div className="flex-1 min-w-0">
           {/* 名前行 */}
-          <div className="flex items-center gap-1.5 text-[13px]">
-            <span className="font-bold text-slate-100 truncate">{displayName}</span>
-            <span className="text-slate-600 truncate">@{username}</span>
-            <span className="text-slate-700">·</span>
-            <span className="text-slate-600 text-[12px]">今</span>
+          <div className="flex items-center gap-1.5 text-[15px]">
+            <span className="font-bold text-slate-900 truncate">{displayName}</span>
+            <span className="text-slate-500 truncate">@{username}</span>
+            <span className="text-slate-400">·</span>
+            <span className="text-slate-500 text-[14px]">今</span>
             <span className="ml-auto">
               <MoreHorizontal size={14} style={{ color: '#64748b' }} />
             </span>
@@ -180,14 +180,14 @@ function PostCard({
 
           {/* 返信先（スレッド2件目以降） */}
           {isReply && (
-            <p className="text-[11px] text-slate-600 mt-0.5">
-              返信先: <span style={{ color: '#60a5fa' }}>@{username}</span>
+            <p className="text-[13px] text-slate-500 mt-0.5">
+              返信先: <span style={{ color: '#2563eb' }}>@{username}</span>
             </p>
           )}
 
           {/* ポスト本文 */}
           <p
-            className="text-[14px] text-slate-100 whitespace-pre-wrap mt-1 leading-[1.55]"
+            className="text-[16px] text-slate-900 whitespace-pre-wrap mt-1 leading-[1.6]"
             style={{ wordBreak: 'break-word' }}
           >
             {chunk.text}
@@ -203,7 +203,7 @@ function PostCard({
                   ? 'grid-cols-2'
                   : 'grid-cols-2'
               }`}
-              style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{ border: '1px solid rgba(15,23,42,0.1)' }}
             >
               {imagePreviews.map((url, idx) => (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -221,13 +221,13 @@ function PostCard({
 
           {/* メタ行 */}
           <div className="flex items-center justify-between mt-2">
-            <span className="text-[11px] text-slate-600">
+            <span className="text-[13px] text-slate-500">
               {index + 1} / {total} · {chunk.charCount} カウント
             </span>
           </div>
 
           {/* アクション行（ダミー） */}
-          <div className="flex items-center justify-between mt-2 pr-6 max-w-md text-slate-600">
+          <div className="flex items-center justify-between mt-2 pr-6 max-w-md text-slate-500">
             <ActionIcon icon={<MessageCircle size={14} />} />
             <ActionIcon icon={<Repeat2 size={14} />} />
             <ActionIcon icon={<Heart size={14} />} />
@@ -242,7 +242,7 @@ function PostCard({
 
 function ActionIcon({ icon }: { icon: React.ReactNode }) {
   return (
-    <span className="flex items-center gap-1 text-[11px] hover:text-slate-400 transition-colors cursor-default">
+    <span className="flex items-center gap-1 text-[12px] hover:text-slate-700 transition-colors cursor-default">
       {icon}
     </span>
   );

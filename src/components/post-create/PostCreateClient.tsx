@@ -532,7 +532,7 @@ export function PostCreateClient() {
           {/* 本文 */}
           <div className="neon-card p-6 space-y-4">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-200 leading-none flex items-center gap-2">
+              <h2 className="text-[17px] font-bold text-slate-800 leading-none flex items-center gap-2">
                 <PenLine size={15} className="text-neon-purple" />
                 本文
               </h2>
@@ -552,8 +552,8 @@ export function PostCreateClient() {
                 appendMode
                 showPasteButton
               />
-              <div className="flex items-center justify-between gap-2 mt-1.5 text-[11px] flex-wrap">
-                <span className="text-slate-600">
+              <div className="flex items-center justify-between gap-2 mt-1.5 text-[13px] flex-wrap">
+                <span className="text-slate-500">
                   {text.length}文字 ／ X換算 {totalXCount}カウント
                 </span>
                 <div className="flex items-center gap-2">
@@ -562,9 +562,9 @@ export function PostCreateClient() {
                     onClick={insertSplitMarker}
                     className="inline-flex items-center gap-1 px-2 py-1 rounded-md transition-all"
                     style={{
-                      background: 'rgba(96,165,250,0.08)',
-                      border: '1px solid rgba(96,165,250,0.22)',
-                      color: '#93c5fd',
+                      background: 'rgba(37,99,235,0.08)',
+                      border: '1px solid rgba(37,99,235,0.25)',
+                      color: '#2563eb',
                     }}
                     title={`カーソル位置に「${MANUAL_SPLIT_MARKER}」を挿入（強制分割マーカー）`}
                   >
@@ -579,12 +579,12 @@ export function PostCreateClient() {
                 </div>
               </div>
               {hasMarker && mode === 'none' && (
-                <p className="text-[10px] text-slate-600 mt-1.5 leading-relaxed">
+                <p className="text-[12px] text-slate-500 mt-1.5 leading-relaxed">
                   「分割無し」モードのため、本文中の「{MANUAL_SPLIT_MARKER}」は投稿時に除去されます。
                 </p>
               )}
               {hasMarker && mode !== 'none' && (
-                <p className="text-[10px] text-slate-600 mt-1.5 leading-relaxed">
+                <p className="text-[12px] text-slate-500 mt-1.5 leading-relaxed">
                   本文中の「{MANUAL_SPLIT_MARKER}」位置で強制分割され、各セグメント内は自動分割されます。
                 </p>
               )}
@@ -596,7 +596,7 @@ export function PostCreateClient() {
                 画像（任意・各ポスト最大{MAX_IMAGES}枚）
               </FieldLabel>
               {chunks.length === 0 ? (
-                <p className="text-[11px] text-slate-600 leading-relaxed">
+                <p className="text-[13px] text-slate-500 leading-relaxed">
                   本文を入力すると、ポストごとに画像を添付できます。
                 </p>
               ) : (
@@ -612,7 +612,7 @@ export function PostCreateClient() {
                       onRemove={(imgIdx) => removeImage(i, imgIdx)}
                     />
                   ))}
-                  <p className="text-[10px] text-slate-600 leading-relaxed">
+                  <p className="text-[12px] text-slate-500 leading-relaxed">
                     JPEG / PNG / GIF / WEBP・1枚あたり5MBまで。
                   </p>
                 </div>
@@ -623,7 +623,7 @@ export function PostCreateClient() {
           {/* 投稿先プラットフォーム */}
           <div className="neon-card p-6 space-y-4">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-200 leading-none flex items-center gap-2">
+              <h2 className="text-[17px] font-bold text-slate-800 leading-none flex items-center gap-2">
                 <Share2 size={15} className="text-neon-blue" />
                 投稿先
               </h2>
@@ -661,21 +661,21 @@ export function PostCreateClient() {
             </div>
 
             {(targetX || targetThreads) && targetInstagram && (
-              <p className="text-[11px] text-slate-500 leading-relaxed">
+              <p className="text-[12px] text-slate-500 leading-relaxed">
                 Instagram は分割せず単一投稿（キャプション最大2,200文字・画像必須）として投稿します。X / Threads とは分割設定が異なる点にご注意ください。
               </p>
             )}
 
             {targetX && targetThreads && (
-              <p className="text-[11px] text-slate-500 leading-relaxed">
+              <p className="text-[12px] text-slate-500 leading-relaxed">
                 X と Threads の両方に投稿時は文字数上限を X 基準（短い方）に合わせています。
               </p>
             )}
 
             {instagramNeedsImage && (
               <p
-                className="text-[11px] text-amber-300 px-3 py-2 rounded-xl flex items-start gap-2"
-                style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)' }}
+                className="text-[13px] text-amber-700 px-3 py-2 rounded-xl flex items-start gap-2"
+                style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)' }}
               >
                 <AlertTriangle size={13} className="shrink-0 mt-0.5" />
                 <span>Instagram は画像が必須です。画像を1枚以上添付してください。</span>
@@ -701,7 +701,7 @@ export function PostCreateClient() {
           {/* 分割モード */}
           <div className="neon-card p-6 space-y-4">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-200 leading-none flex items-center gap-2">
+              <h2 className="text-[17px] font-bold text-slate-800 leading-none flex items-center gap-2">
                 <SplitSquareHorizontal size={15} className="text-neon-cyan" />
                 分割モード
               </h2>
@@ -715,7 +715,7 @@ export function PostCreateClient() {
                 icon={<MessageSquare size={14} />}
                 title="スレッド（リプ連結）"
                 desc="1件目の返信として2件目以降を連結。文脈が繋がる読み方。"
-                accent="#60a5fa"
+                accent="#2563eb"
               />
               <ModeCard
                 active={mode === 'separate'}
@@ -723,7 +723,7 @@ export function PostCreateClient() {
                 icon={<Sparkles size={14} />}
                 title="独立投稿（連投）"
                 desc="それぞれが独立したポスト。個別にバズらせやすい。"
-                accent="#a78bfa"
+                accent="#7c3aed"
               />
               <ModeCard
                 active={mode === 'none'}
@@ -731,7 +731,7 @@ export function PostCreateClient() {
                 icon={<AlignLeft size={14} />}
                 title="分割無し（原文そのまま）"
                 desc="本文をそのまま1ポスト。長文プラン契約時向け。"
-                accent="#f472b6"
+                accent="#db2777"
               />
             </div>
           </div>
@@ -739,7 +739,7 @@ export function PostCreateClient() {
           {/* 詳細設定 */}
           <div className="neon-card p-6 space-y-4">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-200 leading-none flex items-center gap-2">
+              <h2 className="text-[17px] font-bold text-slate-800 leading-none flex items-center gap-2">
                 <Hash size={15} className="text-neon-pink" />
                 {mode === 'none' ? '上限チェック' : '分割設定'}
               </h2>
@@ -763,15 +763,15 @@ export function PostCreateClient() {
                     className="text-left px-3.5 py-2.5 rounded-xl transition-all"
                     style={{
                       background:
-                        maxCount === opt.value ? 'rgba(167,139,250,0.08)' : 'rgba(255,255,255,0.025)',
+                        maxCount === opt.value ? 'rgba(124,58,237,0.09)' : 'rgba(15,23,42,0.03)',
                       border:
                         maxCount === opt.value
-                          ? '1px solid rgba(167,139,250,0.3)'
-                          : '1px solid rgba(255,255,255,0.06)',
+                          ? '1px solid rgba(124,58,237,0.35)'
+                          : '1px solid rgba(15,23,42,0.08)',
                     }}
                   >
-                    <p className="text-[12px] font-semibold text-slate-200">{opt.label}</p>
-                    <p className="text-[10px] text-slate-600 mt-0.5">{opt.note}</p>
+                    <p className="text-[14px] font-semibold text-slate-800">{opt.label}</p>
+                    <p className="text-[12px] text-slate-500 mt-0.5">{opt.note}</p>
                   </button>
                 ))}
               </div>
@@ -782,13 +782,13 @@ export function PostCreateClient() {
               <label
                 className="flex items-center justify-between px-3.5 py-2.5 rounded-xl cursor-pointer"
                 style={{
-                  background: 'rgba(255,255,255,0.025)',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: 'rgba(15,23,42,0.03)',
+                  border: '1px solid rgba(15,23,42,0.08)',
                 }}
               >
                 <div>
-                  <p className="text-[12px] font-semibold text-slate-200">番号を自動付与</p>
-                  <p className="text-[10px] text-slate-600 mt-0.5">
+                  <p className="text-[14px] font-semibold text-slate-800">番号を自動付与</p>
+                  <p className="text-[12px] text-slate-500 mt-0.5">
                     「1/5」「2/5」を各ポストの先頭に自動追加
                   </p>
                 </div>
@@ -803,10 +803,10 @@ export function PostCreateClient() {
 
             {splitError && (
               <p
-                className="text-[12px] text-red-400 px-3 py-2 rounded-xl"
+                className="text-[14px] text-red-600 px-3 py-2 rounded-xl"
                 style={{
                   background: 'rgba(239,68,68,0.08)',
-                  border: '1px solid rgba(239,68,68,0.2)',
+                  border: '1px solid rgba(239,68,68,0.25)',
                 }}
               >
                 {splitError}
@@ -815,10 +815,10 @@ export function PostCreateClient() {
 
             {noneOverWarning && (
               <p
-                className="text-[12px] text-amber-300 px-3 py-2 rounded-xl flex items-start gap-2"
+                className="text-[14px] text-amber-700 px-3 py-2 rounded-xl flex items-start gap-2"
                 style={{
-                  background: 'rgba(251,191,36,0.08)',
-                  border: '1px solid rgba(251,191,36,0.25)',
+                  background: 'rgba(245,158,11,0.1)',
+                  border: '1px solid rgba(245,158,11,0.3)',
                 }}
               >
                 <AlertTriangle size={14} className="shrink-0 mt-0.5" />
@@ -828,10 +828,10 @@ export function PostCreateClient() {
 
             {error && (
               <p
-                className="text-[12px] text-red-400 px-3 py-2 rounded-xl"
+                className="text-[14px] text-red-600 px-3 py-2 rounded-xl"
                 style={{
                   background: 'rgba(239,68,68,0.08)',
-                  border: '1px solid rgba(239,68,68,0.2)',
+                  border: '1px solid rgba(239,68,68,0.25)',
                 }}
               >
                 {error}
@@ -840,10 +840,10 @@ export function PostCreateClient() {
 
             {success && (
               <p
-                className="text-[12px] text-neon-green px-3 py-2 rounded-xl"
+                className="text-[14px] text-neon-green px-3 py-2 rounded-xl"
                 style={{
-                  background: 'rgba(52,211,153,0.08)',
-                  border: '1px solid rgba(52,211,153,0.2)',
+                  background: 'rgba(5,150,105,0.09)',
+                  border: '1px solid rgba(5,150,105,0.28)',
                 }}
               >
                 ✓ {success}
@@ -881,11 +881,11 @@ export function PostCreateClient() {
                 type="button"
                 onClick={() => (scheduleOpen ? setScheduleOpen(false) : openSchedulePanel())}
                 disabled={chunks.length === 0 || isPosting || isScheduling || !!splitError || (!targetX && !targetThreads && !targetInstagram) || instagramNeedsImage}
-                className="inline-flex items-center justify-center gap-1.5 px-4 rounded-xl text-[13px] font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-1.5 px-4 rounded-xl text-[15px] font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: scheduleOpen ? 'rgba(34,211,238,0.18)' : 'rgba(34,211,238,0.08)',
-                  border: '1px solid rgba(34,211,238,0.35)',
-                  color: '#22d3ee',
+                  background: scheduleOpen ? 'rgba(8,145,178,0.16)' : 'rgba(8,145,178,0.08)',
+                  border: '1px solid rgba(8,145,178,0.35)',
+                  color: '#0891b2',
                   minHeight: 44,
                 }}
                 title="日時を指定して予約する"
@@ -899,24 +899,24 @@ export function PostCreateClient() {
             {scheduleOpen && (
               <div
                 className="rounded-xl p-4 space-y-3"
-                style={{ background: 'rgba(34,211,238,0.05)', border: '1px solid rgba(34,211,238,0.2)' }}
+                style={{ background: 'rgba(8,145,178,0.06)', border: '1px solid rgba(8,145,178,0.22)' }}
               >
                 <div className="flex items-center gap-2">
                   <CalendarClock size={13} className="text-neon-cyan" />
-                  <p className="text-[12px] font-semibold text-slate-200">予約日時</p>
+                  <p className="text-[14px] font-semibold text-slate-800">予約日時</p>
                 </div>
                 <input
                   type="datetime-local"
                   value={scheduledAt}
                   onChange={(e) => setScheduledAt(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg text-[13px] text-slate-200"
+                  className="w-full px-3 py-2 rounded-lg text-[15px] text-slate-900"
                   style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    colorScheme: 'dark',
+                    background: '#ffffff',
+                    border: '1px solid rgba(15,23,42,0.15)',
+                    colorScheme: 'light',
                   }}
                 />
-                <p className="text-[10px] text-slate-500 leading-relaxed">
+                <p className="text-[12px] text-slate-500 leading-relaxed">
                   予約は cron で順次配信されます。BAN 回避のため即時投稿との合計レートには注意してください。
                 </p>
                 <div className="flex gap-2 justify-end">
@@ -924,8 +924,8 @@ export function PostCreateClient() {
                     type="button"
                     onClick={() => setScheduleOpen(false)}
                     disabled={isScheduling}
-                    className="text-[12px] px-3 py-1.5 rounded-lg text-slate-400 disabled:opacity-50"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    className="text-[14px] px-3 py-1.5 rounded-lg text-slate-600 disabled:opacity-50"
+                    style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.1)' }}
                   >
                     閉じる
                   </button>
@@ -933,11 +933,11 @@ export function PostCreateClient() {
                     type="button"
                     onClick={handleSchedule}
                     disabled={isScheduling || !scheduledAt}
-                    className="inline-flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg font-semibold disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 text-[14px] px-3 py-1.5 rounded-lg font-semibold disabled:opacity-50"
                     style={{
-                      background: 'rgba(34,211,238,0.15)',
-                      border: '1px solid rgba(34,211,238,0.4)',
-                      color: '#22d3ee',
+                      background: 'rgba(8,145,178,0.14)',
+                      border: '1px solid rgba(8,145,178,0.4)',
+                      color: '#0891b2',
                     }}
                   >
                     {isScheduling ? (
@@ -961,8 +961,8 @@ export function PostCreateClient() {
         {/* ── Right: プレビュー（Buffer風 — 投稿先別に並列表示）─────────── */}
         <div className="lg:sticky lg:top-6 lg:self-start space-y-5">
           <div className="flex items-center gap-2">
-            <h3 className="text-[13px] font-semibold text-slate-300">Post Previews</h3>
-            <span className="text-[11px] text-slate-600">
+            <h3 className="text-[15px] font-bold text-slate-700">Post Previews</h3>
+            <span className="text-[13px] text-slate-500">
               {(() => {
                 const label = [targetX && 'X', targetThreads && 'Threads', targetInstagram && 'Instagram']
                   .filter(Boolean)
@@ -977,12 +977,12 @@ export function PostCreateClient() {
               className="flex flex-col items-center justify-center rounded-2xl p-10 text-center"
               style={{
                 minHeight: 320,
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px dashed rgba(255,255,255,0.08)',
+                background: 'rgba(15,23,42,0.02)',
+                border: '1px dashed rgba(15,23,42,0.15)',
               }}
             >
-              <p className="text-[13px] text-slate-400">投稿先を選択してください</p>
-              <p className="text-[11px] text-slate-600 mt-1">
+              <p className="text-[15px] text-slate-600">投稿先を選択してください</p>
+              <p className="text-[13px] text-slate-500 mt-1">
                 左の「投稿先」セクションで X / Threads / Instagram をONにすると、対応するプレビューが表示されます。
               </p>
             </div>
@@ -1034,11 +1034,11 @@ function ChunkImagePicker({
     <div
       className="rounded-lg p-2 flex items-center gap-2"
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.05)',
+        background: 'rgba(15,23,42,0.025)',
+        border: '1px solid rgba(15,23,42,0.07)',
       }}
     >
-      <span className="text-[10px] font-semibold text-slate-500 shrink-0 w-10 text-center">
+      <span className="text-[12px] font-semibold text-slate-500 shrink-0 w-10 text-center">
         {index + 1}/{total}
       </span>
       <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
@@ -1046,7 +1046,7 @@ function ChunkImagePicker({
           <div
             key={url}
             className="relative w-12 h-12 rounded-md overflow-hidden shrink-0"
-            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ border: '1px solid rgba(15,23,42,0.12)' }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt="" className="w-full h-full object-cover" />
@@ -1067,9 +1067,9 @@ function ChunkImagePicker({
             onClick={() => inputRef.current?.click()}
             className="w-12 h-12 rounded-md flex items-center justify-center shrink-0 transition-all"
             style={{
-              background: 'rgba(96,165,250,0.06)',
-              border: '1px dashed rgba(96,165,250,0.3)',
-              color: '#93c5fd',
+              background: 'rgba(37,99,235,0.07)',
+              border: '1px dashed rgba(37,99,235,0.35)',
+              color: '#2563eb',
             }}
             title={`${index + 1}件目に画像を追加`}
           >
@@ -1077,7 +1077,7 @@ function ChunkImagePicker({
           </button>
         )}
         {files.length > 0 && (
-          <span className="text-[10px] text-slate-600 ml-auto pr-1">
+          <span className="text-[12px] text-slate-500 ml-auto pr-1">
             {files.length}/{MAX_IMAGES}
           </span>
         )}
@@ -1114,7 +1114,7 @@ function PlatformToggle({
   label: string;
   disabledNote: string;
 }) {
-  const accent = platform === 'x' ? '#60a5fa' : platform === 'instagram' ? '#ec4899' : '#c084fc';
+  const accent = platform === 'x' ? '#2563eb' : platform === 'instagram' ? '#db2777' : '#7c3aed';
   return (
     <button
       type="button"
@@ -1122,15 +1122,15 @@ function PlatformToggle({
       disabled={disabled || loading}
       className="text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3 disabled:cursor-not-allowed"
       style={{
-        background: active && !disabled ? `${accent}14` : 'rgba(255,255,255,0.025)',
-        border: active && !disabled ? `1px solid ${accent}55` : '1px solid rgba(255,255,255,0.06)',
+        background: active && !disabled ? `${accent}14` : 'rgba(15,23,42,0.03)',
+        border: active && !disabled ? `1px solid ${accent}66` : '1px solid rgba(15,23,42,0.08)',
         opacity: disabled ? 0.5 : 1,
       }}
     >
       <span
         className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
         style={{
-          background: active && !disabled ? `${accent}22` : 'rgba(255,255,255,0.04)',
+          background: active && !disabled ? `${accent}22` : 'rgba(15,23,42,0.05)',
           color: active && !disabled ? accent : '#64748b',
         }}
       >
@@ -1138,12 +1138,12 @@ function PlatformToggle({
       </span>
       <div className="min-w-0 flex-1">
         <p
-          className="text-[12px] font-semibold"
-          style={{ color: active && !disabled ? '#e2e8f0' : '#94a3b8' }}
+          className="text-[14px] font-semibold"
+          style={{ color: active && !disabled ? '#1e293b' : '#475569' }}
         >
           {label}
         </p>
-        <p className="text-[10px] text-slate-600 mt-0.5">
+        <p className="text-[12px] text-slate-500 mt-0.5">
           {loading ? '読み込み中…' : disabled ? disabledNote : active ? '投稿する' : '投稿しない'}
         </p>
       </div>
@@ -1151,7 +1151,7 @@ function PlatformToggle({
         className="w-4 h-4 rounded-full shrink-0"
         style={{
           background: active && !disabled ? accent : 'transparent',
-          border: active && !disabled ? `1px solid ${accent}` : '1px solid rgba(255,255,255,0.15)',
+          border: active && !disabled ? `1px solid ${accent}` : '1px solid rgba(15,23,42,0.2)',
         }}
       />
     </button>
@@ -1181,9 +1181,9 @@ function DailyCountStrip({
   return (
     <div
       className="rounded-lg px-3 py-2 flex items-center gap-3 flex-wrap"
-      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+      style={{ background: 'rgba(15,23,42,0.025)', border: '1px solid rgba(15,23,42,0.07)' }}
     >
-      <span className="inline-flex items-center gap-1.5 text-[10px] text-slate-500 shrink-0">
+      <span className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 shrink-0">
         <Gauge size={11} />
         過去 24h の投稿数
       </span>
@@ -1200,7 +1200,7 @@ function DailyCountStrip({
       </div>
       <Link
         href="/guide/posting-guidelines"
-        className="text-[10px] text-slate-600 hover:text-slate-400 transition-colors ml-auto"
+        className="text-[12px] text-slate-500 hover:text-slate-700 transition-colors ml-auto"
       >
         ソフトリミットとは？
       </Link>
@@ -1211,12 +1211,12 @@ function DailyCountStrip({
 function CountChip({ platform, count, limit }: { platform: string; count: number; limit: number }) {
   const ratio = limit > 0 ? count / limit : 0;
   const color =
-    ratio >= 1   ? { bg: 'rgba(239,68,68,0.10)',  border: 'rgba(239,68,68,0.30)',  text: '#fda4af' } :
-    ratio >= 0.8 ? { bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.30)', text: '#fbbf24' } :
-                   { bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)', text: '#94a3b8' };
+    ratio >= 1   ? { bg: 'rgba(239,68,68,0.10)',  border: 'rgba(239,68,68,0.30)',  text: '#dc2626' } :
+    ratio >= 0.8 ? { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.35)', text: '#b45309' } :
+                   { bg: 'rgba(15,23,42,0.04)',   border: 'rgba(15,23,42,0.1)',    text: '#475569' };
   return (
     <span
-      className="text-[11px] px-2 py-0.5 rounded-md font-mono inline-flex items-center gap-1"
+      className="text-[12px] px-2 py-0.5 rounded-md font-mono inline-flex items-center gap-1"
       style={{ background: color.bg, border: `1px solid ${color.border}`, color: color.text }}
       title={ratio >= 1 ? `${platform} 推奨上限を超過しています` : ratio >= 0.8 ? `${platform} 推奨上限に近づいています` : undefined}
     >
@@ -1245,20 +1245,20 @@ function ModeCard({
       onClick={onClick}
       className="text-left px-4 py-3 rounded-xl transition-all"
       style={{
-        background: active ? `${accent}14` : 'rgba(255,255,255,0.025)',
-        border: active ? `1px solid ${accent}55` : '1px solid rgba(255,255,255,0.06)',
+        background: active ? `${accent}14` : 'rgba(15,23,42,0.03)',
+        border: active ? `1px solid ${accent}66` : '1px solid rgba(15,23,42,0.08)',
       }}
     >
       <div className="flex items-center gap-2">
         <span style={{ color: active ? accent : '#64748b' }}>{icon}</span>
         <p
-          className="text-[12px] font-semibold"
-          style={{ color: active ? '#e2e8f0' : '#94a3b8' }}
+          className="text-[14px] font-semibold"
+          style={{ color: active ? '#1e293b' : '#475569' }}
         >
           {title}
         </p>
       </div>
-      <p className="text-[10px] text-slate-600 mt-1.5 leading-snug">{desc}</p>
+      <p className="text-[12px] text-slate-500 mt-1.5 leading-snug">{desc}</p>
     </button>
   );
 }

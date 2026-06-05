@@ -98,7 +98,7 @@ const MODELS: { id: ImagenModel; label: string; price: string; icon: typeof Zap;
     label: 'Imagen 4 Fast',
     price: '$0.02/枚',
     icon:  Zap,
-    color: '#34d399',
+    color: '#059669',
     desc:  '速い・安い（試行錯誤向き）',
   },
   {
@@ -106,7 +106,7 @@ const MODELS: { id: ImagenModel; label: string; price: string; icon: typeof Zap;
     label: 'Imagen 4 Standard',
     price: '$0.04/枚',
     icon:  Gem,
-    color: '#a78bfa',
+    color: '#7c3aed',
     desc:  '高品質（本番投稿向き）',
   },
 ];
@@ -314,10 +314,10 @@ export default function ThumbnailPage() {
           <div className="neon-card p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-[15px] font-semibold text-slate-200 leading-none">アップロード画像（任意）</h2>
+                <h2 className="text-[16px] font-semibold text-slate-800 leading-none">アップロード画像（任意）</h2>
                 <p className="section-label mt-1.5">商品・人物・背景などを最大{MAX_UPLOADS}枚まで</p>
               </div>
-              <span className="text-[10px] tabular-nums text-slate-600">{uploads.length}/{MAX_UPLOADS}</span>
+              <span className="text-[11px] tabular-nums text-slate-600">{uploads.length}/{MAX_UPLOADS}</span>
             </div>
 
             {uploads.length > 0 && (
@@ -326,24 +326,24 @@ export default function ThumbnailPage() {
                   <div
                     key={u.id}
                     className="flex items-center gap-3 p-2.5 rounded-xl"
-                    style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}
+                    style={{ background: 'rgba(15,23,42,0.025)', border: '1px solid rgba(15,23,42,0.07)' }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={u.dataUrl}
                       alt={u.fileName}
                       className="w-14 h-14 rounded-lg shrink-0"
-                      style={{ objectFit: 'cover', border: '1px solid rgba(255,255,255,0.08)' }}
+                      style={{ objectFit: 'cover', border: '1px solid rgba(15,23,42,0.08)' }}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span
-                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shrink-0"
+                          className="text-[11px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shrink-0"
                           style={roleChipStyle(u.role)}
                         >
                           {labelsById.get(u.id)}
                         </span>
-                        <p className="text-[12px] text-slate-400 truncate">{u.fileName}</p>
+                        <p className="text-[13px] text-slate-600 truncate">{u.fileName}</p>
                       </div>
                       <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         <RolePill
@@ -351,21 +351,21 @@ export default function ThumbnailPage() {
                           onClick={() => updateRole(u.id, 'item')}
                           icon={Package}
                           label="アイテム"
-                          color="#a78bfa"
+                          color="#7c3aed"
                         />
                         <RolePill
                           active={u.role === 'background'}
                           onClick={() => updateRole(u.id, 'background')}
                           icon={Mountain}
                           label="背景"
-                          color="#22d3ee"
+                          color="#0891b2"
                         />
                         <RolePill
                           active={u.role === 'logo'}
                           onClick={() => updateRole(u.id, 'logo')}
                           icon={BadgeCheck}
                           label="ロゴ"
-                          color="#fbbf24"
+                          color="#b45309"
                         />
                       </div>
                     </div>
@@ -392,10 +392,10 @@ export default function ThumbnailPage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploads.length >= MAX_UPLOADS}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[12px] font-medium transition-all"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-medium transition-all"
               style={{
-                background: uploads.length >= MAX_UPLOADS ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)',
-                border:     '1px dashed rgba(255,255,255,0.15)',
+                background: uploads.length >= MAX_UPLOADS ? 'rgba(15,23,42,0.02)' : 'rgba(15,23,42,0.04)',
+                border:     '1px dashed rgba(15,23,42,0.15)',
                 color:      uploads.length >= MAX_UPLOADS ? '#475569' : '#94a3b8',
                 cursor:     uploads.length >= MAX_UPLOADS ? 'not-allowed' : 'pointer',
               }}
@@ -408,7 +408,7 @@ export default function ThumbnailPage() {
           {/* プロンプト */}
           <div className="neon-card p-6 space-y-5">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-200 leading-none">プロンプト</h2>
+              <h2 className="text-[16px] font-semibold text-slate-800 leading-none">プロンプト</h2>
               <p className="section-label mt-1.5">どんな画像を作りたいか日本語または英語で記述</p>
             </div>
             <div>
@@ -420,14 +420,14 @@ export default function ThumbnailPage() {
                 placeholder={placeholderHint}
                 appendMode
               />
-              <p className="text-[11px] text-slate-600 mt-1.5 text-right">{prompt.length}文字</p>
+              <p className="text-[12px] text-slate-600 mt-1.5 text-right">{prompt.length}文字</p>
             </div>
           </div>
 
           {/* ターゲット */}
           <div className="neon-card p-6 space-y-4">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-200 leading-none">ターゲット</h2>
+              <h2 className="text-[16px] font-semibold text-slate-800 leading-none">ターゲット</h2>
               <p className="section-label mt-1.5">用途に合わせてスタイルが調整されます</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -439,15 +439,15 @@ export default function ThumbnailPage() {
                     onClick={() => setTarget(id)}
                     className="text-left p-3.5 rounded-xl transition-all cursor-pointer"
                     style={{
-                      background: active ? 'rgba(167,139,250,0.1)' : 'rgba(255,255,255,0.025)',
-                      border:     active ? '1px solid rgba(167,139,250,0.3)' : '1px solid rgba(255,255,255,0.07)',
+                      background: active ? 'rgba(167,139,250,0.1)' : 'rgba(15,23,42,0.025)',
+                      border:     active ? '1px solid rgba(167,139,250,0.3)' : '1px solid rgba(15,23,42,0.07)',
                     }}
                   >
-                    <span className="text-lg">{emoji}</span>
-                    <p className="text-[13px] font-medium mt-1.5" style={{ color: active ? '#c4b5fd' : '#cbd5e1' }}>
+                    <span className="text-xl">{emoji}</span>
+                    <p className="text-[14px] font-medium mt-1.5" style={{ color: active ? '#7c3aed' : '#334155' }}>
                       {label}
                     </p>
-                    <p className="text-[11px] text-slate-600 mt-0.5">{desc}</p>
+                    <p className="text-[12px] text-slate-600 mt-0.5">{desc}</p>
                   </button>
                 );
               })}
@@ -458,7 +458,7 @@ export default function ThumbnailPage() {
           <div className="neon-card p-6 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-[15px] font-semibold text-slate-200 leading-none">モデル</h2>
+                <h2 className="text-[16px] font-semibold text-slate-800 leading-none">モデル</h2>
                 <p className="section-label mt-1.5">
                   {isComposeMode
                     ? 'アップロード時は Gemini 2.5 Flash Image を自動使用'
@@ -467,8 +467,8 @@ export default function ThumbnailPage() {
               </div>
               {isComposeMode && (
                 <span
-                  className="text-[10px] font-semibold px-2 py-1 rounded-md whitespace-nowrap"
-                  style={{ color: '#67e8f9', background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)' }}
+                  className="text-[11px] font-semibold px-2 py-1 rounded-md whitespace-nowrap"
+                  style={{ color: '#0891b2', background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)' }}
                 >
                   自動: Nano Banana
                 </span>
@@ -486,24 +486,24 @@ export default function ThumbnailPage() {
                     onClick={() => setModel(id)}
                     className="flex items-center gap-3 text-left p-3.5 rounded-xl transition-all cursor-pointer"
                     style={{
-                      background: active ? `${color}15` : 'rgba(255,255,255,0.025)',
-                      border:     active ? `1px solid ${color}55` : '1px solid rgba(255,255,255,0.07)',
+                      background: active ? `${color}15` : 'rgba(15,23,42,0.025)',
+                      border:     active ? `1px solid ${color}55` : '1px solid rgba(15,23,42,0.07)',
                     }}
                   >
                     <Icon size={18} style={{ color: active ? color : '#64748b' }} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-[13px] font-medium" style={{ color: active ? color : '#cbd5e1' }}>
+                        <p className="text-[14px] font-medium" style={{ color: active ? color : '#334155' }}>
                           {label}
                         </p>
                         <span
-                          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md tabular-nums"
+                          className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md tabular-nums"
                           style={{ color, background: `${color}18`, border: `1px solid ${color}30` }}
                         >
                           {price}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 mt-0.5">{desc}</p>
+                      <p className="text-[12px] text-slate-600 mt-0.5">{desc}</p>
                     </div>
                   </button>
                 );
@@ -511,7 +511,7 @@ export default function ThumbnailPage() {
             </div>
 
             {error && (
-              <p className="text-[12px] text-red-400 px-3 py-2 rounded-xl"
+              <p className="text-[13px] text-red-600 px-3 py-2 rounded-xl"
                 style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
                 {error}
               </p>
@@ -525,7 +525,7 @@ export default function ThumbnailPage() {
                 : <><Sparkles size={14} />サムネを生成</>
               }
             </Button>
-            <p className="text-[11px] text-slate-600 text-center">
+            <p className="text-[12px] text-slate-600 text-center">
               アスペクト比 16:9 ・ Gemini API キーで生成（料金は Google 側に課金）
             </p>
           </div>
@@ -535,12 +535,12 @@ export default function ThumbnailPage() {
         <div>
           {imageDataUrl ? (
             <div className="space-y-4">
-              <p className="text-[15px] font-semibold text-slate-200">生成結果</p>
+              <p className="text-[16px] font-semibold text-slate-800">生成結果</p>
 
               {/* プレビュー（テキストオーバーレイ表示） */}
               <div
                 className="neon-card p-3"
-                style={{ background: 'rgba(255,255,255,0.02)' }}
+                style={{ background: 'rgba(15,23,42,0.02)' }}
               >
                 <div
                   className="relative w-full rounded-xl overflow-hidden"
@@ -563,10 +563,10 @@ export default function ThumbnailPage() {
               <div className="neon-card p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Type size={14} style={{ color: '#fbbf24' }} />
-                    <h3 className="text-[14px] font-semibold text-slate-200">テキストを追加</h3>
+                    <Type size={14} style={{ color: '#b45309' }} />
+                    <h3 className="text-[15px] font-semibold text-slate-800">テキストを追加</h3>
                   </div>
-                  <span className="text-[10px] tabular-nums text-slate-600">{textItems.length}/{MAX_TEXT_ITEMS}</span>
+                  <span className="text-[11px] tabular-nums text-slate-600">{textItems.length}/{MAX_TEXT_ITEMS}</span>
                 </div>
 
                 {textItems.length > 0 && (
@@ -586,10 +586,10 @@ export default function ThumbnailPage() {
                 <button
                   onClick={addTextItem}
                   disabled={textItems.length >= MAX_TEXT_ITEMS}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-medium transition-all"
+                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[13px] font-medium transition-all"
                   style={{
-                    background: textItems.length >= MAX_TEXT_ITEMS ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)',
-                    border:     '1px dashed rgba(255,255,255,0.15)',
+                    background: textItems.length >= MAX_TEXT_ITEMS ? 'rgba(15,23,42,0.02)' : 'rgba(15,23,42,0.04)',
+                    border:     '1px dashed rgba(15,23,42,0.15)',
                     color:      textItems.length >= MAX_TEXT_ITEMS ? '#475569' : '#94a3b8',
                     cursor:     textItems.length >= MAX_TEXT_ITEMS ? 'not-allowed' : 'pointer',
                   }}
@@ -602,11 +602,11 @@ export default function ThumbnailPage() {
               <button
                 onClick={handleDownload}
                 disabled={isExporting}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[14px] font-semibold transition-all"
                 style={{
                   background: 'rgba(34,211,238,0.1)',
                   border:     '1px solid rgba(34,211,238,0.3)',
-                  color:      isExporting ? '#475569' : '#67e8f9',
+                  color:      isExporting ? '#475569' : '#0891b2',
                 }}
               >
                 {isExporting ? <RefreshCw size={13} className="animate-spin" /> : <Download size={13} />}
@@ -623,7 +623,7 @@ export default function ThumbnailPage() {
                       ? 'Gemini 2.5 Flash Image が画像を合成しています（最大数十秒）'
                       : 'Imagen が画像を生成しています（最大数十秒）')
                   : 'プロンプトを入力してターゲットとモデルを選択してください'}
-                iconColor="#22d3ee"
+                iconColor="#0891b2"
               />
             </div>
           )}
@@ -634,9 +634,9 @@ export default function ThumbnailPage() {
 }
 
 const ROLE_CHIP_COLORS: Record<UploadRole, { bg: string; fg: string; border: string }> = {
-  item:       { bg: 'rgba(167,139,250,0.18)', fg: '#c4b5fd', border: 'rgba(167,139,250,0.4)' },
-  background: { bg: 'rgba(34,211,238,0.18)',  fg: '#67e8f9', border: 'rgba(34,211,238,0.4)'  },
-  logo:       { bg: 'rgba(251,191,36,0.18)',  fg: '#fcd34d', border: 'rgba(251,191,36,0.4)'  },
+  item:       { bg: 'rgba(167,139,250,0.18)', fg: '#7c3aed', border: 'rgba(167,139,250,0.4)' },
+  background: { bg: 'rgba(34,211,238,0.18)',  fg: '#0891b2', border: 'rgba(34,211,238,0.4)'  },
+  logo:       { bg: 'rgba(251,191,36,0.18)',  fg: '#b45309', border: 'rgba(251,191,36,0.4)'  },
 };
 
 function roleChipStyle(role: UploadRole) {
@@ -796,10 +796,10 @@ function TextEditor({
   return (
     <div
       className="rounded-xl p-3 space-y-2.5"
-      style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}
+      style={{ background: 'rgba(15,23,42,0.025)', border: '1px solid rgba(15,23,42,0.07)' }}
     >
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">テキスト {index + 1}</span>
+        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">テキスト {index + 1}</span>
         <button
           onClick={onRemove}
           className="p-1 rounded-md transition-colors hover:bg-red-500/10"
@@ -814,12 +814,12 @@ function TextEditor({
         onChange={(e) => onChange({ text: e.target.value })}
         rows={2}
         placeholder="ここに文字を入力（改行可）"
-        className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.08] text-[13px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[rgba(251,191,36,0.4)] resize-none leading-relaxed"
+        className="w-full px-3 py-2 rounded-lg bg-slate-900/[0.03] border border-slate-900/[0.08] text-[14px] text-slate-800 placeholder-slate-600 focus:outline-none focus:border-[rgba(251,191,36,0.4)] resize-none leading-relaxed"
       />
 
       {/* フォント */}
       <div>
-        <p className="text-[10px] text-slate-500 mb-1">フォント</p>
+        <p className="text-[11px] text-slate-500 mb-1">フォント</p>
         <div className="grid grid-cols-3 gap-1">
           {TEXT_FONTS.map(({ id, label, family, sample }) => {
             const active = item.font === id;
@@ -829,17 +829,17 @@ function TextEditor({
                 onClick={() => onChange({ font: id })}
                 className="text-left p-1.5 rounded-md transition-all"
                 style={{
-                  background: active ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)',
-                  border:     active ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(255,255,255,0.06)',
+                  background: active ? 'rgba(251,191,36,0.1)' : 'rgba(15,23,42,0.02)',
+                  border:     active ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(15,23,42,0.06)',
                 }}
               >
                 <p
-                  className="text-[13px]"
-                  style={{ fontFamily: family, fontWeight: 700, color: active ? '#fcd34d' : '#cbd5e1' }}
+                  className="text-[14px]"
+                  style={{ fontFamily: family, fontWeight: 700, color: active ? '#b45309' : '#334155' }}
                 >
                   {sample}
                 </p>
-                <p className="text-[9px] text-slate-600 leading-tight">{label}</p>
+                <p className="text-[10px] text-slate-600 leading-tight">{label}</p>
               </button>
             );
           })}
@@ -848,7 +848,7 @@ function TextEditor({
 
       {/* サイズ */}
       <div>
-        <p className="text-[10px] text-slate-500 mb-1">サイズ</p>
+        <p className="text-[11px] text-slate-500 mb-1">サイズ</p>
         <div className="grid grid-cols-4 gap-1">
           {TEXT_SIZES.map(({ id, label }) => {
             const active = item.size === id;
@@ -856,11 +856,11 @@ function TextEditor({
               <button
                 key={id}
                 onClick={() => onChange({ size: id })}
-                className="py-1.5 rounded-md text-[11px] font-semibold transition-all"
+                className="py-1.5 rounded-md text-[12px] font-semibold transition-all"
                 style={{
-                  background: active ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)',
-                  border:     active ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(255,255,255,0.06)',
-                  color:      active ? '#fcd34d' : '#cbd5e1',
+                  background: active ? 'rgba(251,191,36,0.1)' : 'rgba(15,23,42,0.02)',
+                  border:     active ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(15,23,42,0.06)',
+                  color:      active ? '#b45309' : '#334155',
                 }}
               >
                 {label}
@@ -873,9 +873,9 @@ function TextEditor({
       {/* 色 + 縁取り */}
       <div className="grid grid-cols-2 gap-2">
         <label className="flex items-center gap-2 px-2.5 py-1.5 rounded-md"
-          style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ background: 'rgba(15,23,42,0.025)', border: '1px solid rgba(15,23,42,0.06)' }}
         >
-          <span className="text-[10px] text-slate-500 shrink-0">文字色</span>
+          <span className="text-[11px] text-slate-500 shrink-0">文字色</span>
           <input
             type="color"
             value={item.color}
@@ -883,13 +883,13 @@ function TextEditor({
             className="w-6 h-6 rounded cursor-pointer bg-transparent"
             style={{ border: 'none', padding: 0 }}
           />
-          <span className="text-[10px] text-slate-400 tabular-nums uppercase">{item.color}</span>
+          <span className="text-[11px] text-slate-600 tabular-nums uppercase">{item.color}</span>
         </label>
 
         <label className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md cursor-pointer"
           style={{
-            background: item.stroke ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.025)',
-            border:     item.stroke ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(255,255,255,0.06)',
+            background: item.stroke ? 'rgba(251,191,36,0.06)' : 'rgba(15,23,42,0.025)',
+            border:     item.stroke ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(15,23,42,0.06)',
           }}
         >
           <input
@@ -898,7 +898,7 @@ function TextEditor({
             onChange={(e) => onChange({ stroke: e.target.checked })}
             className="w-3.5 h-3.5 rounded accent-amber-400 cursor-pointer"
           />
-          <span className="text-[10px] text-slate-500 shrink-0">縁取り</span>
+          <span className="text-[11px] text-slate-500 shrink-0">縁取り</span>
           <input
             type="color"
             value={item.strokeColor}
@@ -912,10 +912,10 @@ function TextEditor({
 
       {/* 配置（ドットで位置を示すコンパクト 3x3 セレクタ） */}
       <div className="flex items-center gap-2">
-        <p className="text-[10px] text-slate-500 shrink-0">配置</p>
+        <p className="text-[11px] text-slate-500 shrink-0">配置</p>
         <div
           className="inline-grid grid-cols-3 gap-0.5 p-1 rounded-md"
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)' }}
         >
           {(Object.keys(POSITION_LABEL) as GridPosition[]).map((pos) => {
             const active = item.position === pos;
@@ -925,8 +925,8 @@ function TextEditor({
                 onClick={() => onChange({ position: pos })}
                 className="w-6 h-6 rounded relative transition-all"
                 style={{
-                  background: active ? 'rgba(251,191,36,0.18)' : 'rgba(255,255,255,0.03)',
-                  border:     active ? '1px solid rgba(251,191,36,0.5)' : '1px solid rgba(255,255,255,0.05)',
+                  background: active ? 'rgba(251,191,36,0.18)' : 'rgba(15,23,42,0.03)',
+                  border:     active ? '1px solid rgba(251,191,36,0.5)' : '1px solid rgba(15,23,42,0.05)',
                 }}
                 title={POSITION_LABEL[pos]}
                 aria-label={POSITION_LABEL[pos]}
@@ -936,7 +936,7 @@ function TextEditor({
             );
           })}
         </div>
-        <span className="text-[10px] text-slate-500 ml-auto tabular-nums">
+        <span className="text-[11px] text-slate-500 ml-auto tabular-nums">
           {POSITION_LABEL[item.position]}
         </span>
       </div>
@@ -964,7 +964,7 @@ function PositionDot({ position, active }: { position: GridPosition; active: boo
       style={{
         width:  6,
         height: 6,
-        background: active ? '#fcd34d' : '#64748b',
+        background: active ? '#b45309' : '#64748b',
         ...p,
       }}
     />
@@ -996,10 +996,10 @@ function RolePill({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md transition-all"
+      className="flex items-center gap-1 text-[12px] font-medium px-2 py-1 rounded-md transition-all"
       style={{
-        background: active ? `${color}1a` : 'rgba(255,255,255,0.04)',
-        border:     active ? `1px solid ${color}55` : '1px solid rgba(255,255,255,0.08)',
+        background: active ? `${color}1a` : 'rgba(15,23,42,0.04)',
+        border:     active ? `1px solid ${color}55` : '1px solid rgba(15,23,42,0.08)',
         color:      active ? color : '#94a3b8',
       }}
     >

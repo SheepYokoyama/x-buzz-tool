@@ -17,11 +17,11 @@ export function Card({
 }: CardProps) {
   const accentStyle =
     accent === 'blue'
-      ? { borderColor: 'rgba(96,165,250,0.3)', boxShadow: '0 0 24px rgba(96,165,250,0.1), 0 8px 40px rgba(0,0,0,0.5)' }
+      ? { borderColor: 'rgba(37,99,235,0.3)', boxShadow: '0 0 24px rgba(37,99,235,0.08), 0 8px 28px rgba(15,23,42,0.08)' }
       : accent === 'purple'
-      ? { borderColor: 'rgba(167,139,250,0.35)', boxShadow: '0 0 24px rgba(167,139,250,0.12), 0 8px 40px rgba(0,0,0,0.5)' }
+      ? { borderColor: 'rgba(124,58,237,0.32)', boxShadow: '0 0 24px rgba(124,58,237,0.1), 0 8px 28px rgba(15,23,42,0.08)' }
       : accent === 'cyan'
-      ? { borderColor: 'rgba(34,211,238,0.3)', boxShadow: '0 0 24px rgba(34,211,238,0.1), 0 8px 40px rgba(0,0,0,0.5)' }
+      ? { borderColor: 'rgba(8,145,178,0.3)', boxShadow: '0 0 24px rgba(8,145,178,0.08), 0 8px 28px rgba(15,23,42,0.08)' }
       : undefined;
 
   return (

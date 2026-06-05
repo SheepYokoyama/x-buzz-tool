@@ -14,10 +14,10 @@ export default function XAccountsPage() {
 
       {/* 注意事項 */}
       <div
-        className="mb-6 rounded-xl px-4 py-3 text-[12px] text-slate-500"
-        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+        className="mb-6 rounded-xl px-4 py-3 text-[13px] text-slate-500"
+        style={{ background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.05)' }}
       >
-        <span className="text-slate-400 font-medium">セキュリティについて:</span>{' '}
+        <span className="text-slate-600 font-medium">セキュリティについて:</span>{' '}
         トークンはAES-256-CBCで暗号化してデータベースに保存されます。画面上ではマスク表示のみ行い、平文は一切表示されません。
       </div>
 

@@ -54,20 +54,20 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
   return (
     <div className="neon-card p-6 space-y-5">
       <div>
-        <h2 className="text-[15px] font-semibold text-slate-200 leading-none">生成設定</h2>
+        <h2 className="text-[16px] font-semibold text-slate-800 leading-none">生成設定</h2>
         <p className="section-label mt-1.5">条件を設定してバズ投稿を生成</p>
       </div>
 
       {/* ── AIプロバイダー（コンパクト表示） ── */}
       <div
         className="flex items-center justify-between px-3.5 py-2.5 rounded-xl"
-        style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}
+        style={{ background: 'rgba(15,23,42,0.025)', border: '1px solid rgba(15,23,42,0.06)' }}
       >
         <div className="flex items-center gap-2">
-          <span className="text-[12px] text-slate-500">使用中のAI:</span>
-          <span className="text-[12px] font-medium text-slate-300">{providerInfo.label}</span>
+          <span className="text-[13px] text-slate-500">使用中のAI:</span>
+          <span className="text-[13px] font-medium text-slate-700">{providerInfo.label}</span>
           <span
-            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+            className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md"
             style={{
               color: providerInfo.badgeColor,
               background: `${providerInfo.badgeColor}18`,
@@ -77,7 +77,7 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
             {providerInfo.badge}
           </span>
         </div>
-        <span className="flex items-center gap-1 text-[11px] text-slate-600">
+        <span className="flex items-center gap-1 text-[12px] text-slate-600">
           <Settings size={10} />
           設定で変更
         </span>
@@ -89,7 +89,7 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
           <FieldLabel className="mb-0">ペルソナ</FieldLabel>
           <Link
             href="/persona"
-            className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
+            className="text-[12px] text-slate-500 hover:text-slate-700 transition-colors"
           >
             変更するには設定へ
           </Link>
@@ -103,17 +103,17 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
               boxShadow: '0 0 14px rgba(167,139,250,0.15)',
             }}
           >
-            <span className="text-2xl leading-none shrink-0">{activePersona.avatar}</span>
+            <span className="text-3xl leading-none shrink-0">{activePersona.avatar}</span>
             <div className="text-left min-w-0 flex-1">
-              <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: '#c4b5fd' }}>
+              <p className="text-[14px] font-semibold leading-tight truncate" style={{ color: '#7c3aed' }}>
                 {activePersona.name}
               </p>
-              <p className="text-[11px] mt-0.5 leading-tight truncate" style={{ color: '#475569' }}>
+              <p className="text-[12px] mt-0.5 leading-tight truncate" style={{ color: '#475569' }}>
                 {activePersona.tone}
               </p>
               <span
-                className="inline-flex items-center gap-1 text-[10px] font-semibold mt-1 px-1.5 py-0.5 rounded-md"
-                style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.25)' }}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold mt-1 px-1.5 py-0.5 rounded-md"
+                style={{ background: 'rgba(167,139,250,0.15)', color: '#7c3aed', border: '1px solid rgba(167,139,250,0.25)' }}
               >
                 <span className="w-1 h-1 rounded-full bg-current" />
                 使用中
@@ -122,8 +122,8 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
           </div>
         ) : (
           <div
-            className="px-4 py-3 rounded-xl text-[12px] text-slate-500"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.08)' }}
+            className="px-4 py-3 rounded-xl text-[13px] text-slate-500"
+            style={{ background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.08)' }}
           >
             アクティブなペルソナがありません。
             <Link href="/persona" className="ml-1 text-neon-purple hover:underline">
@@ -136,7 +136,7 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
 
       {/* ── テーマ ── */}
       <div>
-        <FieldLabel>テーマ <span className="text-red-400">*</span></FieldLabel>
+        <FieldLabel>テーマ <span className="text-red-600">*</span></FieldLabel>
         <VoiceTextarea
           rows={2}
           value={input.theme}
@@ -156,11 +156,11 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
               <button
                 key={t}
                 onClick={() => onChange({ selectedTopic: active ? '' : t })}
-                className="text-[12px] px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+                className="text-[13px] px-3 py-1.5 rounded-lg transition-all cursor-pointer"
                 style={{
-                  background: active ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.04)',
-                  border: active ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                  color: active ? '#a78bfa' : '#64748b',
+                  background: active ? 'rgba(167,139,250,0.15)' : 'rgba(15,23,42,0.04)',
+                  border: active ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(15,23,42,0.08)',
+                  color: active ? '#7c3aed' : '#64748b',
                 }}
               >
                 {t}
@@ -190,11 +190,11 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
               <button
                 key={value}
                 onClick={() => onChange({ purpose: value })}
-                className="text-[12px] px-3 py-2 rounded-xl transition-all text-left cursor-pointer"
+                className="text-[13px] px-3 py-2 rounded-xl transition-all text-left cursor-pointer"
                 style={{
-                  background: active ? 'rgba(96,165,250,0.12)' : 'rgba(255,255,255,0.03)',
-                  border: active ? '1px solid rgba(96,165,250,0.3)' : '1px solid rgba(255,255,255,0.07)',
-                  color: active ? '#60a5fa' : '#64748b',
+                  background: active ? 'rgba(96,165,250,0.12)' : 'rgba(15,23,42,0.03)',
+                  border: active ? '1px solid rgba(96,165,250,0.3)' : '1px solid rgba(15,23,42,0.07)',
+                  color: active ? '#2563eb' : '#64748b',
                   fontWeight: active ? 500 : 400,
                 }}
               >
@@ -215,11 +215,11 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
               <button
                 key={value}
                 onClick={() => onChange({ tone: value })}
-                className="text-[12px] px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+                className="text-[13px] px-3 py-1.5 rounded-lg transition-all cursor-pointer"
                 style={{
-                  background: active ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.03)',
-                  border: active ? '1px solid rgba(52,211,153,0.3)' : '1px solid rgba(255,255,255,0.07)',
-                  color: active ? '#34d399' : '#64748b',
+                  background: active ? 'rgba(52,211,153,0.12)' : 'rgba(15,23,42,0.03)',
+                  border: active ? '1px solid rgba(52,211,153,0.3)' : '1px solid rgba(15,23,42,0.07)',
+                  color: active ? '#059669' : '#64748b',
                   fontWeight: active ? 500 : 400,
                 }}
               >
@@ -233,7 +233,7 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
       {/* ── 文字数（任意調整・折りたたみ） ── */}
       <details className="group">
         <summary
-          className="flex items-center gap-2 cursor-pointer list-none text-[11px] text-slate-600 hover:text-slate-400 py-1 transition-colors"
+          className="flex items-center gap-2 cursor-pointer list-none text-[12px] text-slate-600 hover:text-slate-600 py-1 transition-colors"
           title={`全角=2カウント・半角=1カウント。CTA+ハッシュタグ込みで合計${xLimit.toLocaleString()}cnt以内で生成（${planLabel}プラン）。\n※ AIはテンプレ最適化を優先するため目安通りにならない場合があります`}
         >
           <span>本文カウント目安（任意）</span>
@@ -241,7 +241,7 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
           <span className="text-slate-500">
             {lengthOptions.find((o) => o.value === input.maxLength)?.label ?? `${input.maxLength}cnt`}
           </span>
-          <span className="ml-auto text-slate-700 text-[10px] group-open:rotate-180 transition-transform">▾</span>
+          <span className="ml-auto text-slate-700 text-[11px] group-open:rotate-180 transition-transform">▾</span>
         </summary>
         <div className="mt-2 flex flex-wrap gap-2">
           {lengthOptions.map(({ value, label, note }) => {
@@ -252,14 +252,14 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
                 onClick={() => onChange({ maxLength: value })}
                 className="flex-1 min-w-[30%] py-2 rounded-xl transition-all cursor-pointer"
                 style={{
-                  background: active ? 'rgba(34,211,238,0.1)' : 'rgba(255,255,255,0.03)',
-                  border: active ? '1px solid rgba(34,211,238,0.3)' : '1px solid rgba(255,255,255,0.07)',
-                  color: active ? '#22d3ee' : '#64748b',
+                  background: active ? 'rgba(34,211,238,0.1)' : 'rgba(15,23,42,0.03)',
+                  border: active ? '1px solid rgba(34,211,238,0.3)' : '1px solid rgba(15,23,42,0.07)',
+                  color: active ? '#0891b2' : '#64748b',
                   fontWeight: active ? 500 : 400,
                 }}
               >
-                <p className="text-[12px] leading-tight">{label}</p>
-                <p className="text-[10px] mt-0.5 opacity-60">{note}</p>
+                <p className="text-[13px] leading-tight">{label}</p>
+                <p className="text-[11px] mt-0.5 opacity-60">{note}</p>
               </button>
             );
           })}
@@ -267,23 +267,23 @@ export function GenerateSettings({ input, personas, isGenerating, onChange, onGe
       </details>
 
       {/* ── CTA ── */}
-      <div className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'rgba(15,23,42,0.025)', border: '1px solid rgba(15,23,42,0.06)' }}>
         <div>
-          <p className="text-[13px] font-medium text-slate-300">CTA（行動喚起）</p>
-          <p className="text-[11px] text-slate-600 mt-0.5">フォロー・コメント促進など</p>
+          <p className="text-[14px] font-medium text-slate-700">CTA（行動喚起）</p>
+          <p className="text-[12px] text-slate-600 mt-0.5">フォロー・コメント促進など</p>
         </div>
         <button
           onClick={() => onChange({ hasCta: !input.hasCta })}
           className="relative w-10 h-5 rounded-full transition-all cursor-pointer shrink-0"
           style={{
-            background: input.hasCta ? 'rgba(167,139,250,0.6)' : 'rgba(255,255,255,0.1)',
-            border: input.hasCta ? '1px solid rgba(167,139,250,0.5)' : '1px solid rgba(255,255,255,0.1)',
+            background: input.hasCta ? 'rgba(167,139,250,0.6)' : 'rgba(15,23,42,0.1)',
+            border: input.hasCta ? '1px solid rgba(167,139,250,0.5)' : '1px solid rgba(15,23,42,0.1)',
           }}
         >
           <span
             className="absolute top-0.5 w-4 h-4 rounded-full transition-all"
             style={{
-              background: input.hasCta ? '#a78bfa' : '#64748b',
+              background: input.hasCta ? '#7c3aed' : '#64748b',
               left: input.hasCta ? '1.25rem' : '0.125rem',
             }}
           />

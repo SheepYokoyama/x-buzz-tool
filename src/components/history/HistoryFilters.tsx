@@ -24,11 +24,11 @@ export function HistoryFilters({ active, onChange }: Props) {
           <button
             key={value}
             onClick={() => onChange(value)}
-            className="text-[12px] px-3.5 py-1.5 rounded-xl transition-all cursor-pointer"
+            className="text-[13px] px-3.5 py-1.5 rounded-xl transition-all cursor-pointer"
             style={{
-              background: isActive ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.03)',
-              border: isActive ? '1px solid rgba(167,139,250,0.3)' : '1px solid rgba(255,255,255,0.07)',
-              color: isActive ? '#a78bfa' : '#64748b',
+              background: isActive ? 'rgba(167,139,250,0.12)' : 'rgba(15,23,42,0.03)',
+              border: isActive ? '1px solid rgba(167,139,250,0.3)' : '1px solid rgba(15,23,42,0.07)',
+              color: isActive ? '#7c3aed' : '#64748b',
               fontWeight: isActive ? 500 : 400,
             }}
           >

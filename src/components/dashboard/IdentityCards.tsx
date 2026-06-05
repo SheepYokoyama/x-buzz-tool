@@ -104,29 +104,29 @@ export function IdentityCards() {
         <div
           className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
           style={{
-            background: 'rgba(96,165,250,0.05)',
-            border: '1px solid rgba(96,165,250,0.12)',
+            background: 'rgba(37,99,235,0.05)',
+            border: '1px solid rgba(37,99,235,0.15)',
           }}
         >
           <span
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] shrink-0"
-            style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.2)' }}
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-[20px] shrink-0"
+            style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}
           >
             {activePersona.avatar}
           </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="text-[12px] font-semibold text-slate-200 truncate">{activePersona.name}</p>
+              <p className="text-[14px] font-semibold text-slate-800 truncate">{activePersona.name}</p>
               <span
                 className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ background: '#34d399', boxShadow: '0 0 5px #34d399' }}
+                style={{ background: '#059669', boxShadow: '0 0 5px #059669' }}
               />
             </div>
-            <p className="text-[10px] text-slate-500 truncate mt-0.5">使用中のペルソナ</p>
+            <p className="text-[12px] text-slate-500 truncate mt-0.5">使用中のペルソナ</p>
           </div>
           <Link
             href="/persona"
-            className="p-1 rounded-md transition-colors hover:bg-white/[0.06]"
+            className="p-1 rounded-md transition-colors hover:bg-slate-900/[0.06]"
             title="ペルソナ設定"
           >
             <SettingsIcon size={13} style={{ color: '#64748b' }} />
@@ -171,13 +171,13 @@ function ConnectedCard({
   settingsTitle: string;
 }) {
   const accentBg =
-    accent === 'purple' ? 'rgba(168,85,247,0.05)'
-    : accent === 'pink' ? 'rgba(236,72,153,0.05)'
-    : 'rgba(255,255,255,0.03)';
+    accent === 'purple' ? 'rgba(168,85,247,0.06)'
+    : accent === 'pink' ? 'rgba(236,72,153,0.06)'
+    : 'rgba(37,99,235,0.05)';
   const accentBorder =
-    accent === 'purple' ? 'rgba(168,85,247,0.15)'
-    : accent === 'pink' ? 'rgba(236,72,153,0.15)'
-    : 'rgba(255,255,255,0.07)';
+    accent === 'purple' ? 'rgba(168,85,247,0.2)'
+    : accent === 'pink' ? 'rgba(236,72,153,0.2)'
+    : 'rgba(37,99,235,0.15)';
 
   return (
     <div
@@ -198,12 +198,12 @@ function ConnectedCard({
             src={avatar}
             alt={name}
             className="w-9 h-9 rounded-full"
-            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ border: '1px solid rgba(15,23,42,0.1)' }}
           />
         ) : (
           <span
-            className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold"
-            style={{ background: 'rgba(255,255,255,0.08)', color: '#94a3b8' }}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold"
+            style={{ background: 'rgba(15,23,42,0.06)', color: '#64748b' }}
           >
             {fallbackInitial}
           </span>
@@ -211,8 +211,8 @@ function ConnectedCard({
         <span
           className="absolute -bottom-0.5 -right-0.5 w-[16px] h-[16px] rounded-full flex items-center justify-center"
           style={{
-            background: '#000',
-            border: '1.5px solid rgba(2,6,23,1)',
+            background: '#0f172a',
+            border: '1.5px solid #ffffff',
             color: '#fff',
           }}
           title={platformTitle}
@@ -222,18 +222,18 @@ function ConnectedCard({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <p className="text-[12px] font-semibold text-slate-200 truncate">{name}</p>
+          <p className="text-[14px] font-semibold text-slate-800 truncate">{name}</p>
           <span
             className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ background: '#34d399', boxShadow: '0 0 5px #34d399' }}
+            style={{ background: '#059669', boxShadow: '0 0 5px #059669' }}
           />
         </div>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <p className="text-[10px] text-slate-500 truncate">@{username}</p>
+          <p className="text-[12px] text-slate-500 truncate">@{username}</p>
           {tagText && (
             <span
-              className="text-[9px] font-semibold px-1 py-px rounded shrink-0"
-              style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }}
+              className="text-[11px] font-semibold px-1 py-px rounded shrink-0"
+              style={{ background: 'rgba(37,99,235,0.12)', color: '#2563eb', border: '1px solid rgba(37,99,235,0.25)' }}
             >
               {tagText}
             </span>
@@ -243,7 +243,7 @@ function ConnectedCard({
       </a>
       <Link
         href={settingsHref}
-        className="p-1 rounded-md transition-colors hover:bg-white/[0.06]"
+        className="p-1 rounded-md transition-colors hover:bg-slate-900/[0.06]"
         title={settingsTitle}
       >
         <SettingsIcon size={13} style={{ color: '#64748b' }} />
@@ -268,19 +268,19 @@ function EmptyCard({
     <Link
       href={href}
       className="group rounded-xl px-3 py-2.5 flex items-center gap-2.5"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+      style={{ background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.08)' }}
     >
       <span
         className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-        style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)', color: '#475569' }}
+        style={{ background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.18)', color: '#64748b' }}
       >
         {icon}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] text-slate-400 font-medium truncate">{label}</p>
-        <p className="text-[10px] text-slate-600 mt-0.5 truncate">{hint}</p>
+        <p className="text-[14px] text-slate-600 font-semibold truncate">{label}</p>
+        <p className="text-[12px] text-slate-500 mt-0.5 truncate">{hint}</p>
       </div>
-      <ArrowRight size={13} className="text-slate-600 transition-transform group-hover:translate-x-0.5 shrink-0" />
+      <ArrowRight size={13} className="text-slate-400 transition-transform group-hover:translate-x-0.5 shrink-0" />
     </Link>
   );
 }

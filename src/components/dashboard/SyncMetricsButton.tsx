@@ -63,26 +63,26 @@ export function SyncMetricsButton({ lastSyncedAt }: Props) {
 
   const color =
     state === 'done'  ? 'text-neon-green' :
-    state === 'error' ? 'text-red-400'    :
-    'text-slate-400 hover:text-slate-200';
+    state === 'error' ? 'text-red-600'    :
+    'text-slate-600 hover:text-slate-800';
 
   return (
     <div className="flex flex-col items-end gap-1">
       <button
         onClick={handleSync}
         disabled={state === 'loading'}
-        className={`flex items-center gap-1.5 text-[12px] font-medium transition-colors ${color}`}
+        className={`flex items-center gap-1.5 text-[13px] font-medium transition-colors ${color}`}
         title={lastSyncedAt ? `前回: ${new Date(lastSyncedAt).toLocaleString('ja-JP')}` : '未同期'}
       >
         <RefreshCw size={12} className={state === 'loading' ? 'animate-spin' : ''} />
         {label}
       </button>
       {message ? (
-        <p className={`text-[11px] ${state === 'error' ? 'text-red-400' : 'text-slate-500'}`}>
+        <p className={`text-[12px] ${state === 'error' ? 'text-red-600' : 'text-slate-500'}`}>
           {message}
         </p>
       ) : (
-        <p className="text-[11px] text-slate-600">{lastSyncedLabel}</p>
+        <p className="text-[12px] text-slate-600">{lastSyncedLabel}</p>
       )}
     </div>
   );

@@ -14,7 +14,7 @@ export function TokenCostHint({
     <span
       role="note"
       title={detail}
-      className={`inline-flex items-center gap-1 text-[11px] text-amber-300/80 ${className}`}
+      className={`inline-flex items-center gap-1 text-[12px] text-amber-600/80 ${className}`}
     >
       <Zap size={11} className="flex-shrink-0" aria-hidden />
       <span>AIトークンを消費します</span>

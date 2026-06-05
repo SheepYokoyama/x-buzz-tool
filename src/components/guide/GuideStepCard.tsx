@@ -14,7 +14,7 @@ export function GuideStepCard({ step, title, description, icon: Icon, color }: P
       {/* Step number */}
       <div className="shrink-0 flex flex-col items-center gap-2">
         <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[15px] text-white"
+          className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[16px] text-white"
           style={{ background: `linear-gradient(135deg, ${color}, ${color}99)` }}
         >
           {step}
@@ -26,9 +26,9 @@ export function GuideStepCard({ step, title, description, icon: Icon, color }: P
       <div className="flex-1 pb-1">
         <div className="flex items-center gap-2 mb-2">
           <Icon size={15} style={{ color }} />
-          <h3 className="text-[14px] font-semibold text-slate-200">{title}</h3>
+          <h3 className="text-[15px] font-semibold text-slate-800">{title}</h3>
         </div>
-        <p className="text-[13px] text-slate-500 leading-relaxed">{description}</p>
+        <p className="text-[14px] text-slate-500 leading-relaxed">{description}</p>
       </div>
     </div>
   );

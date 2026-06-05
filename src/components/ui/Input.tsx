@@ -6,10 +6,10 @@ import { MicButton } from './MicButton';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 
 const baseClass = `
-  w-full bg-white/[0.03] border border-white/[0.08]
-  text-[13px] text-slate-200 placeholder-slate-600
+  w-full bg-white border border-slate-300
+  text-[16px] text-slate-900 placeholder-slate-400
   rounded-xl transition-colors duration-200
-  focus:outline-none focus:border-[rgba(167,139,250,0.4)] focus:bg-white/[0.05]
+  focus:outline-none focus:border-[rgba(124,58,237,0.5)] focus:ring-2 focus:ring-[rgba(124,58,237,0.12)]
 `;
 
 // ── 通常 Input ───────────────────────────────────────────
@@ -134,8 +134,8 @@ export const VoiceTextarea = forwardRef<HTMLTextAreaElement, VoiceTextareaProps>
               title="クリップボードからペースト"
               className="w-6 h-6 flex items-center justify-center rounded-md transition-all"
               style={{
-                color: pasted ? '#34d399' : '#475569',
-                background: pasted ? 'rgba(52,211,153,0.1)' : 'transparent',
+                color: pasted ? '#059669' : '#64748b',
+                background: pasted ? 'rgba(5,150,105,0.1)' : 'transparent',
               }}
             >
               {pasted ? <Check size={13} /> : <Clipboard size={13} />}

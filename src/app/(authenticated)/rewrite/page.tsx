@@ -142,7 +142,7 @@ export default function RewritePage() {
         <div className="space-y-5">
           <div className="neon-card p-6 space-y-5">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-200 leading-none">元の投稿</h2>
+              <h2 className="text-[16px] font-semibold text-slate-800 leading-none">元の投稿</h2>
               <p className="section-label mt-1.5">リライトしたい投稿をペーストしてください</p>
             </div>
             <div>
@@ -155,13 +155,13 @@ export default function RewritePage() {
                 appendMode
                 showPasteButton
               />
-              <p className="text-[11px] text-slate-600 mt-1.5 text-right">{original.length}文字</p>
+              <p className="text-[12px] text-slate-600 mt-1.5 text-right">{original.length}文字</p>
             </div>
           </div>
 
           <div className="neon-card p-6 space-y-4">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-200 leading-none">リライトスタイル</h2>
+              <h2 className="text-[16px] font-semibold text-slate-800 leading-none">リライトスタイル</h2>
               <p className="section-label mt-1.5">どのように書き直しますか？</p>
             </div>
             <RewriteStyleSelector
@@ -176,8 +176,8 @@ export default function RewritePage() {
             <label
               className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl cursor-pointer select-none transition-all"
               style={{
-                background: withHashtags ? 'rgba(34,211,238,0.06)' : 'rgba(255,255,255,0.025)',
-                border: withHashtags ? '1px solid rgba(34,211,238,0.25)' : '1px solid rgba(255,255,255,0.06)',
+                background: withHashtags ? 'rgba(34,211,238,0.06)' : 'rgba(15,23,42,0.025)',
+                border: withHashtags ? '1px solid rgba(34,211,238,0.25)' : '1px solid rgba(15,23,42,0.06)',
               }}
             >
               <input
@@ -187,36 +187,36 @@ export default function RewritePage() {
                 className="w-4 h-4 rounded accent-cyan-400 cursor-pointer"
               />
               <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                <Hash size={13} style={{ color: withHashtags ? '#22d3ee' : '#64748b' }} />
-                <span className="text-[12px] font-medium" style={{ color: withHashtags ? '#cbd5e1' : '#94a3b8' }}>
+                <Hash size={13} style={{ color: withHashtags ? '#0891b2' : '#64748b' }} />
+                <span className="text-[13px] font-medium" style={{ color: withHashtags ? '#334155' : '#94a3b8' }}>
                   ハッシュタグを自動生成
                 </span>
-                <span className="text-[10px] text-slate-600">（X用 #タグ ×2）</span>
+                <span className="text-[11px] text-slate-600">（X用 #タグ ×2）</span>
               </div>
             </label>
 
             {/* AIプロバイダー表示 */}
             <div
               className="flex items-center justify-between px-3.5 py-2.5 rounded-xl"
-              style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}
+              style={{ background: 'rgba(15,23,42,0.025)', border: '1px solid rgba(15,23,42,0.06)' }}
             >
               <div className="flex items-center gap-2">
-                <span className="text-[12px] text-slate-500">使用中のAI:</span>
-                <span className="text-[12px] font-medium text-slate-300">{providerInfo.label}</span>
+                <span className="text-[13px] text-slate-500">使用中のAI:</span>
+                <span className="text-[13px] font-medium text-slate-700">{providerInfo.label}</span>
                 <span
-                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                  className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md"
                   style={{ color: providerInfo.badgeColor, background: `${providerInfo.badgeColor}18`, border: `1px solid ${providerInfo.badgeColor}30` }}
                 >
                   {providerInfo.badge}
                 </span>
               </div>
-              <span className="flex items-center gap-1 text-[11px] text-slate-600">
+              <span className="flex items-center gap-1 text-[12px] text-slate-600">
                 <Settings size={10} />設定で変更
               </span>
             </div>
 
             {error && (
-              <p className="text-[12px] text-red-400 px-3 py-2 rounded-xl"
+              <p className="text-[13px] text-red-600 px-3 py-2 rounded-xl"
                 style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
                 {error}
               </p>
@@ -240,7 +240,7 @@ export default function RewritePage() {
         <div>
           {result ? (
             <div className="space-y-4">
-              <p className="text-[15px] font-semibold text-slate-200">リライト結果</p>
+              <p className="text-[16px] font-semibold text-slate-800">リライト結果</p>
               <RewriteResultCard text={result} label={style} />
 
               {/* ── ハッシュタグ ── */}
@@ -254,17 +254,17 @@ export default function RewritePage() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <Hash size={12} style={{ color: '#22d3ee' }} />
-                      <span className="text-[12px] font-semibold text-slate-300">おすすめハッシュタグ</span>
+                      <Hash size={12} style={{ color: '#0891b2' }} />
+                      <span className="text-[13px] font-semibold text-slate-700">おすすめハッシュタグ</span>
                     </div>
                     {hashtags.length > 0 && (
                       <button
                         onClick={handleCopyHashtags}
-                        className="flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-lg transition-all"
+                        className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-lg transition-all"
                         style={{
-                          background: tagsCopied ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.05)',
-                          border: tagsCopied ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(255,255,255,0.09)',
-                          color: tagsCopied ? '#34d399' : '#94a3b8',
+                          background: tagsCopied ? 'rgba(52,211,153,0.1)' : 'rgba(15,23,42,0.05)',
+                          border: tagsCopied ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(15,23,42,0.09)',
+                          color: tagsCopied ? '#059669' : '#94a3b8',
                         }}
                       >
                         {tagsCopied ? <Check size={11} /> : <Copy size={11} />}
@@ -274,21 +274,21 @@ export default function RewritePage() {
                   </div>
 
                   {isHashtagging ? (
-                    <p className="text-[12px] text-slate-500 flex items-center gap-1.5">
+                    <p className="text-[13px] text-slate-500 flex items-center gap-1.5">
                       <RefreshCw size={11} className="animate-spin" />
                       タグを生成中…
                     </p>
                   ) : hashtagError ? (
-                    <p className="text-[12px] text-red-400">{hashtagError}</p>
+                    <p className="text-[13px] text-red-600">{hashtagError}</p>
                   ) : (
                     <div className="flex flex-wrap gap-1.5">
                       {hashtags.map((tag) => (
                         <span
                           key={tag}
-                          className="text-[12px] font-medium px-2.5 py-1 rounded-lg"
+                          className="text-[13px] font-medium px-2.5 py-1 rounded-lg"
                           style={{
                             background: 'rgba(34,211,238,0.1)',
-                            color: '#67e8f9',
+                            color: '#0891b2',
                             border: '1px solid rgba(34,211,238,0.25)',
                           }}
                         >
@@ -304,10 +304,10 @@ export default function RewritePage() {
               <button
                 onClick={handleXSummary}
                 disabled={isSummarizing}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[14px] font-semibold transition-all"
                 style={{
-                  background: isSummarizing ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.09)',
+                  background: isSummarizing ? 'rgba(15,23,42,0.03)' : 'rgba(15,23,42,0.04)',
+                  border: '1px solid rgba(15,23,42,0.09)',
                   color: isSummarizing ? '#475569' : '#94a3b8',
                   cursor: isSummarizing ? 'not-allowed' : 'pointer',
                 }}
@@ -317,8 +317,8 @@ export default function RewritePage() {
                 ) : (
                   <>
                     <span
-                      className="w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-black"
-                      style={{ background: 'rgba(255,255,255,0.08)', color: '#94a3b8' }}
+                      className="w-5 h-5 rounded-md flex items-center justify-center text-[12px] font-black"
+                      style={{ background: 'rgba(15,23,42,0.08)', color: '#94a3b8' }}
                     >
                       X
                     </span>
@@ -332,7 +332,7 @@ export default function RewritePage() {
 
               {/* ── X要約エラー ── */}
               {summaryError && (
-                <p className="text-[12px] text-red-400 px-3 py-2 rounded-xl"
+                <p className="text-[13px] text-red-600 px-3 py-2 rounded-xl"
                   style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
                   {summaryError}
                 </p>
@@ -343,38 +343,38 @@ export default function RewritePage() {
                 <div
                   className="rounded-2xl p-4 space-y-3"
                   style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${xOverLimit ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.1)'}`,
+                    background: 'rgba(15,23,42,0.03)',
+                    border: `1px solid ${xOverLimit ? 'rgba(239,68,68,0.35)' : 'rgba(15,23,42,0.1)'}`,
                   }}
                 >
                   {/* ヘッダー */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span
-                        className="w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-black"
-                        style={{ background: 'rgba(255,255,255,0.1)', color: '#e2e8f0' }}
+                        className="w-5 h-5 rounded-md flex items-center justify-center text-[12px] font-black"
+                        style={{ background: 'rgba(15,23,42,0.1)', color: '#1e293b' }}
                       >
                         X
                       </span>
-                      <span className="text-[12px] font-semibold text-slate-300">X 投稿用</span>
+                      <span className="text-[13px] font-semibold text-slate-700">X 投稿用</span>
                     </div>
                     <div className="flex items-center gap-2.5">
                       {/* 文字数カウンター */}
                       <span
-                        className="text-[12px] font-semibold tabular-nums"
-                        style={{ color: xOverLimit ? '#f87171' : xCharCount > 120 ? '#fbbf24' : '#64748b' }}
+                        className="text-[13px] font-semibold tabular-nums"
+                        style={{ color: xOverLimit ? '#dc2626' : xCharCount > 120 ? '#b45309' : '#64748b' }}
                       >
                         {xCharCount}
-                        <span className="text-[11px] font-normal" style={{ color: '#334155' }}>/{X_CHAR_LIMIT}</span>
+                        <span className="text-[12px] font-normal" style={{ color: '#334155' }}>/{X_CHAR_LIMIT}</span>
                       </span>
                       {/* コピーボタン */}
                       <button
                         onClick={handleCopyXSummary}
-                        className="flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-lg transition-all"
+                        className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-lg transition-all"
                         style={{
-                          background: copied ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.05)',
-                          border: copied ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(255,255,255,0.09)',
-                          color: copied ? '#34d399' : '#94a3b8',
+                          background: copied ? 'rgba(52,211,153,0.1)' : 'rgba(15,23,42,0.05)',
+                          border: copied ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(15,23,42,0.09)',
+                          color: copied ? '#059669' : '#94a3b8',
                         }}
                       >
                         {copied ? <Check size={11} /> : <Copy size={11} />}
@@ -384,13 +384,13 @@ export default function RewritePage() {
                   </div>
 
                   {/* テキスト */}
-                  <p className="text-[13px] text-slate-200 whitespace-pre-wrap leading-[1.75]">
+                  <p className="text-[14px] text-slate-800 whitespace-pre-wrap leading-[1.75]">
                     {xSummary}
                   </p>
 
                   {/* 文字数オーバー警告 */}
                   {xOverLimit && (
-                    <p className="text-[11px] text-red-400">
+                    <p className="text-[12px] text-red-600">
                       ⚠ 140文字を超えています（{xCharCount - X_CHAR_LIMIT}文字オーバー）。再度要約を実行してください。
                     </p>
                   )}
@@ -403,7 +403,7 @@ export default function RewritePage() {
                 icon={Repeat2}
                 title="リライト結果がここに表示されます"
                 description="元の投稿を入力してスタイルを選択してください"
-                iconColor="#22d3ee"
+                iconColor="#0891b2"
               />
             </div>
           )}

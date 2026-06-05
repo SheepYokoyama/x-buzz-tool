@@ -32,18 +32,18 @@ export function ThreadsPreview({ chunks, mode, chunkPreviews, threadsAccount }: 
         className="flex flex-col items-center justify-center rounded-2xl p-10 text-center"
         style={{
           minHeight: 320,
-          background: 'rgba(255,255,255,0.02)',
-          border: '1px dashed rgba(255,255,255,0.08)',
+          background: 'rgba(15,23,42,0.02)',
+          border: '1px dashed rgba(15,23,42,0.15)',
         }}
       >
         <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-slate-300"
-          style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}
+          className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-[#7c3aed]"
+          style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.22)' }}
         >
           <PlatformIcon platform="threads" size={20} />
         </div>
-        <p className="text-[14px] font-semibold text-slate-300">Threads プレビュー</p>
-        <p className="text-[12px] text-slate-600 mt-2 leading-relaxed">
+        <p className="text-[16px] font-bold text-slate-700">Threads プレビュー</p>
+        <p className="text-[14px] text-slate-500 mt-2 leading-relaxed">
           左のフォームにテキストを入力すると<br />ここに投稿イメージが表示されます
         </p>
       </div>
@@ -54,30 +54,30 @@ export function ThreadsPreview({ chunks, mode, chunkPreviews, threadsAccount }: 
     <div
       className="rounded-2xl overflow-hidden"
       style={{
-        background: 'rgba(12,16,28,0.65)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: '#ffffff',
+        border: '1px solid rgba(15,23,42,0.1)',
       }}
     >
       {/* ヘッダー */}
       <div
         className="flex items-center justify-between px-4 py-3"
         style={{
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(168,85,247,0.04)',
+          borderBottom: '1px solid rgba(15,23,42,0.08)',
+          background: 'rgba(124,58,237,0.05)',
         }}
       >
         <div className="flex items-center gap-2">
           <span
-            className="w-6 h-6 rounded-md flex items-center justify-center text-slate-200"
-            style={{ background: 'rgba(168,85,247,0.18)', border: '1px solid rgba(168,85,247,0.3)' }}
+            className="w-6 h-6 rounded-md flex items-center justify-center text-[#7c3aed]"
+            style={{ background: 'rgba(124,58,237,0.14)', border: '1px solid rgba(124,58,237,0.3)' }}
           >
             <PlatformIcon platform="threads" size={12} />
           </span>
           <div>
-            <p className="text-[12px] font-semibold text-slate-300 leading-none">
+            <p className="text-[14px] font-semibold text-slate-700 leading-none">
               {mode === 'thread' ? 'Threads スレッド プレビュー' : 'Threads 独立投稿 プレビュー'}
             </p>
-            <p className="text-[10px] text-slate-600 leading-none mt-1">
+            <p className="text-[12px] text-slate-500 leading-none mt-1">
               {chunks.length} ポスト ·{' '}
               {mode === 'thread' ? '1件目に reply で連結' : 'それぞれ別投稿として公開'}
             </p>
@@ -105,8 +105,8 @@ export function ThreadsPreview({ chunks, mode, chunkPreviews, threadsAccount }: 
 
       {!threadsAccount && (
         <div
-          className="px-4 py-2.5 text-[11px] text-slate-500 leading-relaxed"
-          style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)' }}
+          className="px-4 py-2.5 text-[13px] text-slate-500 leading-relaxed"
+          style={{ background: 'rgba(15,23,42,0.02)', borderTop: '1px solid rgba(15,23,42,0.07)' }}
         >
           プレビューは仮表示です。Threads アカウントを登録するとアバター・@ユーザー名が反映されます。
         </div>
@@ -139,7 +139,7 @@ function ThreadsCard({
   return (
     <article
       className="relative px-4 pt-4 pb-2"
-      style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+      style={{ borderBottom: '1px solid rgba(15,23,42,0.07)' }}
     >
       <div className="flex gap-3">
         {/* アバター列（スレッド接続線付き） */}
@@ -150,15 +150,15 @@ function ThreadsCard({
               src={avatarUrl}
               alt={displayName}
               className="w-10 h-10 rounded-full shrink-0 z-10"
-              style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ border: '1px solid rgba(15,23,42,0.1)' }}
             />
           ) : (
             <span
-              className="w-10 h-10 rounded-full flex items-center justify-center text-[14px] font-bold shrink-0 z-10"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shrink-0 z-10"
               style={{
-                background: 'linear-gradient(135deg, rgba(168,85,247,0.35), rgba(236,72,153,0.35))',
-                color: '#e2e8f0',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+                color: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.1)',
               }}
             >
               {displayName.charAt(0).toUpperCase()}
@@ -179,10 +179,10 @@ function ThreadsCard({
         {/* 本文 */}
         <div className="flex-1 min-w-0">
           {/* 名前行 */}
-          <div className="flex items-center gap-1.5 text-[13px]">
-            <span className="font-bold text-slate-100 truncate">{username}</span>
-            <span className="text-slate-600 truncate">·</span>
-            <span className="text-slate-600 text-[12px]">今</span>
+          <div className="flex items-center gap-1.5 text-[15px]">
+            <span className="font-bold text-slate-900 truncate">{username}</span>
+            <span className="text-slate-500 truncate">·</span>
+            <span className="text-slate-500 text-[14px]">今</span>
             <span className="ml-auto">
               <MoreHorizontal size={14} style={{ color: '#64748b' }} />
             </span>
@@ -190,14 +190,14 @@ function ThreadsCard({
 
           {/* 返信先（スレッド2件目以降） */}
           {isReply && (
-            <p className="text-[11px] text-slate-600 mt-0.5">
-              返信先: <span style={{ color: '#c084fc' }}>@{username}</span>
+            <p className="text-[13px] text-slate-500 mt-0.5">
+              返信先: <span style={{ color: '#7c3aed' }}>@{username}</span>
             </p>
           )}
 
           {/* ポスト本文 */}
           <p
-            className="text-[14px] text-slate-100 whitespace-pre-wrap mt-1 leading-[1.55]"
+            className="text-[16px] text-slate-900 whitespace-pre-wrap mt-1 leading-[1.6]"
             style={{ wordBreak: 'break-word' }}
           >
             {chunk.text}
@@ -212,7 +212,7 @@ function ThreadsCard({
                     ? 'grid-cols-1'
                     : 'grid-cols-2'
                 }`}
-                style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                style={{ border: '1px solid rgba(15,23,42,0.1)' }}
               >
                 {imagePreviews.map((url, idx) => (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -231,13 +231,13 @@ function ThreadsCard({
 
           {/* メタ行 */}
           <div className="flex items-center justify-between mt-2">
-            <span className="text-[11px] text-slate-600">
+            <span className="text-[13px] text-slate-500">
               {index + 1} / {total} · {chunk.charCount} カウント
             </span>
           </div>
 
           {/* アクション行（Threadsの操作: ハート/コメント/リポスト/共有） */}
-          <div className="flex items-center gap-5 mt-2 pr-6 max-w-md text-slate-600">
+          <div className="flex items-center gap-5 mt-2 pr-6 max-w-md text-slate-500">
             <Heart size={15} />
             <MessageCircle size={15} />
             <Repeat2 size={15} />

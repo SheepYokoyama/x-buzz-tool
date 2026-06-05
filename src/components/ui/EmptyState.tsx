@@ -7,7 +7,7 @@ interface EmptyStateProps {
   iconColor?: string;
 }
 
-export function EmptyState({ icon: Icon, title, description, iconColor = '#a78bfa' }: EmptyStateProps) {
+export function EmptyState({ icon: Icon, title, description, iconColor = '#7c3aed' }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
       <div
@@ -19,9 +19,9 @@ export function EmptyState({ icon: Icon, title, description, iconColor = '#a78bf
       >
         <Icon size={24} style={{ color: iconColor }} />
       </div>
-      <p className="text-[14px] font-medium text-slate-400">{title}</p>
+      <p className="text-[16px] font-semibold text-slate-700">{title}</p>
       {description && (
-        <p className="text-[12px] text-slate-600 mt-1.5 max-w-xs leading-relaxed">{description}</p>
+        <p className="text-[14px] text-slate-500 mt-1.5 max-w-xs leading-relaxed">{description}</p>
       )}
     </div>
   );

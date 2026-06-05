@@ -47,16 +47,16 @@ export function ScheduleClient({ initialPosts }: Props) {
       <div className="max-w-2xl space-y-4">
         {/* ── ポスト作成への導線（新規予約はポスト作成画面で作る） ── */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <p className="text-[12px] text-slate-500 leading-relaxed">
+          <p className="text-[13px] text-slate-500 leading-relaxed">
             新しい予約は「ポスト作成」で日時を指定して作成します。
           </p>
           <Link
             href="/post-create"
-            className="inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-all"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-3 py-1.5 rounded-lg transition-all"
             style={{
               background: 'rgba(167,139,250,0.10)',
               border: '1px solid rgba(167,139,250,0.30)',
-              color: '#a78bfa',
+              color: '#7c3aed',
             }}
           >
             <PenLine size={12} />
@@ -83,17 +83,17 @@ export function ScheduleClient({ initialPosts }: Props) {
                     ? 'ポスト作成画面で本文を入力し「予約」ボタンから日時を指定してください'
                     : 'このステータスの投稿はまだありません'
                 }
-                iconColor="#22d3ee"
+                iconColor="#0891b2"
               />
               {(activeTab === 'scheduled' || activeTab === 'all') && (
                 <div className="px-6 pb-6 flex justify-center">
                   <Link
                     href="/post-create"
-                    className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl transition-all"
+                    className="inline-flex items-center gap-1.5 text-[14px] font-semibold px-4 py-2 rounded-xl transition-all"
                     style={{
                       background: 'rgba(167,139,250,0.12)',
                       border: '1px solid rgba(167,139,250,0.35)',
-                      color: '#a78bfa',
+                      color: '#7c3aed',
                     }}
                   >
                     <PenLine size={13} />

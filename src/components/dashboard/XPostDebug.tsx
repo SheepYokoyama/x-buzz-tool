@@ -62,10 +62,10 @@ export function XPostDebug() {
   return (
     <div className="neon-card p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-semibold text-slate-400 tracking-wide">X に直接投稿</p>
+        <p className="text-[14px] font-semibold text-slate-600 tracking-wide">X に直接投稿</p>
         <span
-          className="text-[10px] px-2 py-0.5 rounded-lg cursor-help"
-          style={{ background: 'rgba(255,255,255,0.04)', color: '#475569', border: '1px solid rgba(255,255,255,0.07)' }}
+          className="text-[12px] px-2 py-0.5 rounded-lg cursor-help"
+          style={{ background: 'rgba(15,23,42,0.04)', color: '#64748b', border: '1px solid rgba(15,23,42,0.08)' }}
           title={X_COUNT_RULE}
         >
           全角2 / 半角1 cnt
@@ -82,7 +82,7 @@ export function XPostDebug() {
 
       <div className="flex items-center justify-between">
         <span
-          className={`text-[11px] cursor-help ${charCount > xLimit ? 'text-red-400' : 'text-slate-600'}`}
+          className={`text-[13px] cursor-help ${charCount > xLimit ? 'text-red-600' : 'text-slate-500'}`}
           title={X_COUNT_RULE}
         >
           {charCount} / {xLimit.toLocaleString()} cnt
@@ -91,11 +91,11 @@ export function XPostDebug() {
         <button
           onClick={handlePost}
           disabled={!text.trim() || posting || charCount > xLimit}
-          className="flex items-center gap-1.5 text-[12px] px-4 py-1.5 rounded-xl font-medium transition-all"
+          className="flex items-center gap-1.5 text-[14px] px-4 py-1.5 rounded-xl font-medium transition-all"
           style={{
-            background: 'rgba(96,165,250,0.1)',
-            border: '1px solid rgba(96,165,250,0.25)',
-            color: !text.trim() || posting || charCount > xLimit ? '#475569' : '#60a5fa',
+            background: 'rgba(37,99,235,0.08)',
+            border: '1px solid rgba(37,99,235,0.25)',
+            color: !text.trim() || posting || charCount > xLimit ? '#94a3b8' : '#2563eb',
             cursor: !text.trim() || posting || charCount > xLimit ? 'not-allowed' : 'pointer',
           }}
         >
@@ -110,13 +110,13 @@ export function XPostDebug() {
             href={result.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-[12px] text-neon-green"
+            className="flex items-center gap-1.5 text-[13px] text-neon-green"
           >
             <ExternalLink size={12} />
             投稿成功 — ツイートを確認 ↗
           </a>
         ) : (
-          <p className="text-[12px] text-red-400">{result.error}</p>
+          <p className="text-[14px] text-red-600">{result.error}</p>
         )
       )}
     </div>
