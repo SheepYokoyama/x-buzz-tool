@@ -4,6 +4,13 @@ import { GuideStepCard } from '@/components/guide/GuideStepCard';
 import { GuideTipCard } from '@/components/guide/GuideTipCard';
 import { UserCircle, Sparkles, CalendarClock, TrendingUp, ShieldAlert, ArrowRight } from 'lucide-react';
 
+const SETUP_GUIDES = [
+  { href: '/guide/x-account',        emoji: '𝕏',  title: 'X アカウント連携',        desc: 'console.x.com で API キー／トークンを発行して登録（画面図つき）' },
+  { href: '/guide/threads-account',  emoji: '@',  title: 'Threads アカウント連携',  desc: 'Meta for Developers でアクセストークンを発行して登録' },
+  { href: '/guide/instagram-account', emoji: '📸', title: 'Instagram アカウント連携', desc: 'Instagram プロアカウントを連携して投稿' },
+  { href: '/guide/ai-keys',          emoji: '🔑', title: 'AI API キー設定',         desc: 'Gemini / Anthropic の API キーを登録して AI 生成を有効化' },
+];
+
 const STEPS = [
   {
     step: 1, color: '#2563eb', icon: UserCircle,
@@ -82,6 +89,33 @@ export default function GuidePage() {
         </div>
         <ArrowRight size={16} className="text-slate-500 transition-transform group-hover:translate-x-0.5 shrink-0" />
       </Link>
+
+      {/* アカウント連携マニュアルへの導線 */}
+      <div className="mb-3">
+        <p className="section-label mb-5">アカウント連携マニュアル — はじめに設定</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-12">
+        {SETUP_GUIDES.map((g) => (
+          <Link
+            key={g.href}
+            href={g.href}
+            className="group rounded-2xl p-4 flex items-center gap-3.5 transition-colors hover:bg-slate-900/[0.02]"
+            style={{ background: 'rgba(96,165,250,0.04)', border: '1px solid rgba(96,165,250,0.16)' }}
+          >
+            <span
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[18px]"
+              style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)' }}
+            >
+              {g.emoji}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-semibold text-slate-900">{g.title}</p>
+              <p className="text-[12px] text-slate-500 mt-0.5 leading-relaxed">{g.desc}</p>
+            </div>
+            <ArrowRight size={15} className="text-slate-400 transition-transform group-hover:translate-x-0.5 shrink-0" />
+          </Link>
+        ))}
+      </div>
 
       {/* Steps */}
       <div className="mb-3">
