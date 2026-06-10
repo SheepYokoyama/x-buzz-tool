@@ -1,8 +1,11 @@
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import {
-  ArrowLeft, ExternalLink, Settings, Key, UserPlus, CheckCircle2, AlertTriangle, ShieldCheck, Send, Briefcase,
+  ArrowLeft, ExternalLink, Settings, Key, UserPlus, CheckCircle2, AlertTriangle, ShieldCheck, Send, Briefcase, MousePointerClick,
 } from 'lucide-react';
+import {
+  ConsoleFrame, Hotspot, Btn, Field, MockLegend,
+} from '@/components/guide/ConsoleMock';
 
 const XPRESSO_ORIGIN = 'https://xpresso-chi.vercel.app';
 
@@ -21,6 +24,20 @@ export default function ThreadsAccountGuidePage() {
       >
         <ArrowLeft size={12} /> アカウント管理に戻る
       </Link>
+
+      {/* 図の見方 */}
+      <div
+        className="rounded-2xl p-4 mb-6 flex items-start gap-3"
+        style={{ background: 'rgba(37,99,235,0.05)', border: '1px solid rgba(37,99,235,0.2)' }}
+      >
+        <MousePointerClick size={18} className="text-blue-600 shrink-0 mt-0.5" />
+        <div className="text-[13px] text-slate-600 leading-relaxed">
+          <span className="font-semibold text-slate-800">Meta for Developers の画面は日本語表示です。</span>
+          各ステップの図の
+          <span className="inline-flex items-center justify-center w-4 h-4 mx-1 rounded-full bg-rose-500 text-white text-[10px] font-bold align-middle">1</span>
+          <span className="font-medium text-rose-600">赤い丸</span>がクリック・入力する場所です。
+        </div>
+      </div>
 
       {/* 事前準備 */}
       <GuideSection
@@ -71,6 +88,49 @@ export default function ThreadsAccountGuidePage() {
           </li>
           <li>【要件】【概要】の内容を確認して進み、アプリを作成</li>
         </OrderedList>
+
+        {/* 図：アプリの詳細 */}
+        <ConsoleFrame url="developers.facebook.com/apps/creation">
+          <div className="space-y-3">
+            <WizardSteps current={0} />
+            <p className="text-[13px] font-semibold text-slate-700">アプリの詳細を入力</p>
+            <div className="space-y-2">
+              <Field label="アプリ名を追加">Xpresso</Field>
+              <Field label="アプリの連絡先メールアドレス">you@example.com</Field>
+            </div>
+            <div className="flex justify-end">
+              <Hotspot n={1}><Btn primary>次へ</Btn></Hotspot>
+            </div>
+          </div>
+        </ConsoleFrame>
+        <MockLegend
+          items={[
+            <>アプリ名（例: <code className="font-mono text-[12px]">Xpresso</code>）とメールアドレスを入力して「次へ」</>,
+          ]}
+        />
+
+        {/* 図：ユースケース選択 */}
+        <ConsoleFrame url="developers.facebook.com/apps/creation">
+          <div className="space-y-3">
+            <WizardSteps current={1} />
+            <p className="text-[13px] font-semibold text-slate-700">ユースケースを追加</p>
+            <div className="space-y-2">
+              <UseCaseRow>アプリをFacebookログインにリンク</UseCaseRow>
+              <Hotspot n={1}><UseCaseRow checked>Threads APIにアクセス</UseCaseRow></Hotspot>
+              <UseCaseRow>Instagram APIにアクセス</UseCaseRow>
+            </div>
+            <div className="flex justify-end">
+              <Hotspot n={2}><Btn primary>次へ</Btn></Hotspot>
+            </div>
+          </div>
+        </ConsoleFrame>
+        <MockLegend
+          items={[
+            <>一覧から「<span className="font-medium text-slate-800">Threads APIにアクセス</span>」<b>だけ</b>にチェックを入れる</>,
+            <>「次へ」をクリック（必要な権限が一括で追加されます）</>,
+          ]}
+        />
+
         <Note>
           ※ 以前はユースケース選択が先でしたが、現在は<span className="text-slate-800 font-medium">アプリ名・メールアドレスの入力が先</span>に変わっています。
           「Threads API にアクセス」を選ぶだけで必要な権限（認証・投稿・返信・インサイト取得）が一括で追加されます。
@@ -84,6 +144,33 @@ export default function ThreadsAccountGuidePage() {
           <span className="text-slate-800 font-medium">「表示できるビジネスがありません」</span>
           と表示されて「次へ」が押せない場合は、ビジネスポートフォリオの新規作成が必要です。
         </p>
+
+        {/* 図：ビジネスステップの警告 */}
+        <ConsoleFrame url="developers.facebook.com/apps/creation">
+          <div className="space-y-3">
+            <WizardSteps current={2} />
+            <p className="text-[13px] font-semibold text-slate-700">ビジネスポートフォリオをリンク</p>
+            <div
+              className="rounded-lg px-3 py-2.5 text-[12px] text-slate-600 leading-relaxed"
+              style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)' }}
+            >
+              <span className="font-medium text-amber-700">⚠ 表示できるビジネスがありません。</span>
+              <Hotspot n={1}><span className="text-sky-600 underline px-0.5">ビジネス設定</span></Hotspot>
+              でビジネスポートフォリオを作成してください。
+            </div>
+            <div className="flex justify-end">
+              <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-slate-100 text-slate-400">
+                次へ
+              </span>
+            </div>
+          </div>
+        </ConsoleFrame>
+        <MockLegend
+          items={[
+            <>警告文の中の「<span className="font-medium text-slate-800">ビジネス設定</span>」リンクを開く（「次へ」はグレーのまま押せません）</>,
+          ]}
+        />
+
         <OrderedList>
           <li>警告文の中の <span className="text-slate-800 font-medium">「ビジネス設定」</span> リンクを開く</li>
           <li>
@@ -97,6 +184,26 @@ export default function ThreadsAccountGuidePage() {
           <li>「送信」をクリック → 届いた確認メールで認証を完了</li>
           <li>アプリ作成画面に戻り、作成したポートフォリオを選択して「次へ」</li>
         </OrderedList>
+
+        {/* 図：ポートフォリオ作成モーダル */}
+        <ConsoleFrame url="business.facebook.com/billing_hub/accounts">
+          <div className="max-w-sm mx-auto rounded-xl border border-slate-900/[0.12] shadow-sm bg-white p-4 space-y-2.5">
+            <p className="text-[13px] font-semibold text-slate-700">
+              ビジネスマネージャでビジネスポートフォリオを作成
+            </p>
+            <Field label="ビジネスおよびアカウントの名前">Xpresso Lab（特殊文字は使用不可）</Field>
+            <Field label="あなたの名前">山田 太郎</Field>
+            <Field label="仕事用メールアドレス">you@example.com</Field>
+            <div className="flex justify-end pt-1">
+              <Hotspot n={1}><Btn primary>送信</Btn></Hotspot>
+            </div>
+          </div>
+        </ConsoleFrame>
+        <MockLegend
+          items={[
+            <>3 項目を入力して「送信」→ 届いた確認メールで認証を完了する</>,
+          ]}
+        />
 
         <div
           className="rounded-lg p-3 mt-2"
@@ -134,7 +241,7 @@ export default function ThreadsAccountGuidePage() {
       >
         <p className="text-[14px] text-slate-600 leading-relaxed">
           左サイドバー「<span className="text-slate-800 font-medium">ユースケース</span>」→「Threads API にアクセス」→「アクセス許可と機能」を開き、
-          以下 2 つの権限が <span className="text-slate-800 font-medium">「テスト準備完了」</span> ステータスになっていることを確認します。
+          以下 3 つの権限が <span className="text-slate-800 font-medium">「テスト準備完了」</span> ステータスになっていることを確認します。
         </p>
 
         <div className="rounded-xl overflow-hidden border border-slate-900/10 mt-3">
@@ -157,14 +264,32 @@ export default function ThreadsAccountGuidePage() {
                 <td className="px-3 py-2">スレッドへの投稿</td>
                 <td className="px-3 py-2 text-emerald-600">テスト準備完了</td>
               </tr>
+              <tr className="border-t border-slate-900/10">
+                <td className="px-3 py-2 font-mono text-[12px]">threads_manage_replies</td>
+                <td className="px-3 py-2">ツリー投稿（長文分割時の2件目以降のリプライ連結）</td>
+                <td className="px-3 py-2 text-emerald-600">テスト準備完了</td>
+              </tr>
             </tbody>
           </table>
         </div>
 
         <Note>
-          ※ STEP 1 で「Threads API にアクセス」ユースケースを選択していれば、上記 2 つは自動で追加されています。
+          ※ STEP 1 で「Threads API にアクセス」ユースケースを選択していれば自動で追加されています。
           表示されていない場合は同画面で個別に「追加」してください。
         </Note>
+
+        <div
+          className="rounded-lg p-3 mt-2"
+          style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}
+        >
+          <p className="text-[13px] text-amber-700 font-medium mb-1">⚠️ threads_manage_replies を忘れずに</p>
+          <p className="text-[12px] text-slate-600 leading-relaxed">
+            この権限が無いと、長文を分割したツリー投稿の<span className="text-slate-800 font-medium">2件目以降が
+            「Media Not Found」エラーで投稿できません</span>（1件目だけは成功するため気づきにくい）。
+            トークン発行<span className="text-slate-800 font-medium">前</span>に追加されていることを必ず確認してください。
+            トークン発行後に権限を追加した場合は、トークンを再発行して Xpresso に登録し直す必要があります。
+          </p>
+        </div>
       </GuideSection>
 
       {/* STEP 4 */}
@@ -280,7 +405,7 @@ export default function ThreadsAccountGuidePage() {
         <OrderedList>
           <li>「ユーザートークン生成ツール」セクションの「名前」欄に承認済みアカウントが表示されていることを確認</li>
           <li>該当行の「アクション」から <span className="text-slate-800 font-medium">トークン生成</span> を選択</li>
-          <li>Threads の認可ダイアログで <span className="font-mono text-[12px] text-slate-800">threads_basic</span> と <span className="font-mono text-[12px] text-slate-800">threads_content_publish</span> の両方を許可</li>
+          <li>Threads の認可ダイアログで <span className="font-mono text-[12px] text-slate-800">threads_basic</span>・<span className="font-mono text-[12px] text-slate-800">threads_content_publish</span>・<span className="font-mono text-[12px] text-slate-800">threads_manage_replies</span> をすべて許可</li>
           <li>表示された <span className="font-mono text-[12px] text-cyan-600">アクセストークン</span> をコピー（これが Xpresso に登録する文字列）</li>
         </OrderedList>
 
@@ -354,7 +479,11 @@ export default function ThreadsAccountGuidePage() {
           />
           <ErrorRow
             code="403 forbidden"
-            solution="権限スコープ不足。STEP 3 で threads_basic と threads_content_publish が「テスト準備完了」になっているか確認してください。"
+            solution="権限スコープ不足。STEP 3 で threads_basic / threads_content_publish / threads_manage_replies が「テスト準備完了」になっているか確認してください。"
+          />
+          <ErrorRow
+            code="Media Not Found / The media with id ... cannot be found（ツリー投稿の2件目以降だけ失敗）"
+            solution="トークンに threads_manage_replies 権限が含まれていません。STEP 3 で権限を追加 → STEP 6 でトークンを再発行（認可ダイアログで3つすべて許可）→ Xpresso のアカウントを「編集」で上書き保存してください。"
           />
           <ErrorRow
             code="App in Development mode のため第三者が使えない"
@@ -370,6 +499,62 @@ export default function ThreadsAccountGuidePage() {
           登録が完了したら「<Link href="/post-create" className="text-sky-600 hover:underline">ポスト作成</Link>」ページで投稿先トグルから Threads を選んでテスト投稿してみましょう。
         </p>
       </div>
+    </div>
+  );
+}
+
+/* ── 模式図用のローカル部品 ── */
+
+// アプリ作成ウィザードのステップバー（アプリの詳細→ユースケース→ビジネス→要件→概要）
+function WizardSteps({ current }: { current: number }) {
+  const steps = ['アプリの詳細', 'ユースケース', 'ビジネス', '要件', '概要'];
+  return (
+    <div className="flex items-center flex-wrap gap-y-1 pb-2.5 border-b border-slate-900/[0.08]">
+      {steps.map((label, i) => (
+        <span key={label} className="inline-flex items-center">
+          {i > 0 && <span className="text-slate-300 text-[10px] mx-1">›</span>}
+          <span
+            className={`inline-flex items-center gap-1 text-[11px] font-medium ${
+              i === current ? 'text-blue-700' : 'text-slate-400'
+            }`}
+          >
+            <span
+              className={`w-3.5 h-3.5 rounded-full text-[9px] font-bold flex items-center justify-center ${
+                i < current
+                  ? 'bg-emerald-500 text-white'
+                  : i === current
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-200 text-slate-500'
+              }`}
+            >
+              {i < current ? '✓' : i + 1}
+            </span>
+            {label}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ユースケース選択行（チェックボックス付き）
+function UseCaseRow({ checked = false, children }: { checked?: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      className={`rounded-lg border px-3 py-2 flex items-center gap-2 ${
+        checked ? 'border-blue-500/50 bg-blue-500/[0.04]' : 'border-slate-900/[0.1]'
+      }`}
+    >
+      <span
+        className={`w-3.5 h-3.5 rounded shrink-0 flex items-center justify-center text-[9px] font-bold ${
+          checked ? 'bg-blue-600 text-white' : 'border border-slate-300 bg-white'
+        }`}
+      >
+        {checked ? '✓' : ''}
+      </span>
+      <span className={`text-[12px] ${checked ? 'text-slate-800 font-medium' : 'text-slate-600'}`}>
+        {children}
+      </span>
     </div>
   );
 }

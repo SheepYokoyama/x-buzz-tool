@@ -70,7 +70,7 @@ export async function verifyThreadsTokens(tokens: {
       return {
         ok: false,
         errorCode: 'forbidden',
-        error: 'Threads API の権限が不足しています。アプリの Threads 関連スコープ（threads_basic, threads_content_publish）の許可をご確認ください。',
+        error: 'Threads API の権限が不足しています。アプリの Threads 関連スコープ（threads_basic, threads_content_publish, threads_manage_replies）の許可をご確認ください。',
       };
     }
     if (res.status === 429) {
@@ -180,7 +180,18 @@ const CAROUSEL_MAX = 10;
 const CONTAINER_POLL_INTERVAL_MS = 1_500;
 const CONTAINER_POLL_TIMEOUT_MS  = 30_000;
 
+/**
+ * 「Media Not Found」系エラーのリトライ設定。
+ * publish 直後の親ポストは Meta 側への伝播が完了するまで参照できないことがあり、
+ * その間に reply_to_id 付きでコンテナを作ると HTTP 400 (Media Not Found) が返る。
+ */
+const MEDIA_NOT_FOUND_RETRY_MAX = 4;
+const MEDIA_NOT_FOUND_RETRY_INTERVAL_MS = 3_000;
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const isMediaNotFoundError = (message: string) =>
+  /media not found|cannot be found|media with id/i.test(message);
 
 /**
  * メディアコンテナ（IMAGE / CAROUSEL）の status が FINISHED になるまでポーリング。
@@ -238,6 +249,35 @@ async function createThreadsContainer(
 }
 
 /**
+ * リプライ（reply_to_id 付き）コンテナの作成。
+ * 親ポストの publish 直後は伝播ラグで Media Not Found になることがあるため、
+ * 間隔を空けて数回リトライする。リトライしても解消しない場合は
+ * threads_manage_replies 権限不足の可能性が高いため、対処方法を含めたエラーを投げる。
+ */
+async function createReplyContainerWithRetry(
+  accessToken: string,
+  params: Record<string, string>,
+): Promise<string> {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= MEDIA_NOT_FOUND_RETRY_MAX; attempt++) {
+    if (attempt > 0) await sleep(MEDIA_NOT_FOUND_RETRY_INTERVAL_MS);
+    try {
+      return await createThreadsContainer(accessToken, params);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (!isMediaNotFoundError(lastError.message)) throw lastError;
+    }
+  }
+  throw new Error(
+    'Threads ツリー投稿（2件目以降のリプライ）の作成に失敗しました（Media Not Found）。' +
+    'アクセストークンに threads_manage_replies 権限が含まれていない可能性があります。' +
+    'Meta for Developers の「ユースケース」→「Threads API にアクセス」→「アクセス許可と機能」で ' +
+    'threads_manage_replies を追加し、トークンを再発行して Xpresso に再登録してください。' +
+    `（元エラー: ${lastError?.message ?? '不明'}）`,
+  );
+}
+
+/**
  * 単一 Threads 投稿を行う。
  *
  * Meta Threads 投稿は 2 段階:
@@ -266,14 +306,17 @@ export async function postThreadsSingle(params: {
   let containerId: string;
   let needsPolling = false;
 
+  // reply_to_id 付きは伝播ラグ・権限不足を考慮したリトライ付き作成を使う
+  const createContainer = replyToId ? createReplyContainerWithRetry : createThreadsContainer;
+
   if (imageUrls.length === 0) {
-    containerId = await createThreadsContainer(accessToken, {
+    containerId = await createContainer(accessToken, {
       media_type: 'TEXT',
       text,
       ...(replyToId ? { reply_to_id: replyToId } : {}),
     });
   } else if (imageUrls.length === 1) {
-    containerId = await createThreadsContainer(accessToken, {
+    containerId = await createContainer(accessToken, {
       media_type: 'IMAGE',
       image_url: imageUrls[0],
       text,
@@ -297,7 +340,7 @@ export async function postThreadsSingle(params: {
       if (r.status === 'ERROR')   throw new Error(`Threads 画像処理に失敗: ${r.message}`);
       if (r.status === 'TIMEOUT') throw new Error('Threads 画像処理がタイムアウトしました（30秒）');
     }
-    containerId = await createThreadsContainer(accessToken, {
+    containerId = await createContainer(accessToken, {
       media_type: 'CAROUSEL',
       children: childIds.join(','),
       text,
@@ -314,16 +357,26 @@ export async function postThreadsSingle(params: {
   }
 
   // ── 3) 公開 ───────────────────────────────────
+  //   作成直後のコンテナは Meta 側で参照可能になるまでラグがあり、
+  //   即 publish すると Media Not Found (HTTP 400) が返ることがあるためリトライする。
   const publishUrl = new URL(`${THREADS_API_BASE}/me/threads_publish`);
   publishUrl.searchParams.set('creation_id', containerId);
   publishUrl.searchParams.set('access_token', accessToken);
 
-  const publishRes = await fetch(publishUrl.toString(), { method: 'POST' });
-  if (!publishRes.ok) {
+  let published: { id: string } | null = null;
+  for (let attempt = 0; attempt <= MEDIA_NOT_FOUND_RETRY_MAX; attempt++) {
+    if (attempt > 0) await sleep(MEDIA_NOT_FOUND_RETRY_INTERVAL_MS);
+    const publishRes = await fetch(publishUrl.toString(), { method: 'POST' });
+    if (publishRes.ok) {
+      published = (await publishRes.json()) as { id: string };
+      break;
+    }
     const body = await publishRes.text().catch(() => '');
-    throw new Error(`Threads 公開に失敗: HTTP ${publishRes.status} ${body}`);
+    if (!isMediaNotFoundError(body) || attempt === MEDIA_NOT_FOUND_RETRY_MAX) {
+      throw new Error(`Threads 公開に失敗: HTTP ${publishRes.status} ${body}`);
+    }
   }
-  const published = (await publishRes.json()) as { id: string };
+  if (!published?.id) throw new Error('Threads 公開: id が返りませんでした');
 
   // ── 4) permalink 取得（失敗しても投稿自体は成立しているので無視）──
   let permalink: string | null = null;
