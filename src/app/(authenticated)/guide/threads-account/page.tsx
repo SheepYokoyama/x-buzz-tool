@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import {
-  ArrowLeft, ExternalLink, Settings, Key, UserPlus, CheckCircle2, AlertTriangle, ShieldCheck, Send,
+  ArrowLeft, ExternalLink, Settings, Key, UserPlus, CheckCircle2, AlertTriangle, ShieldCheck, Send, Briefcase,
 } from 'lucide-react';
 
 const XPRESSO_ORIGIN = 'https://xpresso-chi.vercel.app';
@@ -10,7 +10,7 @@ export default function ThreadsAccountGuidePage() {
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
       <Header
-        title="Threads アカウント登録マニュアル"
+        title="Threads アカウント登録方法"
         subtitle="Meta for Developers でアプリを作成し、Long-lived アクセストークンを Xpresso に登録する手順"
       />
 
@@ -36,7 +36,7 @@ export default function ThreadsAccountGuidePage() {
           <li>
             <ExtLink href="https://developers.facebook.com/">developers.facebook.com</ExtLink> に Facebook アカウントでログイン
           </li>
-          <li>右上の「使ってみる / Get Started」から開発者登録（電話番号・メール認証）を完了</li>
+          <li>右上の「<span className="text-slate-800 font-medium">開始する</span>」から開発者登録（電話番号・メール認証）を完了</li>
         </OrderedList>
         <Note>
           ※ Threads API は個人アカウントでも利用可能です（以前はプロアカウント必須でしたが、現在は不要）。
@@ -46,25 +46,88 @@ export default function ThreadsAccountGuidePage() {
 
       {/* STEP 1 */}
       <GuideSection step={1} icon={Settings} iconColor="#7c3aed" title="Meta for Developers でアプリを作成する">
+        <p className="text-[14px] text-slate-600 leading-relaxed">
+          アプリ作成は画面上部のステップバーに沿って
+          <span className="text-slate-800 font-medium">「アプリの詳細」→「ユースケース」→「ビジネス」→「要件」→「概要」</span>
+          の順に進むウィザード形式です。
+        </p>
         <OrderedList>
           <li>
             <ExtLink href="https://developers.facebook.com/apps/">developers.facebook.com/apps</ExtLink> を開く
           </li>
           <li>「アプリを作成」をクリック</li>
           <li>
-            ユースケース一覧から <span className="text-slate-800 font-medium">「Threads API にアクセス」</span> を選択 → 次へ
+            【アプリの詳細】<span className="text-slate-800 font-medium">アプリ名</span>（例: <span className="font-mono text-[12px] text-slate-700">Xpresso</span>）と
+            <span className="text-slate-800 font-medium">アプリの連絡先メールアドレス</span>を入力 → 「次へ」
           </li>
-          <li>アプリの表示名（例: <span className="font-mono text-[12px] text-slate-700">Xpresso</span>）・連絡先メールアドレスを入力して作成</li>
+          <li>
+            【ユースケース】一覧から <span className="text-slate-800 font-medium">「Threads API にアクセス」だけ</span>を選択 → 「次へ」
+          </li>
+          <li>
+            【ビジネス】アプリにリンクするビジネスポートフォリオを選択 → 「次へ」
+            <span className="block text-[12px] text-slate-500 mt-0.5 pl-5">
+              ※ ポートフォリオを持っていないと「次へ」が押せません。その場合は STEP 2 へ
+            </span>
+          </li>
+          <li>【要件】【概要】の内容を確認して進み、アプリを作成</li>
         </OrderedList>
         <Note>
-          ※ ユースケースに「Threads API にアクセス」が直接表示されるので、これを選ぶだけで必要な権限（認証・投稿・返信・インサイト取得）が一括で追加されます。
-          以前案内していた「他のユースケース」→「ビジネス」のルートは現在不要です。
+          ※ 以前はユースケース選択が先でしたが、現在は<span className="text-slate-800 font-medium">アプリ名・メールアドレスの入力が先</span>に変わっています。
+          「Threads API にアクセス」を選ぶだけで必要な権限（認証・投稿・返信・インサイト取得）が一括で追加されます。
         </Note>
       </GuideSection>
 
       {/* STEP 2 */}
+      <GuideSection step={2} icon={Briefcase} iconColor="#f59e0b" title="ビジネスポートフォリオを作成する（持っていない場合）">
+        <p className="text-[14px] text-slate-600 leading-relaxed">
+          「ビジネス」ステップで
+          <span className="text-slate-800 font-medium">「表示できるビジネスがありません」</span>
+          と表示されて「次へ」が押せない場合は、ビジネスポートフォリオの新規作成が必要です。
+        </p>
+        <OrderedList>
+          <li>警告文の中の <span className="text-slate-800 font-medium">「ビジネス設定」</span> リンクを開く</li>
+          <li>
+            「ビジネスマネージャでビジネスポートフォリオを作成」画面で以下を入力
+            <ul className="list-disc list-inside mt-1 space-y-0.5 text-slate-600 pl-3">
+              <li>ビジネスおよびアカウントの名前（特殊文字は使用不可）</li>
+              <li>あなたの名前</li>
+              <li>仕事用メールアドレス</li>
+            </ul>
+          </li>
+          <li>「送信」をクリック → 届いた確認メールで認証を完了</li>
+          <li>アプリ作成画面に戻り、作成したポートフォリオを選択して「次へ」</li>
+        </OrderedList>
+
+        <div
+          className="rounded-lg p-3 mt-2"
+          style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}
+        >
+          <p className="text-[13px] text-amber-700 font-medium mb-1">⚠️ 「ビジネスのアカウントはすでに登録されています」と出る場合</p>
+          <p className="text-[12px] text-slate-600 leading-relaxed">
+            会社ドメインのメールアドレスを入力すると、同じドメインで作成済みのビジネスマネージャがある場合に新規作成できません。
+            既存のビジネス管理者に依頼して自分を追加してもらうか、
+            <span className="text-slate-800 font-medium">別のメールアドレス（個人の Gmail など）</span>に変更して送信してください。
+          </p>
+        </div>
+
+        <div
+          className="rounded-lg p-3 mt-2"
+          style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.25)' }}
+        >
+          <p className="text-[13px] text-rose-600 font-medium mb-1">🚫 「Unable to Create Account（広告の利用が制限されています）」と出る場合</p>
+          <p className="text-[12px] text-slate-600 leading-relaxed">
+            Facebook アカウント自体に広告機能の制限がかかっているとポートフォリオを作成できず、
+            「送信」を押しても同じ画面に戻り続けます（無限ループ）。この場合は
+            <ExtLink href="https://accountquality.facebook.com/">アカウントクオリティ</ExtLink>
+            で制限内容を確認して審査をリクエストするか、
+            <span className="text-slate-800 font-medium">制限のかかっていない別の Facebook アカウント</span>で最初からやり直してください。
+          </p>
+        </div>
+      </GuideSection>
+
+      {/* STEP 3 */}
       <GuideSection
-        step={2}
+        step={3}
         icon={Settings}
         iconColor="#7c3aed"
         title="権限スコープが追加されたか確認する"
@@ -104,9 +167,9 @@ export default function ThreadsAccountGuidePage() {
         </Note>
       </GuideSection>
 
-      {/* STEP 3 */}
+      {/* STEP 4 */}
       <GuideSection
-        step={3}
+        step={4}
         icon={Settings}
         iconColor="#db2777"
         title="コールバック URL を設定する（重要）"
@@ -172,8 +235,8 @@ export default function ThreadsAccountGuidePage() {
         </div>
       </GuideSection>
 
-      {/* STEP 4 */}
-      <GuideSection step={4} icon={UserPlus} iconColor="#db2777" title="Threads テスターを招待する">
+      {/* STEP 5 */}
+      <GuideSection step={5} icon={UserPlus} iconColor="#db2777" title="Threads テスターを招待する">
         <p className="text-[14px] text-slate-600 leading-relaxed">
           Long-lived アクセストークンを発行するには、対象の Threads アカウントを
           <span className="text-slate-800 font-medium"> 「Threads テスター」</span> として登録する必要があります。
@@ -207,12 +270,12 @@ export default function ThreadsAccountGuidePage() {
         </div>
       </GuideSection>
 
-      {/* STEP 5 */}
-      <GuideSection step={5} icon={Key} iconColor="#0891b2" title="Long-lived アクセストークンを発行する">
+      {/* STEP 6 */}
+      <GuideSection step={6} icon={Key} iconColor="#0891b2" title="Long-lived アクセストークンを発行する">
         <p className="text-[14px] text-slate-600 leading-relaxed">
           ふたたび <span className="text-slate-800 font-medium">「ユースケース」→「Threads API にアクセス」→「設定」</span> タブを開きます。
           ページ下部の <span className="text-slate-800 font-medium">「ユーザートークン生成ツール」</span> から、
-          STEP 4 で承認済みの Threads アカウント用に <span className="text-slate-800 font-medium">60 日有効な Long-lived アクセストークン</span> を直接発行できます。
+          STEP 5 で承認済みの Threads アカウント用に <span className="text-slate-800 font-medium">60 日有効な Long-lived アクセストークン</span> を直接発行できます。
         </p>
         <OrderedList>
           <li>「ユーザートークン生成ツール」セクションの「名前」欄に承認済みアカウントが表示されていることを確認</li>
@@ -231,8 +294,8 @@ export default function ThreadsAccountGuidePage() {
         </Note>
       </GuideSection>
 
-      {/* STEP 6 */}
-      <GuideSection step={6} icon={UserPlus} iconColor="#7c3aed" title="Xpresso に登録する">
+      {/* STEP 7 */}
+      <GuideSection step={7} icon={UserPlus} iconColor="#7c3aed" title="Xpresso に登録する">
         <OrderedList>
           <li>
             Xpresso の「<Link href="/x-accounts" className="text-sky-600 hover:underline">アカウント管理</Link>」ページを開く
@@ -242,14 +305,14 @@ export default function ThreadsAccountGuidePage() {
             モーダルで以下を入力して「追加する」
             <ul className="list-disc list-inside mt-1 space-y-0.5 text-slate-600 pl-3">
               <li>アカウント名（任意・空欄なら Threads の表示名を自動取得）</li>
-              <li>Access Token（STEP 5 でコピーした文字列）</li>
+              <li>Access Token（STEP 6 でコピーした文字列）</li>
             </ul>
           </li>
         </OrderedList>
       </GuideSection>
 
-      {/* STEP 7 */}
-      <GuideSection step={7} icon={CheckCircle2} iconColor="#db2777" title="動作を確認する">
+      {/* STEP 8 */}
+      <GuideSection step={8} icon={CheckCircle2} iconColor="#db2777" title="動作を確認する">
         <OrderedList>
           <li>アカウントカードに Threads の @ユーザー名・アイコンが表示されれば連携成功</li>
           <li>ダッシュボード上部の識別カードにも Threads アカウントが表示される</li>
@@ -271,19 +334,27 @@ export default function ThreadsAccountGuidePage() {
         <div className="space-y-3 text-[14px]">
           <ErrorRow
             code="フォームを保存できません / Redirect URIs: OAuthリダイレクトURIを記入してください"
-            solution="URL を入力欄に貼り付けただけだと「未入力」扱いです。Enter キーで青いチップ化してから保存してください（STEP 3 参照）。"
+            solution="URL を入力欄に貼り付けただけだと「未入力」扱いです。Enter キーで青いチップ化してから保存してください（STEP 4 参照）。"
+          />
+          <ErrorRow
+            code="ビジネスのアカウントはすでに登録されています"
+            solution="同じメールドメインで作成済みのビジネスマネージャがあります。既存の管理者に追加してもらうか、別のメールアドレス（個人の Gmail など）で作成してください（STEP 2 参照）。"
+          />
+          <ErrorRow
+            code="Unable to Create Account / 広告の利用が制限されています（「送信」が無限ループ）"
+            solution="Facebook アカウント自体に広告制限がかかっています。アカウントクオリティで審査をリクエストするか、制限のない別の Facebook アカウントでやり直してください（STEP 2 参照）。"
           />
           <ErrorRow
             code="ユーザートークン生成ツールに名前が表示されない"
-            solution="Threads テスターとして招待 → 承認まで完了していません。STEP 4 を確認してください。"
+            solution="Threads テスターとして招待 → 承認まで完了していません。STEP 5 を確認してください。"
           />
           <ErrorRow
             code="401 invalid_token / Session has expired"
-            solution="トークン期限切れまたは無効です。STEP 5 から再発行 → Xpresso 側のアカウントを「編集」で上書き保存してください。"
+            solution="トークン期限切れまたは無効です。STEP 6 から再発行 → Xpresso 側のアカウントを「編集」で上書き保存してください。"
           />
           <ErrorRow
             code="403 forbidden"
-            solution="権限スコープ不足。STEP 2 で threads_basic と threads_content_publish が「テスト準備完了」になっているか確認してください。"
+            solution="権限スコープ不足。STEP 3 で threads_basic と threads_content_publish が「テスト準備完了」になっているか確認してください。"
           />
           <ErrorRow
             code="App in Development mode のため第三者が使えない"
