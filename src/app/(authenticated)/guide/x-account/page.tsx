@@ -13,7 +13,7 @@ export default function XAccountGuidePage() {
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
       <Header
-        title="X アカウント登録マニュアル"
+        title="X アカウント登録方法"
         subtitle="X Developer Console（console.x.com）から API キー／トークンを発行して Xpresso に登録する手順"
       />
 

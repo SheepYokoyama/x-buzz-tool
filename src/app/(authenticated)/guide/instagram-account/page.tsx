@@ -10,7 +10,7 @@ export default function InstagramAccountGuidePage() {
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
       <Header
-        title="Instagram アカウント登録マニュアル"
+        title="Instagram アカウント登録方法"
         subtitle="Meta for Developers でアプリを作成し、Instagram の Long-lived アクセストークンを Xpresso に登録する手順"
       />
 

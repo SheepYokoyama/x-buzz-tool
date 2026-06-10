@@ -83,7 +83,7 @@ export function InstagramAccountsClient() {
           className="inline-flex items-center gap-1.5 text-[12px] text-pink-600 hover:underline shrink-0"
         >
           <BookOpen size={11} />
-          登録マニュアル
+          登録方法
         </Link>
       </div>
 
@@ -103,8 +103,7 @@ export function InstagramAccountsClient() {
           />
         </div>
       ) : (
-        <button
-          onClick={() => setShowForm(true)}
+        <div
           className="rounded-[1.375rem] flex flex-col items-center justify-center gap-3 p-8 transition-all min-h-48 max-w-xl w-full"
           style={{
             border: '2px dashed rgba(15,23,42,0.07)',
@@ -114,17 +113,30 @@ export function InstagramAccountsClient() {
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(236,72,153,0.25)'; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(15,23,42,0.07)'; }}
         >
-          <div
-            className="w-12 h-12 rounded-2xl flex items-center justify-center"
-            style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.08)' }}
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex flex-col items-center gap-3 cursor-pointer"
+            style={{ color: '#475569' }}
           >
-            <Plus size={20} />
-          </div>
-          <div className="text-center">
-            <p className="text-[14px] font-medium text-slate-500">Instagramアカウントを登録</p>
-            <p className="text-[12px] text-slate-700 mt-1">アクセストークンを登録して Instagram 投稿機能を有効化します</p>
-          </div>
-        </button>
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.08)' }}
+            >
+              <Plus size={20} />
+            </div>
+            <div className="text-center">
+              <p className="text-[14px] font-medium text-slate-500">Instagramアカウントを登録</p>
+              <p className="text-[12px] text-slate-700 mt-1">アクセストークンを登録して Instagram 投稿機能を有効化します</p>
+            </div>
+          </button>
+          <Link
+            href="/guide/instagram-account"
+            className="inline-flex items-center gap-1.5 text-[12px] text-pink-600 hover:underline"
+          >
+            <BookOpen size={11} />
+            登録方法を見る
+          </Link>
+        </div>
       )}
 
       {showForm && (
