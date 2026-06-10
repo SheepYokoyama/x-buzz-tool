@@ -132,7 +132,7 @@ export function InstagramAccountForm({ account, onClose, onSave }: Props) {
                 className="inline-flex items-center gap-1.5 text-[12px] text-pink-600 hover:underline"
               >
                 <BookOpen size={11} />
-                トークンの取得方法（登録マニュアル）を見る
+                トークンの取得方法を見る
               </Link>
             )}
             <div>
