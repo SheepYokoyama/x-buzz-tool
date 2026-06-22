@@ -6,6 +6,7 @@ import {
 } from '@/lib/threads-client';
 import { getAuthUser } from '@/lib/auth';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { guardImmediatePost } from '@/lib/post-safety';
 import {
   uploadThreadsImage,
   deleteThreadsImages,
@@ -132,6 +133,11 @@ export async function POST(req: Request) {
   if (texts.length === 0) {
     return NextResponse.json({ error: '投稿テキストが空です' }, { status: 400 });
   }
+
+  // 構造的セーフティ: 二重送信の重複投稿 / 24h 総量の暴走を防ぐ（先頭ポストで判定）
+  // Threads(Meta) は同一文面の重複を弾かないため特に重要。
+  const guard = await guardImmediatePost(user.id, texts[0]);
+  if (!guard.ok) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
   // ── 画像を Supabase Storage にアップロードして公開URL化 ────────────
   //   chunkUploaded[i] には i 件目のポストに使う UploadedThreadsImage[] が入る。

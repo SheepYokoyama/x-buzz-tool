@@ -7,6 +7,7 @@ import {
 } from '@/lib/instagram-client';
 import { getAuthUser } from '@/lib/auth';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { guardImmediatePost } from '@/lib/post-safety';
 import {
   uploadInstagramImage,
   deleteInstagramImages,
@@ -113,6 +114,11 @@ export async function POST(req: Request) {
       );
     }
   }
+
+  // 構造的セーフティ: 二重送信の重複投稿 / 24h 総量の暴走を防ぐ
+  // （Instagram(Meta) は同一キャプションの重複を弾かない。キャプション空の場合は総量バックストップのみ効く）
+  const guard = await guardImmediatePost(user.id, caption);
+  if (!guard.ok) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
   // ── 画像を Supabase Storage にアップロードして公開URL化 ────────────
   const uploaded: UploadedInstagramImage[] = [];

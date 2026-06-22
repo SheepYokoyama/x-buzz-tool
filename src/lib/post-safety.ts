@@ -113,3 +113,96 @@ export async function checkDailyCap(
   }
   return { ok: true, recent, cap };
 }
+
+// ─────────────────────────────────────────────────────────────
+// 即時投稿エンドポイント（/api/x/*, /api/threads/thread, /api/instagram/post）向けガード
+//
+// cron と異なり「サーバー側の繰り返し実行」は無いが、ダブルクリック・クライアント再送・
+// スレッド途中失敗後の再試行で重複投稿が起きうる。特に Threads/Instagram(Meta) は
+// 同一文面でも重複を弾かないため、ツール側で防ぐ必要がある。
+// ─────────────────────────────────────────────────────────────
+
+/** 即時投稿の二重送信判定ウィンドウ（分）。この時間内の同一文面は重複とみなす。 */
+const RECENT_DUP_WINDOW_MIN = Number(process.env.SAFETY_DUP_WINDOW_MIN ?? 10);
+/** ユーザー単位の 24h 総投稿数バックストップ（即時投稿の暴走ブレーキ）。 */
+const TOTAL_DAILY_CAP = Number(process.env.SAFETY_DAILY_TOTAL_CAP ?? 300);
+
+/**
+ * 直近 RECENT_DUP_WINDOW_MIN 分以内に同一ユーザーが同一 content を投稿済みかを判定する。
+ * 二重送信（ダブルクリック/リトライ）による重複投稿の検知用。判定不能時は false（許可）。
+ */
+export async function isRecentDuplicate(userId: string, content: string): Promise<boolean> {
+  const text = content.trim();
+  if (!text) return false;
+  const since = new Date(Date.now() - RECENT_DUP_WINDOW_MIN * 60_000).toISOString();
+  const supabase = getSupabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('scheduled_posts')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('status', 'published')
+    .eq('content', text)
+    .gte('published_at', since)
+    .limit(1);
+  if (error || !Array.isArray(data)) {
+    console.error('[post-safety] isRecentDuplicate failed:', error?.message);
+    return false;
+  }
+  return data.length > 0;
+}
+
+/**
+ * ユーザーが直近 24h に投稿(published)した行数。即時投稿の暴走ブレーキ用。
+ * プラットフォーム横断のユーザー総量（粗い歯止め）。判定不能時は -1。
+ */
+export async function countRecentPublishedRows(userId: string): Promise<number> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const supabase = getSupabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { count, error } = await (supabase as any)
+    .from('scheduled_posts')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('status', 'published')
+    .gte('published_at', since);
+  if (error) {
+    console.error('[post-safety] countRecentPublishedRows failed:', error.message);
+    return -1;
+  }
+  return count ?? 0;
+}
+
+export interface ImmediateGuardResult {
+  ok: boolean;
+  status: number;
+  error?: string;
+}
+
+/**
+ * 即時投稿エンドポイント共通の事前セーフティ。
+ *   ① 直近同一文面の二重投稿を拒否（409）
+ *   ② 24h 総投稿数のボリュームバックストップ（429）
+ * content は代表テキスト（スレッドなら先頭ポスト、IG はキャプション）を渡す。
+ */
+export async function guardImmediatePost(
+  userId: string,
+  content: string,
+): Promise<ImmediateGuardResult> {
+  if (await isRecentDuplicate(userId, content)) {
+    return {
+      ok: false,
+      status: 409,
+      error: '直前に同じ内容を投稿済みです。重複投稿を防ぐためブロックしました（数分後なら再試行できます）。',
+    };
+  }
+  const recent = await countRecentPublishedRows(userId);
+  if (recent >= 0 && recent >= TOTAL_DAILY_CAP) {
+    return {
+      ok: false,
+      status: 429,
+      error: `24時間の投稿上限（${TOTAL_DAILY_CAP}件）に達しました。安全のため一時的に投稿を制限しています。`,
+    };
+  }
+  return { ok: true, status: 200 };
+}
