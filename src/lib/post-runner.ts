@@ -24,6 +24,7 @@ import type {
   ScheduledPostResultItem,
   ScheduledPostResults,
 } from '@/lib/scheduled-post-payload';
+import { checkDailyCap } from '@/lib/post-safety';
 
 /** chunk 順に投稿する X 側の処理 */
 async function runX(
@@ -35,6 +36,10 @@ async function runX(
     return { items: [], error: 'X API の認証情報が見つかりません', accountId: null };
   }
   const accountId = await getActiveXAccountId(userId);
+
+  // 構造的セーフティ: 24h 投稿上限を超えるなら投稿しない（BAN/過剰投稿の最終ブレーキ）
+  const cap = await checkDailyCap(userId, 'x', payload.chunks.length);
+  if (!cap.ok) return { items: [], error: cap.error, accountId };
 
   const items: ScheduledPostResultItem[] = [];
   let lastId: string | undefined;
@@ -89,6 +94,10 @@ async function runThreads(
   const accessToken = await getActiveThreadsAccessToken(userId);
   if (!accessToken) return { items: [], error: 'Threads API の認証情報が見つかりません' };
 
+  // 構造的セーフティ: 24h 投稿上限を超えるなら投稿しない（BAN/過剰投稿の最終ブレーキ）
+  const cap = await checkDailyCap(userId, 'threads', payload.chunks.length);
+  if (!cap.ok) return { items: [], error: cap.error };
+
   const items: ScheduledPostResultItem[] = [];
   let lastId: string | undefined;
 
@@ -128,6 +137,10 @@ async function runInstagram(
     return { items: [], error: 'Instagram API の認証情報が見つかりません', accountId: null };
   }
   const accountId = await getActiveInstagramAccountId(userId);
+
+  // 構造的セーフティ: 24h 投稿上限を超えるなら投稿しない（Instagram は単一投稿=1件）
+  const cap = await checkDailyCap(userId, 'instagram', 1);
+  if (!cap.ok) return { items: [], error: cap.error, accountId };
 
   const caption = payload.chunks.map((c) => c.text).join('\n\n').trim();
   const imageUrls = payload.chunks

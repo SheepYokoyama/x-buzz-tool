@@ -8,6 +8,7 @@ import {
   collectImagePaths,
   type ScheduledPostPayloadV1,
 } from '@/lib/scheduled-post-payload';
+import { isAlreadyPublished, checkDailyCap } from '@/lib/post-safety';
 
 export const maxDuration = 60;
 
@@ -131,6 +132,14 @@ async function processLegacy(
   ]);
   if (!client) return { id: post.id, status: 'skipped', reason: 'X API not configured for user' };
 
+  // 構造的セーフティ: 24h 投稿上限の最終ブレーキ（旧仕様の単独 X 投稿）
+  const cap = await checkDailyCap(userId, 'x', 1);
+  if (!cap.ok) {
+    const supabase = getSupabaseAdmin();
+    await supabase.from('scheduled_posts').update({ status: 'failed' }).eq('id', post.id);
+    return { id: post.id, status: 'failed', mode: 'legacy', error: cap.error ?? 'daily cap reached' };
+  }
+
   const supabase = getSupabaseAdmin();
   try {
     const { data: tweet } = await client.v2.tweet(post.content);
@@ -166,6 +175,17 @@ async function processPayload(
 ): Promise<PostResult> {
   const userId = post.user_id;
   if (!userId) return { id: post.id, status: 'skipped', reason: 'post has no user_id' };
+
+  // 冪等ガード（第2防御線）: 既に成功結果を持つ行は二度と投稿しない。
+  // claim が主防御だが、万一 results 付きの行が再処理されても二重投稿を防ぐ。
+  if (isAlreadyPublished(post.payload)) {
+    const supabase = getSupabaseAdmin();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('scheduled_posts')
+      .update({ status: 'published' }).eq('id', post.id);
+    console.warn(`[cron] skip already-published post ${post.id} (idempotency guard)`);
+    return { id: post.id, status: 'skipped', reason: 'already published (idempotency guard)' };
+  }
 
   const { results, status: runStatus, xAccountId } = await runScheduledPost({
     userId,
