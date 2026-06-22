@@ -31,16 +31,25 @@ export const DAILY_POST_CAP: Record<ScheduledPlatform, number> = {
 };
 
 /**
- * 冪等ガード: payload.results に成功投稿が 1 件でも記録されていれば「投稿済み」とみなす。
- * claim とは独立した第 2 の防御線。何らかの理由で投稿済みの行が再処理されても、
- * ここで弾いて二重投稿を防ぐ。
+ * 完了判定ガード: 対象の全プラットフォームで全チャンクが投稿済みかを判定する。
+ * resume（部分投稿の持ち越し）と両立させるため「1件でもあれば済み」ではなく
+ * 「全部投稿し終えたか」で見る。完了済みの行が再処理されても二重投稿しないための第2防御線。
+ *
+ * 部分投稿（まだ続きがある）行はここで false を返し、resume で続きを投稿させる。
  */
-export function isAlreadyPublished(payload: unknown): boolean {
-  const r = (payload as ScheduledPostPayloadV1 | null | undefined)?.results;
+export function isFullyPublished(payload: ScheduledPostPayloadV1): boolean {
+  const r = payload.results;
   if (!r) return false;
-  return (r.x?.length ?? 0) > 0
-      || (r.threads?.length ?? 0) > 0
-      || (r.instagram?.length ?? 0) > 0;
+  const total = payload.chunks.length;
+  if (total === 0) return false;
+  for (const platform of payload.platforms) {
+    if (platform === 'instagram') {
+      if ((r.instagram?.length ?? 0) < 1) return false;
+    } else {
+      if ((r[platform]?.length ?? 0) < total) return false;
+    }
+  }
+  return true;
 }
 
 /**

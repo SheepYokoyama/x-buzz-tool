@@ -8,7 +8,7 @@ import {
   collectImagePaths,
   type ScheduledPostPayloadV1,
 } from '@/lib/scheduled-post-payload';
-import { isAlreadyPublished, checkDailyCap } from '@/lib/post-safety';
+import { isFullyPublished, checkDailyCap } from '@/lib/post-safety';
 
 export const maxDuration = 60;
 
@@ -31,6 +31,14 @@ const MAX_RUNTIME_MS      = Number(process.env.CRON_MAX_RUNTIME_MS      ?? 50_00
 // 1回の cron 実行は maxDuration(60s) で必ず終わるため、これを十分に超えた時間 locked_at が
 // 立ったまま status='scheduled' の行は「投稿途中で関数が落ちた」とみなせる。再投稿はしない。
 const STALE_LOCK_MS = Number(process.env.CRON_STALE_LOCK_MS ?? 5 * 60_000);
+
+// 投稿処理の「これまでに必ず戻る」締切（cron 起動からの ms）。maxDuration(60s) の手前に置く。
+// 各チャンクは開始前に「自分の最悪所要がこの締切に収まるか」を確認し、収まらなければ停止して
+// 続きを次回 cron に resume する（関数強制終了で投稿途中に落ちるのを防ぐ）。
+const POST_BUDGET_MS = Number(process.env.CRON_POST_BUDGET_MS ?? 54_000);
+
+// 1 行あたりの resume（持ち越し）上限。これを超えたら投稿しきれなくても確定させる（無限ループ防止）。
+const MAX_RESUME_ATTEMPTS = Number(process.env.CRON_MAX_RESUME_ATTEMPTS ?? 5);
 
 function isAuthorized(req: Request): boolean {
   const host = req.headers.get('host') ?? '';
@@ -172,34 +180,60 @@ async function processLegacy(
  */
 async function processPayload(
   post: { id: string; user_id: string | null; payload: ScheduledPostPayloadV1 },
+  deadline: number,
 ): Promise<PostResult> {
   const userId = post.user_id;
   if (!userId) return { id: post.id, status: 'skipped', reason: 'post has no user_id' };
 
-  // 冪等ガード（第2防御線）: 既に成功結果を持つ行は二度と投稿しない。
-  // claim が主防御だが、万一 results 付きの行が再処理されても二重投稿を防ぐ。
-  if (isAlreadyPublished(post.payload)) {
-    const supabase = getSupabaseAdmin();
+  const supabase = getSupabaseAdmin();
+
+  // 完了ガード（第2防御線）: 既に全チャンク投稿済みの行は二度と投稿しない。
+  // claim が主防御だが、万一 完了済みの行が再処理されても二重投稿を防ぐ。
+  // ※ 部分投稿（続きあり）はここを通さず resume させる。
+  if (isFullyPublished(post.payload)) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from('scheduled_posts')
       .update({ status: 'published' }).eq('id', post.id);
-    console.warn(`[cron] skip already-published post ${post.id} (idempotency guard)`);
-    return { id: post.id, status: 'skipped', reason: 'already published (idempotency guard)' };
+    console.warn(`[cron] skip already fully-published post ${post.id} (idempotency guard)`);
+    return { id: post.id, status: 'skipped', reason: 'already fully published (idempotency guard)' };
   }
 
-  const { results, status: runStatus, xAccountId } = await runScheduledPost({
+  const { results, status: runStatus, xAccountId, needsResume } = await runScheduledPost({
     userId,
     payload: post.payload,
+    deadline,
   });
-
-  const dbStatus =
-    runStatus === 'failed' ? 'failed' : 'published'; // partial も published 扱い（DB enum 制約）
 
   // 公開URL/postId は X の最初のチャンクを代表値として x_post_id/x_post_url に格納
   const firstX = results.x?.[0];
+  const publishedCount = (results.x?.length ?? 0) + (results.threads?.length ?? 0) + (results.instagram?.length ?? 0);
+
+  // ── resume: 時間内に投稿しきれなかった → 続きを次回 cron に持ち越す ──
+  //   status=scheduled に戻し、locked_at をクリアして再取得可能にする。
+  //   投稿済みチャンクは results に保存済み → 次回はそこからスキップして再開（二重投稿しない）。
+  //   画像はまだ残りチャンクで使うため削除しない／published_at もまだ立てない。
+  if (needsResume) {
+    const attempts = (post.payload.resumeAttempts ?? 0) + 1;
+    const resumePayload: ScheduledPostPayloadV1 = { ...post.payload, results, resumeAttempts: attempts };
+
+    if (attempts <= MAX_RESUME_ATTEMPTS) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from('scheduled_posts').update({
+        status:    'scheduled',
+        locked_at: null,
+        payload:   resumePayload,
+      }).eq('id', post.id);
+      console.log(`[cron] post ${post.id} partial -> resume next run (attempt ${attempts}, ${publishedCount} posted)`);
+      return { id: post.id, status: 'skipped', reason: `partial, resuming (attempt ${attempts}, ${publishedCount} posted)` };
+    }
+    // 再開上限に到達 → これ以上続けず確定（成立分があれば published 扱い）
+    console.warn(`[cron] post ${post.id} exceeded resume attempts (${attempts}); finalizing`);
+  }
+
+  const dbStatus =
+    runStatus === 'failed' ? 'failed' : 'published'; // partial も published 扱い（DB enum 制約）
   const updatePayload: ScheduledPostPayloadV1 = { ...post.payload, results };
 
-  const supabase = getSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await supabase.from('scheduled_posts').update({
     status:       dbStatus,
@@ -210,7 +244,7 @@ async function processPayload(
     payload:      updatePayload,
   } as any).eq('id', post.id);
 
-  // 画像 cleanup（best-effort）
+  // 画像 cleanup（best-effort）— 確定時のみ（resume 中は残りチャンクで使うため削除しない）
   const paths = collectImagePaths(post.payload);
   if (paths.length > 0) await deletePostImages(paths);
 
@@ -220,7 +254,6 @@ async function processPayload(
       : 'unknown error';
     return { id: post.id, status: 'failed', mode: 'payload', error: err };
   }
-  const publishedCount = (results.x?.length ?? 0) + (results.threads?.length ?? 0) + (results.instagram?.length ?? 0);
   return { id: post.id, status: 'published', mode: 'payload', published: publishedCount };
 }
 
@@ -324,7 +357,7 @@ export async function GET(req: Request) {
         id: row.id,
         user_id: row.user_id,
         payload: row.payload,
-      });
+      }, startedAt + POST_BUDGET_MS);
     } else {
       result = await processLegacy({
         id: row.id,
