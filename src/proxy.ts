@@ -10,9 +10,12 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 認証不要パスはスキップ
+  // /support は不具合報告・データ削除・免責事項の公開ページ（Meta/X 審査でログイン無しの
+  // 到達性が必要なため、合言葉ゲート・ログインの対象外にする）。
   if (
     pathname.startsWith('/login') ||
-    pathname.startsWith('/auth')
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/support')
   ) {
     return NextResponse.next();
   }

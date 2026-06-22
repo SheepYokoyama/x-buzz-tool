@@ -164,8 +164,15 @@ export function Sidebar() {
         </>
       )}
 
-      {/* ── Version ──────────────────────────────── */}
-      <div className="px-5 pb-4 pt-1">
+      {/* ── サポート / バージョン ────────────────── */}
+      <div className="px-5 pb-4 pt-1 space-y-1">
+        <Link
+          href="/support"
+          className="text-[12px] underline transition-colors hover:text-slate-600"
+          style={{ color: '#94a3b8' }}
+        >
+          サポート・不具合報告
+        </Link>
         <p className="text-[12px] tracking-wide" style={{ color: '#94a3b8' }}>
           v{process.env.NEXT_PUBLIC_APP_VERSION} · {process.env.NEXT_PUBLIC_GIT_SHA}
         </p>

@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase';
 import { Loader2, Lock } from 'lucide-react';
@@ -187,6 +188,13 @@ function LoginContent() {
             </p>
           </>
         )}
+
+        {/* サポート・お問い合わせ（不具合報告先・免責事項の公開ページ）*/}
+        <p className="text-[13px] mt-6">
+          <Link href="/support" className="underline" style={{ color: '#94a3b8' }}>
+            サポート・お問い合わせ
+          </Link>
+        </p>
       </div>
     </div>
   );
