@@ -26,6 +26,11 @@ const JITTER_SECONDS      = Number(process.env.CRON_JITTER_SECONDS      ?? 3);
 const EXTRA_DELAY_SECONDS = Number(process.env.CRON_EXTRA_DELAY_SECONDS ?? 5);
 const MAX_RUNTIME_MS      = Number(process.env.CRON_MAX_RUNTIME_MS      ?? 50_000);
 
+// claim（実行前ロック）が取り残されたまま finalize されなかった行を失敗扱いに倒すまでの猶予。
+// 1回の cron 実行は maxDuration(60s) で必ず終わるため、これを十分に超えた時間 locked_at が
+// 立ったまま status='scheduled' の行は「投稿途中で関数が落ちた」とみなせる。再投稿はしない。
+const STALE_LOCK_MS = Number(process.env.CRON_STALE_LOCK_MS ?? 5 * 60_000);
+
 function isAuthorized(req: Request): boolean {
   const host = req.headers.get('host') ?? '';
   if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) return true;
@@ -39,6 +44,58 @@ type PostResult =
   | { id: string; status: 'published'; mode: 'legacy' | 'payload'; published: number }
   | { id: string; status: 'failed';    mode: 'legacy' | 'payload'; error: string }
   | { id: string; status: 'skipped';   reason: string };
+
+/**
+ * 投稿の「前」に行を確保（claim）する。
+ * status='scheduled' かつ locked_at IS NULL の行のみを対象にした原子的 UPDATE。
+ * 1行更新できれば確保成功。0行なら他の cron 実行が既に確保済み（or 別状態）→ スキップすべき。
+ *
+ * これにより、投稿後の finalize 更新前に関数がタイムアウトで強制終了しても、
+ * 行は 'scheduled' に戻らない（locked_at が立つ）ため二度と再投稿されない。
+ * cron 実行が重なった場合の二重取得も防ぐ。
+ */
+async function claimPost(id: string): Promise<boolean> {
+  const supabase = getSupabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('scheduled_posts')
+    .update({ locked_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('status', 'scheduled')
+    .is('locked_at', null)
+    .select('id');
+  if (error) {
+    console.error('[cron] claim failed:', id, error.message);
+    return false;
+  }
+  return Array.isArray(data) && data.length > 0;
+}
+
+/**
+ * claim 済みのまま finalize されず取り残された行（投稿途中で関数が落ちたケース）を
+ * 'failed' に倒す。再投稿はしない（重複投稿を防ぐのが最優先）。
+ * 投稿が実際には成立していた可能性があるため、運用側で payload.results を確認できるよう
+ * status のみ更新する。
+ */
+async function recoverStaleLocks(): Promise<number> {
+  const threshold = new Date(Date.now() - STALE_LOCK_MS).toISOString();
+  const supabase = getSupabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('scheduled_posts')
+    .update({ status: 'failed' })
+    .eq('status', 'scheduled')
+    .not('locked_at', 'is', null)
+    .lt('locked_at', threshold)
+    .select('id');
+  if (error) {
+    console.error('[cron] stale-lock recovery failed:', error.message);
+    return 0;
+  }
+  const n = Array.isArray(data) ? data.length : 0;
+  if (n > 0) console.warn(`[cron] recovered ${n} stale-locked post(s) -> failed`);
+  return n;
+}
 
 function extraDelayMs(): number {
   return Math.round(Math.random() * EXTRA_DELAY_SECONDS * 1000);
@@ -167,10 +224,16 @@ export async function GET(req: Request) {
   const startedAt = Date.now();
   const supabase  = getSupabaseAdmin();
 
+  // 投稿途中で落ちて claim されたまま残った行を先に失敗扱いに倒す（再投稿しない）
+  await recoverStaleLocks();
+
+  // 未確保（locked_at IS NULL）の期限到来分のみ対象にする。
+  // 既に他の実行が確保済みの行や、claim 中の行は拾わない。
   const { data, error } = await supabase
     .from('scheduled_posts')
     .select('*')
     .eq('status', 'scheduled')
+    .is('locked_at', null)
     .lte('scheduled_at', new Date().toISOString())
     .order('scheduled_at', { ascending: true });
 
@@ -213,18 +276,27 @@ export async function GET(req: Request) {
       break;
     }
 
-    const delay = processed === 0 ? extraDelayMs() : nextDelayMs();
-    if (delay > 0) {
-      console.log(`[cron] wait ${delay}ms before post #${processed + 1}`);
-      await sleep(delay);
-    }
-
     const row = post as unknown as {
       id: string;
       user_id: string | null;
       content: string;
       payload: unknown;
     };
+
+    // ── 投稿の前に行を確保（claim）──
+    // ここで status='scheduled' AND locked_at IS NULL を原子的に押さえる。
+    // 確保できなければ他の実行が処理中 → スキップ（二重投稿防止）。
+    const claimed = await claimPost(row.id);
+    if (!claimed) {
+      results.push({ id: row.id, status: 'skipped', reason: 'already claimed by another run' });
+      continue;
+    }
+
+    const delay = processed === 0 ? extraDelayMs() : nextDelayMs();
+    if (delay > 0) {
+      console.log(`[cron] wait ${delay}ms before post #${processed + 1}`);
+      await sleep(delay);
+    }
 
     let result: PostResult;
     if (isPayloadV1(row.payload)) {
