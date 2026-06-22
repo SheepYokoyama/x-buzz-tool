@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getActiveXClient } from '@/lib/x-client';
 import { getAuthUser } from '@/lib/auth';
+import { guardImmediatePost } from '@/lib/post-safety';
 
 /**
  * POST /api/x/tweet
@@ -26,6 +27,10 @@ export async function POST(req: Request) {
   if (!text?.trim()) {
     return NextResponse.json({ error: '投稿テキストが空です' }, { status: 400 });
   }
+
+  // 構造的セーフティ: 二重送信の重複投稿 / 24h 総量の暴走を防ぐ
+  const guard = await guardImmediatePost(user.id, text);
+  if (!guard.ok) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
   try {;
     const { data } = await client.v2.tweet(text);

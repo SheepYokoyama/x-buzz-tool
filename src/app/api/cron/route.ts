@@ -8,6 +8,7 @@ import {
   collectImagePaths,
   type ScheduledPostPayloadV1,
 } from '@/lib/scheduled-post-payload';
+import { isFullyPublished, checkDailyCap } from '@/lib/post-safety';
 
 export const maxDuration = 60;
 
@@ -26,6 +27,19 @@ const JITTER_SECONDS      = Number(process.env.CRON_JITTER_SECONDS      ?? 3);
 const EXTRA_DELAY_SECONDS = Number(process.env.CRON_EXTRA_DELAY_SECONDS ?? 5);
 const MAX_RUNTIME_MS      = Number(process.env.CRON_MAX_RUNTIME_MS      ?? 50_000);
 
+// claim（実行前ロック）が取り残されたまま finalize されなかった行を失敗扱いに倒すまでの猶予。
+// 1回の cron 実行は maxDuration(60s) で必ず終わるため、これを十分に超えた時間 locked_at が
+// 立ったまま status='scheduled' の行は「投稿途中で関数が落ちた」とみなせる。再投稿はしない。
+const STALE_LOCK_MS = Number(process.env.CRON_STALE_LOCK_MS ?? 5 * 60_000);
+
+// 投稿処理の「これまでに必ず戻る」締切（cron 起動からの ms）。maxDuration(60s) の手前に置く。
+// 各チャンクは開始前に「自分の最悪所要がこの締切に収まるか」を確認し、収まらなければ停止して
+// 続きを次回 cron に resume する（関数強制終了で投稿途中に落ちるのを防ぐ）。
+const POST_BUDGET_MS = Number(process.env.CRON_POST_BUDGET_MS ?? 54_000);
+
+// 1 行あたりの resume（持ち越し）上限。これを超えたら投稿しきれなくても確定させる（無限ループ防止）。
+const MAX_RESUME_ATTEMPTS = Number(process.env.CRON_MAX_RESUME_ATTEMPTS ?? 5);
+
 function isAuthorized(req: Request): boolean {
   const host = req.headers.get('host') ?? '';
   if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) return true;
@@ -39,6 +53,58 @@ type PostResult =
   | { id: string; status: 'published'; mode: 'legacy' | 'payload'; published: number }
   | { id: string; status: 'failed';    mode: 'legacy' | 'payload'; error: string }
   | { id: string; status: 'skipped';   reason: string };
+
+/**
+ * 投稿の「前」に行を確保（claim）する。
+ * status='scheduled' かつ locked_at IS NULL の行のみを対象にした原子的 UPDATE。
+ * 1行更新できれば確保成功。0行なら他の cron 実行が既に確保済み（or 別状態）→ スキップすべき。
+ *
+ * これにより、投稿後の finalize 更新前に関数がタイムアウトで強制終了しても、
+ * 行は 'scheduled' に戻らない（locked_at が立つ）ため二度と再投稿されない。
+ * cron 実行が重なった場合の二重取得も防ぐ。
+ */
+async function claimPost(id: string): Promise<boolean> {
+  const supabase = getSupabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('scheduled_posts')
+    .update({ locked_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('status', 'scheduled')
+    .is('locked_at', null)
+    .select('id');
+  if (error) {
+    console.error('[cron] claim failed:', id, error.message);
+    return false;
+  }
+  return Array.isArray(data) && data.length > 0;
+}
+
+/**
+ * claim 済みのまま finalize されず取り残された行（投稿途中で関数が落ちたケース）を
+ * 'failed' に倒す。再投稿はしない（重複投稿を防ぐのが最優先）。
+ * 投稿が実際には成立していた可能性があるため、運用側で payload.results を確認できるよう
+ * status のみ更新する。
+ */
+async function recoverStaleLocks(): Promise<number> {
+  const threshold = new Date(Date.now() - STALE_LOCK_MS).toISOString();
+  const supabase = getSupabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('scheduled_posts')
+    .update({ status: 'failed' })
+    .eq('status', 'scheduled')
+    .not('locked_at', 'is', null)
+    .lt('locked_at', threshold)
+    .select('id');
+  if (error) {
+    console.error('[cron] stale-lock recovery failed:', error.message);
+    return 0;
+  }
+  const n = Array.isArray(data) ? data.length : 0;
+  if (n > 0) console.warn(`[cron] recovered ${n} stale-locked post(s) -> failed`);
+  return n;
+}
 
 function extraDelayMs(): number {
   return Math.round(Math.random() * EXTRA_DELAY_SECONDS * 1000);
@@ -74,6 +140,14 @@ async function processLegacy(
   ]);
   if (!client) return { id: post.id, status: 'skipped', reason: 'X API not configured for user' };
 
+  // 構造的セーフティ: 24h 投稿上限の最終ブレーキ（旧仕様の単独 X 投稿）
+  const cap = await checkDailyCap(userId, 'x', 1);
+  if (!cap.ok) {
+    const supabase = getSupabaseAdmin();
+    await supabase.from('scheduled_posts').update({ status: 'failed' }).eq('id', post.id);
+    return { id: post.id, status: 'failed', mode: 'legacy', error: cap.error ?? 'daily cap reached' };
+  }
+
   const supabase = getSupabaseAdmin();
   try {
     const { data: tweet } = await client.v2.tweet(post.content);
@@ -106,23 +180,60 @@ async function processLegacy(
  */
 async function processPayload(
   post: { id: string; user_id: string | null; payload: ScheduledPostPayloadV1 },
+  deadline: number,
 ): Promise<PostResult> {
   const userId = post.user_id;
   if (!userId) return { id: post.id, status: 'skipped', reason: 'post has no user_id' };
 
-  const { results, status: runStatus, xAccountId } = await runScheduledPost({
+  const supabase = getSupabaseAdmin();
+
+  // 完了ガード（第2防御線）: 既に全チャンク投稿済みの行は二度と投稿しない。
+  // claim が主防御だが、万一 完了済みの行が再処理されても二重投稿を防ぐ。
+  // ※ 部分投稿（続きあり）はここを通さず resume させる。
+  if (isFullyPublished(post.payload)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('scheduled_posts')
+      .update({ status: 'published' }).eq('id', post.id);
+    console.warn(`[cron] skip already fully-published post ${post.id} (idempotency guard)`);
+    return { id: post.id, status: 'skipped', reason: 'already fully published (idempotency guard)' };
+  }
+
+  const { results, status: runStatus, xAccountId, needsResume } = await runScheduledPost({
     userId,
     payload: post.payload,
+    deadline,
   });
-
-  const dbStatus =
-    runStatus === 'failed' ? 'failed' : 'published'; // partial も published 扱い（DB enum 制約）
 
   // 公開URL/postId は X の最初のチャンクを代表値として x_post_id/x_post_url に格納
   const firstX = results.x?.[0];
+  const publishedCount = (results.x?.length ?? 0) + (results.threads?.length ?? 0) + (results.instagram?.length ?? 0);
+
+  // ── resume: 時間内に投稿しきれなかった → 続きを次回 cron に持ち越す ──
+  //   status=scheduled に戻し、locked_at をクリアして再取得可能にする。
+  //   投稿済みチャンクは results に保存済み → 次回はそこからスキップして再開（二重投稿しない）。
+  //   画像はまだ残りチャンクで使うため削除しない／published_at もまだ立てない。
+  if (needsResume) {
+    const attempts = (post.payload.resumeAttempts ?? 0) + 1;
+    const resumePayload: ScheduledPostPayloadV1 = { ...post.payload, results, resumeAttempts: attempts };
+
+    if (attempts <= MAX_RESUME_ATTEMPTS) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from('scheduled_posts').update({
+        status:    'scheduled',
+        locked_at: null,
+        payload:   resumePayload,
+      }).eq('id', post.id);
+      console.log(`[cron] post ${post.id} partial -> resume next run (attempt ${attempts}, ${publishedCount} posted)`);
+      return { id: post.id, status: 'skipped', reason: `partial, resuming (attempt ${attempts}, ${publishedCount} posted)` };
+    }
+    // 再開上限に到達 → これ以上続けず確定（成立分があれば published 扱い）
+    console.warn(`[cron] post ${post.id} exceeded resume attempts (${attempts}); finalizing`);
+  }
+
+  const dbStatus =
+    runStatus === 'failed' ? 'failed' : 'published'; // partial も published 扱い（DB enum 制約）
   const updatePayload: ScheduledPostPayloadV1 = { ...post.payload, results };
 
-  const supabase = getSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await supabase.from('scheduled_posts').update({
     status:       dbStatus,
@@ -133,7 +244,7 @@ async function processPayload(
     payload:      updatePayload,
   } as any).eq('id', post.id);
 
-  // 画像 cleanup（best-effort）
+  // 画像 cleanup（best-effort）— 確定時のみ（resume 中は残りチャンクで使うため削除しない）
   const paths = collectImagePaths(post.payload);
   if (paths.length > 0) await deletePostImages(paths);
 
@@ -143,7 +254,6 @@ async function processPayload(
       : 'unknown error';
     return { id: post.id, status: 'failed', mode: 'payload', error: err };
   }
-  const publishedCount = (results.x?.length ?? 0) + (results.threads?.length ?? 0) + (results.instagram?.length ?? 0);
   return { id: post.id, status: 'published', mode: 'payload', published: publishedCount };
 }
 
@@ -167,10 +277,16 @@ export async function GET(req: Request) {
   const startedAt = Date.now();
   const supabase  = getSupabaseAdmin();
 
+  // 投稿途中で落ちて claim されたまま残った行を先に失敗扱いに倒す（再投稿しない）
+  await recoverStaleLocks();
+
+  // 未確保（locked_at IS NULL）の期限到来分のみ対象にする。
+  // 既に他の実行が確保済みの行や、claim 中の行は拾わない。
   const { data, error } = await supabase
     .from('scheduled_posts')
     .select('*')
     .eq('status', 'scheduled')
+    .is('locked_at', null)
     .lte('scheduled_at', new Date().toISOString())
     .order('scheduled_at', { ascending: true });
 
@@ -213,12 +329,6 @@ export async function GET(req: Request) {
       break;
     }
 
-    const delay = processed === 0 ? extraDelayMs() : nextDelayMs();
-    if (delay > 0) {
-      console.log(`[cron] wait ${delay}ms before post #${processed + 1}`);
-      await sleep(delay);
-    }
-
     const row = post as unknown as {
       id: string;
       user_id: string | null;
@@ -226,13 +336,28 @@ export async function GET(req: Request) {
       payload: unknown;
     };
 
+    // ── 投稿の前に行を確保（claim）──
+    // ここで status='scheduled' AND locked_at IS NULL を原子的に押さえる。
+    // 確保できなければ他の実行が処理中 → スキップ（二重投稿防止）。
+    const claimed = await claimPost(row.id);
+    if (!claimed) {
+      results.push({ id: row.id, status: 'skipped', reason: 'already claimed by another run' });
+      continue;
+    }
+
+    const delay = processed === 0 ? extraDelayMs() : nextDelayMs();
+    if (delay > 0) {
+      console.log(`[cron] wait ${delay}ms before post #${processed + 1}`);
+      await sleep(delay);
+    }
+
     let result: PostResult;
     if (isPayloadV1(row.payload)) {
       result = await processPayload({
         id: row.id,
         user_id: row.user_id,
         payload: row.payload,
-      });
+      }, startedAt + POST_BUDGET_MS);
     } else {
       result = await processLegacy({
         id: row.id,

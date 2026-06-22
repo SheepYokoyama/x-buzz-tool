@@ -47,6 +47,12 @@ export interface ScheduledPostPayloadV1 {
   numbering: boolean;
   chunks: ScheduledChunk[];
   results?: ScheduledPostResults;
+  /**
+   * cron が時間内に全チャンクを投稿しきれず「続きを次回 cron に持ち越し（resume）」した回数。
+   * results に投稿済みチャンクを記録し、次回はそこから再開する。
+   * 無限ループ防止のため上限（post-runner / cron 側の MAX_RESUME_ATTEMPTS）を設ける。
+   */
+  resumeAttempts?: number;
 }
 
 export type ScheduledPostPayload = ScheduledPostPayloadV1;

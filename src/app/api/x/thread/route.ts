@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getActiveXClient, getActiveXAccountId } from '@/lib/x-client';
 import { getAuthUser } from '@/lib/auth';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { guardImmediatePost } from '@/lib/post-safety';
 
 type PostedTweet = { tweetId: string; url: string; text: string };
 
@@ -119,6 +120,10 @@ export async function POST(req: Request) {
   if (texts.length === 0) {
     return NextResponse.json({ error: '投稿テキストが空です' }, { status: 400 });
   }
+
+  // 構造的セーフティ: 二重送信の重複投稿 / 24h 総量の暴走を防ぐ（先頭ポストで判定）
+  const guard = await guardImmediatePost(user.id, texts[0]);
+  if (!guard.ok) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
   // 各ツイートに添付する media_ids を事前にアップロード
   const chunkMediaIds: string[][] = texts.map(() => []);
