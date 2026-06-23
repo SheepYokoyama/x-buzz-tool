@@ -140,9 +140,12 @@ export default function SupportPage() {
         </Section>
 
         {/* ── 戻る ── */}
-        <div className="mt-8 pt-6 border-t border-slate-900/[0.08]">
+        <div className="mt-8 pt-6 border-t border-slate-900/[0.08] flex gap-4">
+          <Link href="/privacy" className="text-[14px] underline" style={{ color: '#64748b' }}>
+            プライバシーポリシー
+          </Link>
           <Link href="/login" className="text-[14px] underline" style={{ color: '#64748b' }}>
-            ← ログインへ戻る
+            ログインへ戻る →
           </Link>
         </div>
       </main>
