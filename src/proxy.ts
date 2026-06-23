@@ -10,13 +10,14 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 認証不要パスはスキップ
-  // /support・/privacy は不具合報告・データ削除・免責事項・プライバシーポリシーの公開ページ
-  // （Meta/X 審査でログイン無しの到達性が必要なため、合言葉ゲート・ログインの対象外にする）。
+  // /support・/privacy・/terms は不具合報告・データ削除・免責事項・プライバシーポリシー・利用規約の
+  // 公開ページ（Meta/X 審査でログイン無しの到達性が必要なため、合言葉ゲート・ログインの対象外にする）。
   if (
     pathname.startsWith('/login') ||
     pathname.startsWith('/auth') ||
     pathname.startsWith('/support') ||
-    pathname.startsWith('/privacy')
+    pathname.startsWith('/privacy') ||
+    pathname.startsWith('/terms')
   ) {
     return NextResponse.next();
   }
