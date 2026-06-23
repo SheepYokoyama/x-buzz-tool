@@ -189,7 +189,10 @@ export default function PrivacyPage() {
         </Section>
 
         {/* ── 戻る ── */}
-        <div className="mt-8 pt-6 border-t border-slate-900/[0.08] flex gap-4">
+        <div className="mt-8 pt-6 border-t border-slate-900/[0.08] flex flex-wrap gap-4">
+          <Link href="/terms" className="text-[14px] underline" style={{ color: '#64748b' }}>
+            利用規約
+          </Link>
           <Link href="/support" className="text-[14px] underline" style={{ color: '#64748b' }}>
             サポート・お問い合わせ
           </Link>
