@@ -71,9 +71,28 @@
 
 ## 提出時メモ（Test Instructions 欄に書く想定）
 
-> This app connects a user's own Threads/Instagram account via a long-lived access token the user generates from Meta's token tools (manual token registration), not an in-app OAuth redirect. The screencast demonstrates the full flow on production (https://xpresso-chi.vercel.app): viewing the connected account (threads_basic / instagram_business_basic), publishing a single post and a multi-part thread to the user's own Threads account (threads_content_publish / threads_manage_replies), and publishing an image post to the user's own Instagram professional account (instagram_business_content_publish). Each published post is then shown live on the respective platform.
+### 審査員への渡し方（推奨方法）
+**方針: スクリーンキャストを主証拠とし、テストアクセス情報は補助として提出メモに添える。**
+理由: 本アプリはトークン手動登録方式（審査員が自分のアカウントを繋ぐ運用ではない）ため、動画で実動作を示すのが最も確実。ログイン情報は審査員が念のため自分で触れるよう添える。
+
+提出前に用意するもの:
+- [ ] **合言葉**（ゲート通過用パスフレーズ）
+- [ ] **テスト用 Google アカウント**（email + password）
+  - **2FA を OFF**にしておく（海外/別デバイスからのログインで Google の確認が入り審査員が弾かれるのを防ぐ）
+  - 可能なら、そのアカウントで事前に Xpresso にログインし **Threads / Instagram を連携済み**にしておく（審査員がそのまま投稿を再現できる）
+- ※ Instructions 欄は審査員のみ閲覧（非公開）なので、合言葉・パスワードを平文で書いてよい。審査通過後に合言葉をローテーションしたい場合は対応する。
+
+### Instructions for reviewers（英文・そのまま貼る）
+
+> This app connects a user's own Threads/Instagram account via a long-lived access token the user generates from Meta's token tools (manual token registration), not an in-app OAuth redirect. **The attached screencast demonstrates the complete flow** on production (https://xpresso-chi.vercel.app): viewing the connected account (threads_basic / instagram_business_basic), publishing a single post and a multi-part thread to the user's own Threads account (threads_content_publish / threads_manage_replies), and publishing an image post to the user's own Instagram professional account (instagram_business_content_publish). Each published post is then shown live on the respective platform.
 >
-> Reviewer access (if needed): shared gate passphrase = 〔ここに合言葉〕 / test login = 〔Googleアカウント等〕
+> To reproduce yourself:
+> 1. Open https://xpresso-chi.vercel.app
+> 2. Enter the shared passphrase: 〔合言葉〕
+> 3. Sign in with the test Google account — email: 〔email〕 / password: 〔password〕
+> 4. The Threads and Instagram accounts are already connected. Open "ポスト作成" (Post create), choose a platform, write content (attach an image for Instagram), and click post.
+>
+> Note: the test Google account has 2FA disabled for review access.
 
 ---
 
