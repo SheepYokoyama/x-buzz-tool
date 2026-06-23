@@ -211,7 +211,12 @@ function ConnectedCard({
         <span
           className="absolute -bottom-0.5 -right-0.5 w-[16px] h-[16px] rounded-full flex items-center justify-center"
           style={{
-            background: '#0f172a',
+            // プラットフォームごとにバッジ背景色を変えて一目で判別できるようにする
+            // （Instagram はブランドグラデーション。X / Threads はブランドの黒）
+            background:
+              platformBadge === 'instagram'
+                ? 'linear-gradient(135deg, #f58529, #dd2a7b, #8134af)'
+                : '#0f172a',
             border: '1.5px solid #ffffff',
             color: '#fff',
           }}
