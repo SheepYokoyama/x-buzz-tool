@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Xpresso — SNS投稿管理ツール</title>
+<meta name="description" content="Xpressoは、X・Threads・InstagramのSNS投稿の作成・予約・管理を一元化するWebツールです。" />
+<style>
+  :root {
+    --bg: #020617;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.10);
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 64px 24px; flex: 1; width: 100%; }
+  .logo {
+    font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(90deg, var(--blue), var(--purple));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .lead { color: var(--muted); margin-top: 12px; font-size: 18px; }
+  .cta {
+    display: inline-block; margin-top: 28px; padding: 14px 28px;
+    background: linear-gradient(90deg, var(--blue), var(--purple));
+    color: #fff; text-decoration: none; border-radius: 12px; font-weight: 700;
+  }
+  section { margin-top: 56px; }
+  h2 { font-size: 20px; margin-bottom: 16px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+  .feat {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px;
+  }
+  .feat h3 { font-size: 16px; margin-bottom: 6px; }
+  .feat p { color: var(--muted); font-size: 14px; }
+  footer {
+    border-top: 1px solid var(--border); padding: 28px 24px; text-align: center;
+    color: var(--muted); font-size: 13px;
+  }
+  footer a { color: var(--blue); text-decoration: none; margin: 0 10px; }
+  .info { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .info th, .info td { text-align: left; vertical-align: top; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .info th { color: var(--muted); font-weight: 600; width: 38%; white-space: nowrap; padding-right: 16px; }
+  .info td { color: var(--text); }
+  .info td a { color: var(--blue); text-decoration: none; }
+  @media (max-width: 560px) {
+    .grid { grid-template-columns: 1fr; }
+    .info th { width: 42%; font-size: 13px; }
+    .info td { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="logo">Xpresso</div>
+    <p class="lead">X・Threads・InstagramのSNS投稿を、作成から予約・管理まで一元化するWebツール。</p>
+    <a class="cta" href="https://xpresso-chi.vercel.app">アプリを開く →</a>
+
+    <section>
+      <h2>できること</h2>
+      <div class="grid">
+        <div class="feat"><h3>投稿の作成支援</h3><p>テーマに沿った投稿文の作成を効率化します。</p></div>
+        <div class="feat"><h3>予約投稿</h3><p>X・Threads・Instagramへの投稿を予約・自動公開。</p></div>
+        <div class="feat"><h3>複数SNSの一元管理</h3><p>各SNSの投稿を1つの画面でまとめて管理。</p></div>
+        <div class="feat"><h3>投稿履歴の管理</h3><p>過去の投稿を記録し、運用を振り返れます。</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Xpressoについて</h2>
+      <p style="color:var(--muted)">XpressoはSNS運用を支援するWebサービスです。ご利用にはアカウント登録が必要です。お問い合わせは下記の連絡先またはサポートページよりお願いします。</p>
+    </section>
+
+    <section>
+      <h2>事業者情報（特定商取引法に基づく表記）</h2>
+      <table class="info">
+        <tbody>
+          <tr><th>事業者名</th><td>横山 美穂（個人事業）</td></tr>
+          <tr><th>運営統括責任者</th><td>横山 美穂</td></tr>
+          <tr><th>所在地</th><td>請求があれば遅滞なく開示します。</td></tr>
+          <tr><th>電話番号</th><td>請求があれば遅滞なく開示します。お問い合わせはメールにて承ります。</td></tr>
+          <tr><th>メールアドレス</th><td><a href="mailto:xpresso@mntside.net">xpresso@mntside.net</a></td></tr>
+          <tr><th>サービス内容</th><td>SNS（X・Threads・Instagram）投稿の作成・予約・管理を支援するWebサービス</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <a href="https://xpresso-chi.vercel.app">アプリ</a>
+    <a href="https://xpresso-chi.vercel.app/privacy">プライバシーポリシー</a>
+    <a href="https://xpresso-chi.vercel.app/terms">利用規約</a>
+    <a href="https://xpresso-chi.vercel.app/support">サポート</a>
+    <p style="margin-top:12px">運営者：横山 美穂（個人事業）　|　xpresso@mntside.net　|　© Xpresso</p>
+  </footer>
+</body>
+</html>
