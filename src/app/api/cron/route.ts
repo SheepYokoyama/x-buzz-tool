@@ -9,6 +9,7 @@ import {
   type ScheduledPostPayloadV1,
 } from '@/lib/scheduled-post-payload';
 import { isFullyPublished, checkDailyCap } from '@/lib/post-safety';
+import { sendThothWebhook } from '@/lib/thoth-partner';
 
 export const maxDuration = 60;
 
@@ -104,6 +105,47 @@ async function recoverStaleLocks(): Promise<number> {
   const n = Array.isArray(data) ? data.length : 0;
   if (n > 0) console.warn(`[cron] recovered ${n} stale-locked post(s) -> failed`);
   return n;
+}
+
+/**
+ * Thoth 経由の予約（payload.partner.source='thoth'）が確定（published/failed）したら
+ * 状態通知 Webhook を送る（仕様書 §3）。
+ * 確定後の最新行を読み直して postId/URL を詰める。失敗しても投稿確定には影響しない
+ * （Thoth 側は GET /api/v1/scheduled-posts/{id} でフォールバック照会できる）。
+ */
+async function notifyThothIfPartnerPost(postId: string, resultStatus: 'published' | 'failed'): Promise<void> {
+  try {
+    const supabase = getSupabaseAdmin();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: row } = await (supabase as any)
+      .from('scheduled_posts')
+      .select('id, published_at, x_post_id, x_post_url, payload')
+      .eq('id', postId)
+      .maybeSingle();
+    if (!row || !isPayloadV1(row.payload)) return;
+    const partner = row.payload.partner;
+    if (partner?.source !== 'thoth') return;
+
+    const errors = row.payload.results?.errors;
+    // cron の残り時間を食い潰さないよう再送は 1 回まで（欠落時は Thoth 側の GET 照会で補完）
+    await sendThothWebhook(
+      {
+        event: resultStatus === 'published' ? 'post.posted' : 'post.failed',
+        thothPostId: partner.thothPostId,
+        expressoPostId: row.id,
+        xPostId: row.x_post_id ?? null,
+        threadsPostId: row.payload.results?.threads?.[0]?.postId ?? null,
+        postedAt: row.published_at ?? null,
+        postUrl: row.x_post_url ?? null,
+        error: resultStatus === 'failed' && errors
+          ? Object.entries(errors).map(([k, v]) => `${k}: ${v}`).join(' / ')
+          : null,
+      },
+      { attempts: 2 },
+    );
+  } catch (err) {
+    console.error('[cron] Thoth webhook 通知中に例外:', err);
+  }
 }
 
 function extraDelayMs(): number {
@@ -367,6 +409,11 @@ export async function GET(req: Request) {
     }
     results.push(result);
     processed++;
+
+    // Thoth 経由の予約なら確定結果を Webhook で通知（partner でなければ即 return）
+    if (result.status === 'published' || result.status === 'failed') {
+      await notifyThothIfPartnerPost(row.id, result.status);
+    }
   }
 
   const published = results.filter((r) => r.status === 'published').length;

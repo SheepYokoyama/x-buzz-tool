@@ -23,6 +23,25 @@ export interface ScheduledChunk {
   images: ScheduledImage[];
 }
 
+/**
+ * 外部システム（Thoth 等）経由で登録された予約投稿のメタ情報。
+ * 冪等キー（thothPostId）の照合と、状態 Webhook の送り先判定に使用する。
+ * Xpresso の UI から作られた予約には存在しない（undefined）。
+ */
+export interface PartnerMeta {
+  source: 'thoth';
+  /** Thoth 側の冪等キー。同一キーの再送は新規予約を作らない */
+  thothPostId: string;
+  /** 両アプリ共通の会員識別メールアドレス */
+  memberEmail: string;
+  /** 投稿目的（参考情報・例: "line_registration"）*/
+  purpose?: string;
+  campaignId?: string;
+  trackingUrl?: string;
+  /** Thoth 側の版番号 */
+  contentVersion?: number;
+}
+
 export interface ScheduledPostResultItem {
   postId: string;
   url: string;
@@ -46,6 +65,8 @@ export interface ScheduledPostPayloadV1 {
   platforms: ScheduledPlatform[];
   numbering: boolean;
   chunks: ScheduledChunk[];
+  /** 外部システム経由の予約の場合のみ存在（Xpresso UI 起点なら undefined）*/
+  partner?: PartnerMeta;
   results?: ScheduledPostResults;
   /**
    * cron が時間内に全チャンクを投稿しきれず「続きを次回 cron に持ち越し（resume）」した回数。
