@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Xpresso favicon: ブランドカラー（neon-blue → neon-purple）のグラデーション背景に珈琲カップ -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- 湯気 -->
+  <g stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.85">
+    <path d="M25 11c-2.5 3 2.5 5.5 0 8.5"/>
+    <path d="M35 9c-2.5 3 2.5 5.5 0 8.5"/>
+  </g>
+  <!-- カップ本体 -->
+  <path d="M15 26h28v10a11 11 0 0 1-11 11h-6a11 11 0 0 1-11-11z" fill="#ffffff"/>
+  <!-- 取っ手 -->
+  <path d="M43 29h2.5a6.5 6.5 0 0 1 0 13H43" stroke="#ffffff" stroke-width="4" fill="none"/>
+  <!-- ソーサー -->
+  <path d="M14 53h32" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.9"/>
+</svg>
