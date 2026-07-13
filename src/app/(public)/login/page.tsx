@@ -84,7 +84,7 @@ function LoginContent() {
         <h1
           className="text-3xl font-bold mb-8"
           style={{
-            background: 'linear-gradient(90deg, #fbbf24, #f472b6, #a78bfa)',
+            background: 'linear-gradient(90deg, #2563eb, #7c3aed)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}
