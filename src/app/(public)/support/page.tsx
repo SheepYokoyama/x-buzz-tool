@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AppLogo from '@/components/ui/AppLogo';
 
 export const metadata: Metadata = {
   title: 'サポート・お問い合わせ | Xpresso',
@@ -28,20 +29,12 @@ export default function SupportPage() {
       >
         {/* ── ヘッダー ── */}
         <div className="flex items-center gap-3 mb-8">
-          <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl select-none shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #f59e0b, #ec4899, #a78bfa)',
-              boxShadow: '0 0 18px rgba(236,72,153,0.4)',
-            }}
-          >
-            🔥
-          </div>
+          <AppLogo size={44} />
           <div>
             <h1
               className="text-2xl font-bold leading-none"
               style={{
-                background: 'linear-gradient(90deg, #fbbf24, #f472b6, #a78bfa)',
+                background: 'linear-gradient(90deg, #2563eb, #7c3aed)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
