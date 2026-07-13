@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase';
 import { Loader2, Lock } from 'lucide-react';
+import AppLogo from '@/components/ui/AppLogo';
 
 function LoginContent() {
   const router = useRouter();
@@ -77,15 +78,7 @@ function LoginContent() {
       >
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl select-none"
-            style={{
-              background: 'linear-gradient(135deg, #f59e0b, #ec4899, #a78bfa)',
-              boxShadow: '0 0 24px rgba(236,72,153,0.45), 0 4px 12px rgba(0,0,0,0.4)',
-            }}
-          >
-            🔥
-          </div>
+          <AppLogo size={56} />
         </div>
 
         <h1

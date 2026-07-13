@@ -21,6 +21,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api-fetch';
+import AppLogo from '@/components/ui/AppLogo';
 
 const mainNav = [
   { href: '/dashboard',   label: 'ダッシュボード', icon: LayoutDashboard },
@@ -78,15 +79,7 @@ export function Sidebar() {
       {/* ── Logo ─────────────────────────────────── */}
       <div className="px-6 pt-7 pb-6">
         <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[20px] select-none"
-            style={{
-              background: 'linear-gradient(135deg, #f59e0b, #ec4899, #a78bfa)',
-              boxShadow: '0 0 18px rgba(236,72,153,0.45), 0 2px 8px rgba(0,0,0,0.4)',
-            }}
-          >
-            🔥
-          </div>
+          <AppLogo size={36} />
           <div>
             <p className="font-bold text-[16px] tracking-tight leading-none" style={{
               background: 'linear-gradient(90deg, #fbbf24, #f472b6, #a78bfa)',
