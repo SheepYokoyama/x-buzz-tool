@@ -182,6 +182,38 @@ export async function countRecentPublishedRows(userId: string): Promise<number> 
   return count ?? 0;
 }
 
+/** 外部連携（Thoth）予約受け入れ時のクロスアカウント重複判定ウィンドウ（日）。 */
+const CROSS_DUP_WINDOW_DAYS = Number(process.env.SAFETY_CROSS_DUP_WINDOW_DAYS ?? 7);
+
+/**
+ * 「同一文面の複数アカウント横展開」検知（BAN 回避ガイドラインの最重要 NG 項目）。
+ * 他ユーザーのアカウントに同一 content の予約/投稿が直近ウィンドウ内に存在するかを判定する。
+ *
+ * ※ RLS バイパス（admin）でユーザー横断検索を行うが、返すのは存在有無の boolean のみで
+ *   他ユーザーのデータは呼び出し元へ一切返さない（データ漏洩なし）。
+ * 判定不能時は false（許可）— 主目的は事故防止のバックストップ。
+ */
+export async function isCrossAccountDuplicate(userId: string, content: string): Promise<boolean> {
+  const text = content.trim();
+  if (!text) return false;
+  const since = new Date(Date.now() - CROSS_DUP_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const supabase = getSupabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('scheduled_posts')
+    .select('id')
+    .neq('user_id', userId)
+    .in('status', ['scheduled', 'published'])
+    .eq('content', text)
+    .gte('created_at', since)
+    .limit(1);
+  if (error || !Array.isArray(data)) {
+    console.error('[post-safety] isCrossAccountDuplicate failed:', error?.message);
+    return false;
+  }
+  return data.length > 0;
+}
+
 export interface ImmediateGuardResult {
   ok: boolean;
   status: number;
